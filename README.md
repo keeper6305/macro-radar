@@ -3,14 +3,25 @@
 세무사 수험 공부와 병행해 거시 6대 지표·반전 신호·데일리 브리핑·시나리오·킬 스위치를 한 화면에서 추적하는 모바일 퍼스트 PWA입니다.
 외부 CDN·프레임워크 없이 정적 파일(HTML/CSS/JS + JSON)만으로 동작합니다.
 
-- 배포 URL: https://onyx-handle-l9att.ship.place/ (임시 테스트 드롭, 2026-11-24 만료)
-- GitHub Pages 이전 시: `https://keeper6305.github.io/macro-radar/`
+- 정본 배포: `https://keeper6305.github.io/macro-radar/` (GitHub Pages · main / root)
+- 임시 검증 드롭: `python3 ../deploy.py <label>` (ship.page, 7일 만료)
+
+## v2 (2026-11-17) 주요 변경
+
+- **실측 시계열 차트**: 스파크라인을 SVG 꺾은선+영역 그라데이션 차트로 교체. Y축 눈금·기준선 점선·X축 날짜·탭/터치 툴팁.
+  - 원천: FRED(DGS10·UNRATE·PAYEMS·CPI·PPI·PCE), Yahoo Finance(^KS11·^KQ11·^GSPC·^IXIC·DX-Y.NYB·KRW=X·개별주), CoinGecko(BTC·ETH 180일), Naver 금융(국내 재무).
+  - 데이터 생성: `python3 ../build_v2_data.py && python3 ../enrich_v2.py` → `site/data/market_state.json` 갱신.
+- **관심기업 탭(🏢)**: 종목 추가·수정·삭제(로컬 저장), JSON 백업/복원.
+- **종목 상세**: 주가 6개월 차트(평단·손절·목표 기준선), PER/PBR 밴드 게이지, 분기·연간 매출/영업이익 막대 + 영업이익률 선, 내부자 매수 표(평단 대비 괴리), 주주환원·DART 3Q·선행지표·킬 스위치.
+- **localStorage 키**: `macro_radar_memos_v1`(메모), `macro_radar_assets_v1`(관심기업), `macro_radar_theme`.
+- 서비스 워커 캐시 `macro-radar-v2`로 상향.
 
 ## 구조
 
 ```
 site/
 ├── index.html                 앱 셸 (스타일·로직 포함, 외부 의존 0)
+├── data/market_state.json     ★ 지표 시계열·자산 재무·밴드·내부자 매수 데이터
 ├── manifest.json              PWA 매니페스트 (standalone, 아이콘 3종)
 ├── sw.js                      서비스 워커 (macro-radar-v1)
 ├── data/market_state.json     ★ 모든 수치·브리핑·자산·시나리오 데이터

@@ -5,7 +5,7 @@
  *  - 아이콘·매니페스트 등 정적 자산: cache-first (오프라인 보장)
  * 캐시 이름을 바꾸면(예: macro-radar-v2) 활성화 시 이전 캐시를 모두 지웁니다.
  */
-var CACHE = 'macro-radar-v1';
+var CACHE = 'macro-radar-v2';
 var PRECACHE = [
   './', './index.html', './manifest.json', './data/market_state.json',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
