@@ -6,6 +6,19 @@
 - 정본 배포: `https://keeper6305.github.io/macro-radar/` (GitHub Pages · main / root)
 - 임시 검증 드롭: `python3 ../deploy.py <label>` (ship.page, 7일 만료)
 
+## v3 (2026-11-17) 주요 변경
+
+- **PBR·PER 밴드 및 실적 그래프 노출**: 카드 가운데(차트 영역)를 누르면 상세가 열리지 않아(차트 툴팁이 탭을 가로챔) 밴드·실적을 못 보던 진입 문제를 해결.
+  - 종목 카드 안에 **PER·PBR 미니 밴드 게이지**(현재 위치 니들 + 하단 대비 괴리)와 **분기 실적 미니 막대**(매출·영업이익, 최근 6분기)를 상시 노출.
+  - 카드 하단에 `밴드·실적 상세 ›` · `수정` 버튼을 고정 배치해 상세 진입 경로를 명시.
+  - 종목 상세 시트에 **PER 밴드 차트·PBR 밴드 차트**(연말 실적 배수 + 하단/평균/상단 기준선 + 현재) 추가. 기존 게이지는 유지.
+- **종목 편집 강화**: `↕ 순서 · 편집` 모드에서 카드별 **▲▼ 순서 이동 · 수정 · 삭제**, 상단 `＋ 종목 추가`. 순서는 `localStorage`(`macro_radar_assets_v1.order`)에 저장되고 백업 JSON에 함께 담김.
+  - **추가 버그 수정**: 새 종목이 `custom`이 아닌 `overrides`로 저장되어 목록에 나타나지 않던 v2 결함 수정.
+  - 수정 시 2차 목표가 구간이 사라지던 문제 수정.
+- **탭 순서 변경**: `지표 → 종목 → 브리핑 → 시나리오 → 도감` (관심기업이 시나리오 앞).
+- **공부도감 8 → 20장**: 재무제표 3종 연결·흑자도산, ROE-PBR 매트릭스·PEG, 영업레버리지, 연준 4대 도구, 환율·금리차·수급, 버블 5단계·항복, 주주환원·코리아 디스카운트, 3대 산업 사이클, 컨센서스·어닝 서프라이즈, 포지션 사이징 수학, 주식 세금 3종(2026 기준), 리포트·목표가·오너 리스크. 각 카드에 요약·기준표·실전 체크포인트, 상단 **태그 필터**.
+- 서비스 워커 캐시 `macro-radar-v3`, 데이터 `meta.version` `2026.11.17-v3`.
+
 ## v2 (2026-11-17) 주요 변경
 
 - **실측 시계열 차트**: 스파크라인을 SVG 꺾은선+영역 그라데이션 차트로 교체. Y축 눈금·기준선 점선·X축 날짜·탭/터치 툴팁.
@@ -23,7 +36,7 @@ site/
 ├── index.html                 앱 셸 (스타일·로직 포함, 외부 의존 0)
 ├── data/market_state.json     ★ 지표 시계열·자산 재무·밴드·내부자 매수 데이터
 ├── manifest.json              PWA 매니페스트 (standalone, 아이콘 3종)
-├── sw.js                      서비스 워커 (macro-radar-v1)
+├── sw.js                      서비스 워커 (macro-radar-v3)
 ├── data/market_state.json     ★ 모든 수치·브리핑·자산·시나리오 데이터
 ├── icon-192.png / icon-512.png / icon-maskable-512.png
 ├── apple-touch-icon.png / favicon-32.png
@@ -42,7 +55,7 @@ site/
 | 콘솔 오류 | 0건 |
 | 크립토 실시간 | CoinGecko → Binance 폴백 동작 확인 (실패 시 기준 데이터 유지) |
 
-QA 하네스(`qa-mobile.html`, `qa-shot.html`)는 검증용 드롭에만 올렸고 정본 `site/`에는 포함하지 않았습니다.
+QA 하네스(`qa-mobile.html`, `qa-v3.html`, `qa-v3b.html`, `qa-shot.html`, `qa-shots.html`)는 `qa/` 폴더에 두고 검증용 드롭에만 올렸고 정본 `site/`에는 포함하지 않았습니다. 새 드롭은 `python3 qa_deploy.py <label> <harness.html> …`.
 
 ## 매일 데이터 갱신 (07:00 미국 / 16:00 국내)
 
@@ -68,7 +81,7 @@ QA 하네스(`qa-mobile.html`, `qa-shot.html`)는 검증용 드롭에만 올렸�
 | `data/market_state.json` | network-first → 실패 시 캐시 |
 | 아이콘·매니페스트 | cache-first |
 
-구조가 바뀌면 `sw.js`의 `CACHE`를 `macro-radar-v2`로 올리세요. 활성화 시 이전 캐시는 자동 삭제됩니다.
+구조가 바뀌면 `sw.js`의 `CACHE`를 다음 버전(현재 `macro-radar-v3`)으로 올리세요. 활성화 시 이전 캐시는 자동 삭제됩니다.
 
 ## 데이터 출처
 
