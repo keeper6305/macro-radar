@@ -268,6 +268,8 @@ details.ans[open] summary:before{content:"▾ "}
 .abar .mk2.stp{background:var(--bad)}
 .abar .lbl{position:absolute;top:-11px;font-size:9px;color:var(--mu);transform:translateX(-50%);white-space:nowrap}
 .aleg{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:9px}
+.aleg.wide{grid-template-columns:1fr}
+.aleg b{white-space:nowrap}
 .aleg div{font-size:10.5px;color:var(--tx2);display:flex;align-items:center;gap:5px;min-width:0}
 .aleg i{width:6px;height:6px;border-radius:50%;flex:none}
 .aleg b{font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums;margin-left:auto}
@@ -1419,7 +1421,7 @@ function assetCard(x){
       lg.push('<div><i style="background:var(--good)"></i>'+esc(t.label)+'<b>'+bu+bigNum(t.from)+(t.to!==t.from?'~'+bigNum(t.to):'')+'</b>'+
         '<span class="pct">'+sgn((t.from/val-1)*100,1)+'</span></div>');
     });
-    h+='<div class="aleg">'+lg.join('')+'</div>';
+    h+='<div class="aleg'+(x.barUnit==='$'?' wide':'')+'">'+lg.join('')+'</div>';
   }
 
   var chips=[];
