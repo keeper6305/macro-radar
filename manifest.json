@@ -1,0 +1,21 @@
+{
+  "name": "거시경제·투자 레이더",
+  "short_name": "투자 레이더",
+  "description": "미 10년물·DXY·고용·물가·지수·크립토 6대 지표와 반전 신호, 데일리 브리핑, 시나리오·킬 스위치, 공부 도감을 한 화면에서 추적하는 모바일 대시보드.",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "macro-radar",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0a0d12",
+  "theme_color": "#0a0d12",
+  "categories": ["finance", "productivity", "education"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
