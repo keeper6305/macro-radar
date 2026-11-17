@@ -77,15 +77,16 @@ async function main(){
     return;
   }
   if(SHOT){
-    // 스크린샷 전용: 단일 프레임에서 BTC 상세 시트를 연 상태로 정지
-    var f = await mkFrame(390, './index.html?qa=shot', 844);
+    // 스크린샷 전용: BTC 카드(shot=card) / BTC 상세 시트(shot=btc) 정지 화면
+    var f = await mkFrame(390, './index.html?qa=shot&s=' + SHOT + '&v=' + Date.now(), 844);
     var d = f.contentDocument;
     d.querySelector('.tab[data-tab="companies"]').click();
-    await wait(500);
+    await wait(600);
     var card = d.querySelector('main [data-asset="btc"]');
-    if(card){ card.querySelector('[data-open]').click(); }
-    await wait(700);
-    document.getElementById('out').textContent = 'shot ready · ' + (d.querySelector('.mhd h3') ? d.querySelector('.mhd h3').textContent : 'no modal');
+    if(SHOT === 'card' && card){ card.scrollIntoView({block:'center'}); await wait(500); }
+    else if(SHOT === 'overview'){ d.querySelector('.tab[data-tab="overview"]').click(); await wait(600); }
+    else if(card){ card.querySelector('[data-open]').click(); await wait(800); }
+    document.getElementById('out').textContent = 'shot ready · ' + (d.querySelector('.mhd h3') ? d.querySelector('.mhd h3').textContent : 'page');
     document.title = 'QA DONE';
     return;
   }
