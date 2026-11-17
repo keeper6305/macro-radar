@@ -1935,7 +1935,23 @@ function applyLive(o){
       cr.chips.push({text:'공포탐욕 '+o.fng.value+' · '+fngKo(o.fng.cls),level:o.fng.value<25?'bad':(o.fng.value>75?'warn':'')});
     }
   }
-  if(S.tab==='overview') render();
+  /* '종목' 탭 비트코인 카드도 같은 실시간 값으로 맞춘다(지표와 종목 숫자 불일치 방지) */
+  var ba=null;
+  (S.data.assets||[]).forEach(function(a){ if(a.id==='btc') ba=a; });
+  if(ba&&typeof o.btc==='number'){
+    ba.price=o.btc;
+    ba.display='$'+nf(Math.round(o.btc),0);
+    if(typeof o.btcChg==='number') ba.delta={text:sgn(o.btcChg,2),dir:o.btcChg>=0?'up':'down'};
+    if(ba.series&&ba.series.length){
+      var td=todayISO(), lst=ba.series[ba.series.length-1];
+      if(lst.d===td) lst.v=Math.round(o.btc); else ba.series.push({d:td,v:Math.round(o.btc)});
+    }
+  }
+  if(S.tab==='overview'||S.tab==='companies') render();
+}
+function todayISO(){
+  var d=new Date();
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
 }
 function fngKo(cls){
   var m={'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'};
