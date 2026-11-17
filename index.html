@@ -1496,7 +1496,10 @@ function assetDetail(a){
   var refs=[];
   if(typeof a.avg==='number') refs.push({value:a.avg,label:'평단',color:'var(--warn)'});
   if(typeof a.stop==='number') refs.push({value:a.stop,label:'손절',color:'var(--bad)'});
-  if(a.targets&&a.targets.length) refs.push({value:a.targets[0].from,label:a.targets[0].label+' 목표',color:'var(--good)'});
+  if(a.targets&&a.targets.length){
+    var t0=a.targets[0];
+    refs.push({value:(typeof t0.chartRef==='number'?t0.chartRef:t0.from),label:t0.label+' 목표',color:'var(--good)'});
+  }
   if(a.series&&a.series.length>2){
     h+='<div class="msec"><h4>'+(isCrypto?'가격 흐름 · 최근 6개월':'주가 흐름 · 최근 6개월')+'</h4>'+lineChart({series:a.series,refs:refs,h:132,dec:a.price>1000?0:2,
       src:a.seriesSource||'',freq:'일별 종가'})+'</div>';
