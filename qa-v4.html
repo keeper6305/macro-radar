@@ -67,11 +67,11 @@ async function main(){
       document.getElementById('row').appendChild(col);
       keep.push(fr);
     }
+    await wait(4000);
     for (var n=0;n<keep.length;n++){
-      await new Promise(function(res){ keep[n].addEventListener('load',function(){ setTimeout(res,2400); },{once:true}); });
-      keep[n].contentDocument.querySelector('.tab[data-tab="companies"]').click();
+      try{ keep[n].contentDocument.querySelector('.tab[data-tab="companies"]').click(); }catch(e){}
     }
-    await wait(900);
+    await wait(1200);
     document.getElementById('out').textContent='multi ready · '+widths.join(' / ')+'px · 종목 탭';
     document.title='QA DONE';
     return;
