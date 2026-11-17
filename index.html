@@ -1287,7 +1287,7 @@ function viewCompanies(){
     h+='<article class="card"><p class="empty">등록된 종목이 없습니다. ＋ 종목 추가로 시작하세요.</p></article>';
   }
   h+=list.map(function(x,i){ return S.edit?editAssetCard(x,i,list.length):assetCard(x,i); }).join('');
-  if(S.edit) h+='<div class="ordnote">▲▼ 로 순서를 바꾸면 즉시 저장됩니다. 수정·삭제도 이 화면에서 끝냐면 저장됩니다.</div>';
+  if(S.edit) h+='<div class="ordnote">▲▼ 로 순서를 바꾸면 즉시 저장됩니다. 수정·삭제도 이 화면에서 바로 저장됩니다.</div>';
   h+='<div class="toolrow"><button class="btn" id="btnAstExport">백업 내보내기</button>'+
      '<label class="filebtn">백업 불러오기<input type="file" id="astImport" accept="application/json,.json"></label></div>';
   h+='<div class="foot">재무·밴드 수치는 Naver 금융·Yahoo Finance에서 2026-11-17 조회한 값이며, 2026.3Q 국내 기업은 컨센서스입니다. 순서·추가·수정·삭제는 이 기기에 저장되고 백업 JSON에 함께 담깁니다. 투자 판단의 근거 자료이며 매매 권유가 아닙니다.</div>';
