@@ -1181,7 +1181,7 @@ function viewOverview(){
         return '<li><span class="st">'+ic+'</span><span class="cn">'+esc(s.name)+
           '<span class="cv">현재 '+esc(s.now)+'</span></span></li>';}).join('')+'</ul>'+
      '</article>';
-  h+='<div class="sec"><h2>데이터 출처</h2><span class="hint">2026-11-17 조회</span></div>';
+  h+='<div class="sec"><h2>데이터 출처</h2><span class="hint">2026-11-18 조회</span></div>';
   h+='<article class="card"><ul class="srcs">'+((d.meta.dataSources||[]).map(function(s){
       return '<li><b>'+esc(s.name)+'</b><span>'+esc(s.what)+'</span><i>'+esc(s.asOf)+'</i></li>';}).join(''))+'</ul></article>';
   h+='<div class="foot">'+esc(d.meta.sourceNote)+'<br>'+esc(d.meta.disclaimer)+'</div>';
@@ -1295,7 +1295,7 @@ function viewScenario(){
       }).join('')+'</div>'+
       '<button class="btn wide" data-goto="companies" style="margin-top:11px">종목 상세 · 재무 · 밴드 보기 ›</button></article>';
 
-  h+='<div class="sec"><h2>이벤트 타임라인</h2><span class="hint">11/17 → 2027-02</span></div>'+
+  h+='<div class="sec"><h2>이벤트 타임라인</h2><span class="hint">11/18 → 2027-02</span></div>'+
     '<article class="card"><ul class="ev">'+d.events.map(function(e){
       return '<li class="'+esc(e.level)+'"><span class="ed"><span class="dd">'+esc(e.dday)+'</span><span class="dt">'+esc(e.dateLabel||e.date.slice(5))+'</span></span>'+
         '<span class="eb"><span class="et">'+esc(e.title)+(e.time?' · '+esc(e.time):'')+'</span>'+
@@ -1657,7 +1657,7 @@ function viewStudy(){
         s.check.map(function(c){return '<li>'+rich(c)+'</li>';}).join('')+'</ul></div>':'')+
       '</div></details>';
   }).join('');
-  h+='<div class="foot">숫자는 11/17 브리핑·3분기 DART 원문과 국세청·기획재정부 2026년 시행 기준입니다. 판단의 근거 자료이며 매매 권유가 아닙니다.</div>';
+  h+='<div class="foot">숫자는 11/18 브리핑·3분기 DART 원문과 국세청·기획재정부 2026년 시행 기준입니다. 판단의 근거 자료이며 매매 권유가 아닙니다.</div>';
   return h;
 }
 
@@ -1988,7 +1988,7 @@ function refreshLive(){
   })
   .then(function(o){ return fngP.then(function(f){ if(f){o.fng=f;} return o; }); })
   .then(function(o){ applyLive(o); finish('실시간 반영 · '+o.src+' '+nowHMS()); })
-  .catch(function(){ finish('실시간 시세를 못 받았습니다 · 17:00 기준 데이터 유지'); });
+  .catch(function(){ finish('실시간 시세를 못 받았습니다 · 직전 갱신 데이터 유지'); });
 }
 
 /* ---------- boot ---------- */
