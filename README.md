@@ -6,6 +6,19 @@
 - 정본 배포: `https://keeper6305.github.io/macro-radar/` (GitHub Pages · main / root)
 - 임시 검증 드롭: `python3 ../deploy.py <label>` (ship.page, 7일 만료)
 
+## v4 (2026-11-18) 주요 변경
+
+- **브랜드 로고·앱 색상 전면 개편**: '차트 + 레이더' 마크(샴페인 골드 링 260°·상승 3단 바·시그널 도트)를 새로 제작하고 PWA 아이콘 세트 전체를 교체.
+  - `icon-192.png` · `icon-512.png` · `icon-maskable-512.png`(안전영역 80%) · `apple-touch-icon.png` · `favicon-32.png` · `favicon-16.png` · `favicon.svg`.
+  - 팔레트: 딥 그래파이트(`#070b11`) 바탕 + 샴페인 골드(`#e6b764`) 포인트. 라이트 모드는 웜 아이보리(`#f7f5f0`) + 브론즈(`#8a6520`).
+  - 상승/하락·경계/중립/양호 시맨틱 컬러와 차트 그라디언트까지 CSS 변수(`--accRGB`·`--badRGB`·`--upRGB` …)로 통일해 라이트/다크 대비를 다시 맞춤.
+  - 헤더 브랜드 마크 인라인 SVG, `theme-color`·매니페스트 색상 갱신, 서비스 워커 캐시 `macro-radar-v4`.
+- **비트코인(BTC) 관심종목 추가**: `🏢 종목` 탭 기본 시드에 `비트코인 BTC` 카드 추가(CoinGecko 실측, 180일 일별 시계열, 현재가·24h 변동).
+  - 상세 시트: 매수 밴드 $60,000~$70,000(오태민 중장기 사이클 바닥), 킬 스위치(현물 ETF 순유출 장기화 · 추가 긴축 · DXY 105 돌파), 선행지표 체크포인트.
+  - `localStorage`에 저장된 순서 배열이 있어도 이더리움 뒤에 자동 삽입(`SEED_AFTER`) — 기존 사용자 데이터 초기화 없음.
+  - 크립토 종목은 기업 재무·내부자 공시 섹션을 숨기고 수급·가격 체크로 대체.
+  - `build_v2_data.py`가 매 갱신마다 BTC 카드 가격·시계열·밴드 문구를 CoinGecko로 최신화.
+
 ## v3 (2026-11-17) 주요 변경
 
 - **PBR·PER 밴드 및 실적 그래프 노출**: 카드 가운데(차트 영역)를 누르면 상세가 열리지 않아(차트 툴팁이 탭을 가로챔) 밴드·실적을 못 보던 진입 문제를 해결.
@@ -35,8 +48,8 @@
 site/
 ├── index.html                 앱 셸 (스타일·로직 포함, 외부 의존 0)
 ├── data/market_state.json     ★ 지표 시계열·자산 재무·밴드·내부자 매수 데이터
-├── manifest.json              PWA 매니페스트 (standalone, 아이콘 3종)
-├── sw.js                      서비스 워커 (macro-radar-v3)
+├── manifest.json              PWA 매니페스트 (standalone, 아이콘 4종 + SVG)
+├── sw.js                      서비스 워커 (macro-radar-v4)
 ├── data/market_state.json     ★ 모든 수치·브리핑·자산·시나리오 데이터
 ├── icon-192.png / icon-512.png / icon-maskable-512.png
 ├── apple-touch-icon.png / favicon-32.png
