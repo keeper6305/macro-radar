@@ -54,6 +54,28 @@ function overflow(f, sel){
 }
 
 async function main(){
+  try{ localStorage.setItem('macro_radar_theme', THEME); }catch(e){}
+  var MULTI = new URLSearchParams(location.search).get('multi');
+  if(MULTI){
+    var widths=[360,390,430], keep=[];
+    for (var k=0;k<3;k++){
+      var col=document.createElement('div');
+      col.style.cssText='flex:none;display:flex;flex-direction:column;gap:4px';
+      var lab=document.createElement('div'); lab.className='w'; lab.textContent=widths[k]+'px';
+      var fr=document.createElement('iframe'); fr.width=widths[k]; fr.height=820; fr.src='./index.html?multi='+widths[k]+'&v='+Date.now();
+      col.appendChild(lab); col.appendChild(fr);
+      document.getElementById('row').appendChild(col);
+      keep.push(fr);
+    }
+    for (var n=0;n<keep.length;n++){
+      await new Promise(function(res){ keep[n].addEventListener('load',function(){ setTimeout(res,2400); },{once:true}); });
+      keep[n].contentDocument.querySelector('.tab[data-tab="companies"]').click();
+    }
+    await wait(900);
+    document.getElementById('out').textContent='multi ready · '+widths.join(' / ')+'px · 종목 탭';
+    document.title='QA DONE';
+    return;
+  }
   if(SHOT){
     // 스크린샷 전용: 단일 프레임에서 BTC 상세 시트를 연 상태로 정지
     var f = await mkFrame(390, './index.html?qa=shot', 844);
