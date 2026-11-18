@@ -1260,7 +1260,7 @@ function rowChart(r,name){
   return lineChart({
     series:r.series,
     baseline:r.baseline||null,
-    asofSuffix:(r.session==='live'?' 현재':(String(r.freq||'').indexOf('일별')>=0?' 종가':'')),
+    asofSuffix:(r.session==='live'?'':(String(r.freq||'').indexOf('일별')>=0?' 종가':'')),
     unit:(r.scale&&r.scale.unit)||'',
     dec:(r.scale&&typeof r.scale.decimals==='number')?r.scale.decimals:undefined,
     name:name||r.label,
@@ -1535,7 +1535,7 @@ function miniPrice(a){
   var refs=[];
   if(typeof a.avg==='number') refs.push({value:a.avg,label:'평단',color:'var(--warn)'});
   if(typeof a.stop==='number') refs.push({value:a.stop,label:'손절',color:'var(--bad)'});
-  return lineChart({series:a.series, refs:refs, name:a.name, h:112, asofSuffix:(a.quoteAt?' 현재':' 종가'),
+  return lineChart({series:a.series, refs:refs, name:a.name, h:112, asofSuffix:(a.quoteAt?'':' 종가'),
     src:a.seriesSource||'', freq:'최근 6개월'});
 }
 
@@ -1659,7 +1659,7 @@ function assetDetail(a){
   }
   if(a.series&&a.series.length>2){
     h+='<div class="msec"><h4>'+(isCrypto?'가격 흐름 · 최근 6개월':'주가 흐름 · 최근 6개월')+'</h4>'+lineChart({series:a.series,refs:refs,h:132,dec:a.price>1000?0:2,
-      asofSuffix:(a.quoteAt||isCrypto?' 현재':' 종가'),src:a.seriesSource||'',freq:'일별 종가'})+'</div>';
+      asofSuffix:(a.quoteAt||isCrypto?'':' 종가'),src:a.seriesSource||'',freq:'일별 종가'})+'</div>';
   }
 
   /* 밴드 */
