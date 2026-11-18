@@ -672,6 +672,7 @@ function sgn(v,d){ if(typeof v!=='number'||!isFinite(v)) return '–'; return (v
 function dirClass(d){ return d==='up'?'d-up':(d==='down'?'d-down':'d-flat'); }
 function $id(id){return document.getElementById(id);}
 function nowHMS(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function nowMD(){ var d=new Date(); return ('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2)+' '+nowHMS(); }
 function nowStamp(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)+' '+nowHMS(); }
 /* 소수점을 값에 맞춰 정확히: 5.102 / 4,968.48 / 63,830 */
 function exact(v){ if(typeof v!=='number'||!isFinite(v)) return '–';
@@ -2141,7 +2142,7 @@ function fetchJSON(url,ms){
   }).catch(function(e){ clearTimeout(t); throw e; });
 }
 function applyLive(o){
-  S.live={src:o.src,at:nowHMS(),btc:o.btc,eth:o.eth,fng:o.fng||null};
+  S.live={src:o.src,at:nowMD(),btc:o.btc,eth:o.eth,fng:o.fng||null};
   var cr=S.data.indicators.filter(function(x){return x.id==='crypto';})[0];
   if(cr){
     cr.rows.forEach(function(r){
@@ -2200,7 +2201,7 @@ function applyQuote(a, px, prev, dt){
     var d=isoFromDate(dt), lst=a.series[a.series.length-1];
     if(lst.d===d) lst.v=px; else if(lst.d<d) a.series.push({d:d,v:px});
   }
-  a.quoteAt=nowHMS();
+  a.quoteAt=nowMD();
   return true;
 }
 function refreshQuotes(){
