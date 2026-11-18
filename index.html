@@ -720,7 +720,7 @@ function assetUpd(a){
   var liveQuote=!!(a&&a.quoteAt);
   var at=liveQuote?a.quoteAt:(st.at||metaTime());
   var s=(a&&a.series)||[];
-  var basis=liveQuote?'실시간 시세':((s.length&&isISO(s[s.length-1].d))?(dShort(s[s.length-1].d)+' 종가'):'');
+  var basis=(st.live||liveQuote)?'':((s.length&&isISO(s[s.length-1].d))?(dShort(s[s.length-1].d)+' 종가'):'');
   return '<div class="upd'+((st.live||liveQuote)?' live':'')+'"><i></i><span>'+
     ((st.live||liveQuote)?'실시간 ':'업데이트 ')+esc(at)+' KST</span>'+
     (basis?'<span class="sep">·</span><span>'+esc(basis)+'</span>':'')+'</div>';
@@ -1535,7 +1535,8 @@ function miniPrice(a){
   var refs=[];
   if(typeof a.avg==='number') refs.push({value:a.avg,label:'평단',color:'var(--warn)'});
   if(typeof a.stop==='number') refs.push({value:a.stop,label:'손절',color:'var(--bad)'});
-  return lineChart({series:a.series, refs:refs, name:a.name, h:112, asofSuffix:(a.quoteAt?'':' 종가'),
+  var crypt=String(a.market||'').toUpperCase()==='CRYPTO';
+  return lineChart({series:a.series, refs:refs, name:a.name, h:112, asofSuffix:((a.quoteAt||crypt)?'':' 종가'),
     src:a.seriesSource||'', freq:'최근 6개월'});
 }
 
