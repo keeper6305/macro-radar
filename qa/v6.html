@@ -132,7 +132,7 @@ async function run(){
     else{
       need(txt(rb).indexOf('긴축')>=0,'국면 라벨 없음');
       need(qa('#ribbon .rdot').length===6,'반전 6신호 점 없음');
-      rec('pass','거시 리본 · 국면·반전 6점',txt(rb));
+      rec('pass','거시 리본 구성 · '+(rb.hidden?'지표 탭에선 숨김(히어로 중복)':'표시'),txt(rb));
     }
   }catch(e){ rec('fail','거시 리본',e.message); }
 

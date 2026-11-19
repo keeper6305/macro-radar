@@ -539,7 +539,8 @@ details.study[open] .chv{transform:rotate(90deg)}
 .edrow>.btn{flex:1;min-height:36px;font-size:11.5px;padding:0 6px}
 .ordnote{font-size:9.5px;color:var(--mu);margin:8px 2px 0;line-height:1.45}
 /* 도감 필터 */
-.sfilter{display:flex;gap:6px;overflow-x:auto;padding:0 2px 3px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.sfilter{display:flex;gap:6px;overflow-x:auto;padding:0 2px 3px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sfilter::-webkit-scrollbar,.sstatus::-webkit-scrollbar{display:none}
 .sfilter button{flex:none;appearance:none;border:1px solid var(--line);background:var(--card);color:var(--tx2);
   font-size:11px;font-weight:700;border-radius:999px;padding:0 11px;min-height:32px;font-family:inherit;line-height:1}
 .sfilter button.on{background:var(--accentbg);border-color:rgba(var(--accRGB),.45);color:var(--accent2)}
@@ -642,8 +643,9 @@ details.study.s2[open]{opacity:1}
 .pmm.avg{background:var(--warn)}
 .pmm.stp{background:var(--bad)}
 .pmm.tgt{background:var(--good)}
-.pmticks{position:relative;height:15px;margin-top:5px;font-size:8.5px;color:var(--mu)}
-.pmticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.pmticks{position:relative;height:27px;margin-top:5px;font-size:8.5px;color:var(--mu)}
+.pmticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.pmticks span.r2{top:11px}
 .pmleg{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:5px;font-size:10px;color:var(--tx2)}
 .pmleg div{display:flex;align-items:center;gap:5px;min-width:0}
 .pmleg i{width:6px;height:6px;border-radius:50%;flex:none}
@@ -651,7 +653,7 @@ details.study.s2[open]{opacity:1}
 .pmleg .pct{color:var(--mu);font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* 도감 상태 필터 · 퀵 테스트 */
-.sstatus{display:flex;gap:6px;overflow-x:auto;padding:0 2px 3px;margin:-4px 0 10px;-webkit-overflow-scrolling:touch}
+.sstatus{display:flex;gap:6px;overflow-x:auto;padding:0 2px 3px;margin:-4px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sstatus button{flex:none;appearance:none;border:1px solid var(--line);background:var(--card);color:var(--tx2);
   font-size:10.5px;font-weight:700;border-radius:999px;padding:0 10px;min-height:30px;font-family:inherit;line-height:1}
 .sstatus button b{font-variant-numeric:tabular-nums;margin-left:3px}
@@ -663,7 +665,7 @@ details.study.s2[open]{opacity:1}
 .qtestbar .btn{flex:1;min-height:38px;font-size:11.5px}
 .qt-prog{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--mu);font-weight:700}
 .qt-prog b{color:var(--tx);font-variant-numeric:tabular-nums}
-.qt-bar{height:5px;border-radius:3px;background:var(--card2);margin-top:5px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.qt-bar{height:6px;border-radius:3px;background:var(--card2);margin-top:6px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
 .qt-bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .2s}
 .qt-card{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
 .qt-card .qtg{font-size:9.5px;font-weight:800;color:var(--accent2);margin-bottom:5px}
@@ -749,7 +751,7 @@ var DATA_URL = './data/market_state.json';
 var QA = /[?&]qa=1(&|$)/.test(location.search);
 var SUF = QA ? ':qa' : '';
 var LS_MEMO = 'macro_radar_memos_v1' + SUF;
-var LS_THEME = 'macro_radar_theme';
+var LS_THEME = 'macro_radar_theme' + SUF;
 var LS_AST = 'macro_radar_assets_v1' + SUF;
 var LS_STUDY = 'macro_radar_study_v1' + SUF;
 /* 기본 종목에서 항상 최신 market_state.json 값으로 덮어쓰는 필드(가격·등락·차트·밸류·공시) */
@@ -1422,7 +1424,8 @@ function indCard(ind,compact){
 function renderRibbon(){
   var rb=$id('ribbon'); if(!rb) return;
   var rg=S.data&&S.data.regime;
-  if(!rg){ rb.hidden=true; return; }
+  /* 지표 탭은 바로 아래 히어로 카드가 같은 내용을 자세히 보여주므로 중복을 피한다 */
+  if(!rg||S.tab==='overview'){ rb.hidden=true; return; }
   var met=Math.max(0,Math.min(rg.reverseTotal||0,rg.reverseCount||0)), tot=rg.reverseTotal||0;
   var dots='';
   for(var i=0;i<tot;i++) dots+='<i class="rdot'+(i<met?' on':'')+'"></i>';
@@ -1456,8 +1459,8 @@ function portfolioCard(){
   var up=rs.filter(function(v){return v>0.05;}).length;
   var dn=rs.filter(function(v){return v<-0.05;}).length;
   var avg=rs.reduce(function(s,v){return s+v;},0)/rs.length;
-  var maxAbs=Math.max.apply(null,rs.map(Math.abs).concat([5]));
-  var scale=Math.max(10,Math.ceil(maxAbs/5)*5);
+  var maxAbs=Math.max.apply(null,rs.map(Math.abs));
+  var scale=maxAbs<=5?Math.max(1,Math.ceil(maxAbs)):(maxAbs<=10?5:Math.ceil(maxAbs/5)*5);
   var rows=hs.map(function(a,i){
     var r=rs[i];
     var w=Math.min(50,Math.abs(r)/scale*50);
@@ -1505,16 +1508,19 @@ function priceMap(a){
   var marks=pts.map(function(p){
     return '<i class="pmm '+p.cls+'" style="left:'+pos(p.v).toFixed(2)+'%" title="'+esc(p.label+' '+priceFmt(a,p.v))+'" aria-hidden="true"></i>';
   }).join('');
-  /* 라벨 겹침 방지: 위치 순으로 최소 16%p 간격 */
+  /* 라벨은 마커 위치에 그대로 두고, 가까우면 두 줄로 나눠 겹침만 푼다 */
   var labs=pts.slice().sort(function(x,y){ return pos(x.v)-pos(y.v); });
-  var last=-99, ticks='';
+  var last=-99, row=0, ticks='';
   labs.forEach(function(p){
-    var q=Math.max(pos(p.v),last+16); last=q;
-    q=Math.max(3,Math.min(97,q));
-    ticks+='<span style="left:'+q.toFixed(1)+'%">'+esc(p.label)+'</span>';
+    var q=pos(p.v);
+    row=(q-last<13)?(row?0:1):0;
+    last=q;
+    q=Math.max(4,Math.min(96,q));
+    ticks+='<span class="'+(row?'r2':'')+'" style="left:'+q.toFixed(1)+'%">'+esc(p.label)+'</span>';
   });
   var leg=pts.map(function(p){
-    var pc=(p.v/a.price-1)*100;
+    /* 평단은 '평단 대비 수익률'(카드와 같은 방향), 나머지는 현재가 기준 거리 */
+    var pc=(p.cls==='avg')?((a.price/p.v-1)*100):((p.v/a.price-1)*100);
     return '<div><i style="background:'+p.color+'"></i>'+esc(p.label)+'<b>'+esc(priceFmt(a,p.v))+'</b>'+
       (p.cls==='cur'?'':'<span class="pct">'+sgn(pc,1)+'</span>')+'</div>';
   }).join('');
@@ -1972,7 +1978,7 @@ function assetDetail(a){
     '<button class="mx" data-close="1" aria-label="닫기">✕</button></div>';
   h+='<div class="mval"><b>'+esc(a.display||'')+'</b>'+
      (a.delta?'<span class="delta '+dirClass(a.delta.dir)+'">'+esc(a.delta.text)+'</span>':'')+
-     (typeof a.avg==='number'?'<span class="avg2">평단 '+nf(a.avg,0)+' · '+sgn((a.price/a.avg-1)*100,1)+'</span>':'')+'</div>';
+     (typeof a.avg==='number'?'<span class="avg2">평단 '+esc(priceFmt(a,a.avg))+' · '+sgn((a.price/a.avg-1)*100,1)+'</span>':'')+'</div>';
   h+=assetUpd(a);
 
   /* 가격 지도: 손절·평단·현재·목표를 한 줄에 */
@@ -2216,6 +2222,7 @@ function setTab(t){
   });
   window.scrollTo(0,0);
   render();
+  renderRibbon();
 }
 
 function bindView(){
