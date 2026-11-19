@@ -2144,8 +2144,9 @@ function viewStudy(){
   var c=studyCounts(all), tot=all.length||1, pct=Math.round(c[2]/tot*100);
   var tagItems=all.filter(function(s){ return cur==='전체'||s.tag===cur; });
   var ct=studyCounts(tagItems);
-  var h='<div class="sec"><h2>공부 도감</h2><span class="hint">'+all.length+'개 · '+
-      (cur==='전체'?'전체':cur+' '+items.length+'개')+'</span></div>';
+  var hint=all.length+'개 · '+(cur==='전체'?'전체':cur);
+  if(S.sstate!=='all') hint+=' · '+(S.sstate===1?'애매':(S.sstate===2?'완료':'미학습'))+' '+items.length+'개';
+  var h='<div class="sec"><h2>공부 도감</h2><span class="hint">'+hint+'</span></div>';
   h+='<div class="sprog"><div class="nums">'+
       '<span>미학습<b>'+c[0]+'</b></span>'+
       '<span class="c1">애매<b>'+c[1]+'</b></span>'+
