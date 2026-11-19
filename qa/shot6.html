@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macro-radar v6 shots</title>
+<style>
+html,body{margin:0;background:#000;overflow:hidden}
+iframe{display:block;border:0;background:#070b11}
+</style>
+</head>
+<body>
+<script>
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+var P=new URLSearchParams(location.search);
+var S=P.get('s')||'home', W=parseInt(P.get('w')||'390',10), H=parseInt(P.get('h')||'844',10);
+var f=document.createElement('iframe');
+f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
+f.src='../index.html?qa=1&shot='+S+'&t='+Date.now();
+document.body.appendChild(f);
+document.title='shot '+S+' '+W;
+f.addEventListener('load',async function(){
+  var d=f.contentDocument, q=function(x){ return d.querySelector(x); };
+  await wait(1800);
+  try{
+    if(S==='home'){ window.scrollTo(0,0); }
+    else if(S==='companies'||S==='portfolio'||S==='pmap'||S==='light'){
+      if(S==='light') q('#btnTheme').click();
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      if(S==='pmap'){
+        var card=q('#main [data-asset="gamsung"]'); card.click(); await wait(500);
+        var pm=q('#msheet .pmap'); if(pm) q('#msheet').scrollTop=pm.offsetTop-150;
+      }
+    }
+    else if(S==='study'||S==='qt'){
+      q('.tab[data-tab="study"]').click(); await wait(500);
+      if(S==='qt'){ q('#btnQuizTest').click(); await wait(500); }
+    }
+    else if(S==='quiz'){
+      q('.tab[data-tab="briefing"]').click(); await wait(500);
+      var m=q('#main .quiz [data-qmemo]'); if(m) m.click(); await wait(200);
+      var r=q('#main .quiz [data-qreveal]'); if(r) r.click(); await wait(300);
+      var z=q('#main .quiz'); if(z) z.scrollIntoView({block:'start'});
+    }
+    else if(S==='detail'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(500);
+    }
+  }catch(e){ document.title='ERR '+e.message; }
+  await wait(400);
+  window.__ready=true;
+  document.title='ready '+S+' '+W;
+});
+</script>
+</body>
+</html>

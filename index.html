@@ -1442,7 +1442,7 @@ function priceFmt(a,v){
   var mk=String((a&&a.market)||'').toUpperCase();
   if(mk==='CRYPTO') return '$'+nf(v,v<100?2:0);
   if(mk==='NASDAQ'||mk==='NYSE'||mk==='US') return '$'+nf(v,2);
-  return nf(v,0)+'원';
+  return nf(v,(Math.abs(v-Math.round(v))<1e-9)?0:1)+'원';
 }
 function holdReturn(a){
   if(!a||typeof a.price!=='number'||typeof a.avg!=='number'||!a.avg) return null;

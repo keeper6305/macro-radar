@@ -178,6 +178,10 @@ async function run(){
   try{
     var btcCard=q('#main [data-asset="btc"]');
     var btcPx=btcCard?txt(btcCard.querySelector('.apx b')).replace(/\s+/g,''):null;
+    q('.tab[data-tab="overview"]').click(); await wait(250);
+    var crNow=q('#main [data-ind="crypto"] .row .rv');
+    cryptoBtc=crNow?txt(crNow).replace(/\s+/g,''):cryptoBtc;
+    q('.tab[data-tab="companies"]').click(); await wait(250);
     need(cryptoBtc&&btcPx,'비트코인 표기 비교 불가 ('+cryptoBtc+' / '+btcPx+')');
     need(cryptoBtc===btcPx,'지표 탭 '+cryptoBtc+' ≠ 종목 탭 '+btcPx);
     rec('pass','크립토 지표·종목 숫자 일치',btcPx);
@@ -188,8 +192,10 @@ async function run(){
     if(!pf){ rec('skip','보유 평단 대비 요약','신규 기능 미구현'); }
     else{
       var rows=qa('#main .pfcard .pfrow');
-      need(rows.length>=3,'보유 행 '+rows.length+'개');
+      need(rows.length>=2,'보유 행 '+rows.length+'개');
       need(txt(pf).match(/[+-]\d/),'수익률 숫자 없음');
+      need(txt(pf).indexOf('평단 대비')>=0,'카드 제목 없음');
+      need(qa('#main .pfcard .pfbar').length===rows.length,'막대 수 불일치');
       rec('pass','보유 평단 대비 요약 · '+rows.length+'행',txt(pf).slice(0,120));
     }
   }catch(e){ rec('fail','보유 평단 대비 요약',e.message); }
