@@ -59,15 +59,34 @@ function boot(win){
     });
     return bad;
   }
+  function overflowV(sel){
+    var bad=[];
+    qa(sel).forEach(function(el){
+      var de=el.ownerDocument.documentElement;
+      if(el.scrollWidth>el.clientWidth+1 && el.clientWidth>0) bad.push((el.className||el.tagName)+' '+el.scrollWidth+'>'+el.clientWidth);
+    });
+    return bad;
+  }
   function pageOverflow(){
     var de=d.documentElement;
     return {doc:de.scrollWidth-W, body:d.body.scrollWidth-W, main:(q('#main')||{}).scrollWidth};
   }
+  function cardEls(){
+    var a=qa('#main [data-asset]');
+    return a.length?a:qa('#main .card.ed');
+  }
+  function cardIds(){
+    return cardEls().map(function(e){
+      var b=e.querySelector('[data-mv="up"]');
+      return b?b.getAttribute('data-id'):e.getAttribute('data-asset');
+    });
+  }
+  function shown(el){ return !!el && el.getClientRects().length>0; }
   function fire(el,type,cx,cy,extra){
     var ev=new win.PointerEvent(type,Object.assign({bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerType:'touch',pointerId:1,isPrimary:true},extra||{}));
     el.dispatchEvent(ev);
   }
-  return {d:d,win:win,q:q,qa:qa,overflow:overflow,pageOverflow:pageOverflow,fire:fire};
+  return {d:d,win:win,q:q,qa:qa,overflow:overflow,overflowV:overflowV,pageOverflow:pageOverflow,fire:fire,cardEls:cardEls,cardIds:cardIds,shown:shown};
 }
 
 async function run(){
@@ -78,6 +97,7 @@ async function run(){
   frames.appendChild(f);
   await new Promise(function(r){ f.addEventListener('load',r,{once:true}); });
   var win=f.contentWindow, X=boot(win), d=X.d, q=X.q, qa=X.qa;
+  var cryptoBtc=null;
   await wait(2200); /* 데이터·자동 실시간 시도가 끝날 시간 */
 
   /* ---------- 1. 부팅·레이아웃 ---------- */
@@ -126,6 +146,8 @@ async function run(){
     need(q('#main .gauge'),'게이지 없음');
     var bad=X.overflow('#main .rh, #main .ch, #main .val, #main .upd');
     need(!bad.length,'지표 카드 내부 넘침: '+bad.join(', '));
+    var crc=q('#main [data-ind="crypto"]');
+    if(crc){ var r0=crc.querySelector('.row .rv'); cryptoBtc=r0?txt(r0).replace(/\s+/g,''):null; }
     rec('pass','지표 탭 · 카드 '+cards.length+' · 차트 '+qa('#main .chart').length+' · 체크리스트 6');
   }catch(e){ rec('fail','지표 탭',e.message); }
 
@@ -146,12 +168,20 @@ async function run(){
   /* ---------- 5. 종목 탭 ---------- */
   try{
     q('.tab[data-tab="companies"]').click(); await wait(400);
-    var cards2=qa('#main [data-asset]');
+    var cards2=X.cardEls();
     need(cards2.length>=8,'종목 카드 '+cards2.length);
-    var bad2=X.overflow('#main .ah, #main .aleg, #main .mbmeter, #main .actrow');
+    var bad2=X.overflow('#main .ah, #main .aleg, #main .mbmeter, #main .actrow, #main .pfrow');
     need(!bad2.length,'종목 카드 내부 넘침: '+bad2.join(', '));
     rec('pass','종목 탭 · 카드 '+cards2.length+' · 내부 넘침 0');
   }catch(e){ rec('fail','종목 탭',e.message); }
+
+  try{
+    var btcCard=q('#main [data-asset="btc"]');
+    var btcPx=btcCard?txt(btcCard.querySelector('.apx b')).replace(/\s+/g,''):null;
+    need(cryptoBtc&&btcPx,'비트코인 표기 비교 불가 ('+cryptoBtc+' / '+btcPx+')');
+    need(cryptoBtc===btcPx,'지표 탭 '+cryptoBtc+' ≠ 종목 탭 '+btcPx);
+    rec('pass','크립토 지표·종목 숫자 일치',btcPx);
+  }catch(e){ rec('fail','크립토 지표·종목 숫자 일치',e.message); }
 
   try{
     var pf=q('#main .pfcard');
@@ -165,7 +195,7 @@ async function run(){
   }catch(e){ rec('fail','보유 평단 대비 요약',e.message); }
 
   try{
-    var c0=qa('#main [data-asset]')[0];
+    var c0=X.cardEls()[0];
     c0.click(); await wait(300);
     need(!q('#modal').hidden,'상세 시트가 안 열림');
     need(qa('#msheet .msec').length>=4,'상세 섹션 '+qa('#msheet .msec').length);
@@ -173,6 +203,9 @@ async function run(){
     if(!pm) rec('skip','가격 지도(손절·평단·목표)','신규 기능 미구현');
     else{
       need(txt(pm).indexOf('현재')>=0,'현재 표시 없음');
+      need(qa('#msheet .pmap .pmm').length>=3,'가격 지도 마커 '+qa('#msheet .pmap .pmm').length);
+      var badm=X.overflowV('#msheet .pmleg, #msheet .pmap, #msheet .mval, #msheet .ins, #msheet .bh');
+      need(!badm.length,'상세 시트 가로 넘침: '+badm.join(', '));
       rec('pass','가격 지도 · '+txt(pm).replace(/\s+/g,' ').slice(0,80));
     }
     q('#msheet [data-close]').click(); await wait(250);
@@ -182,36 +215,36 @@ async function run(){
 
   /* ---------- 6. 순서 편집·추가·삭제 ---------- */
   try{
-    var before=qa('#main [data-asset]').map(function(e){return e.getAttribute('data-asset');});
+    var before=X.cardIds();
     q('#btnEditMode').click(); await wait(250);
     var dn=qa('#main [data-mv="down"]')[0];
     need(!!dn,'아래로 버튼 없음');
     dn.click(); await wait(250);
-    var after=qa('#main [data-asset]').map(function(e){return e.getAttribute('data-asset');});
+    var after=X.cardIds();
     need(after[0]===before[1]&&after[1]===before[0],'순서 이동 실패 '+before.slice(0,2)+'→'+after.slice(0,2));
     qa('#main [data-mv="up"]')[1].click(); await wait(250);
-    var back=qa('#main [data-asset]').map(function(e){return e.getAttribute('data-asset');});
+    var back=X.cardIds();
     need(back[0]===before[0]&&back[1]===before[1],'되돌리기 실패');
     q('#btnEditMode').click(); await wait(200);
     rec('pass','순서 편집 · 아래/위 이동 저장');
   }catch(e){ rec('fail','순서 편집',e.message); }
 
   try{
-    var n0=qa('#main [data-asset]').length;
+    var n0=X.cardEls().length;
     q('#btnAddAsset').click(); await wait(250);
     var nm=q('#msheet [data-f="name"]');
     need(!!nm,'추가 폼 종목명 필드 없음');
     nm.value='QA 테스트 종목'; nm.dispatchEvent(new win.Event('input',{bubbles:true}));
     var pf2=q('#msheet [data-f="price"]'); pf2.value='10000'; pf2.dispatchEvent(new win.Event('input',{bubbles:true}));
     q('#btnSaveAsset').click(); await wait(350);
-    var n1=qa('#main [data-asset]').length;
+    var n1=X.cardEls().length;
     need(n1===n0+1,'추가 후 '+n1+'개');
     q('#btnEditMode').click(); await wait(200);
     var delBtn=qa('#main [data-del2]').filter(function(b){return txt(b.closest('.card')).indexOf('QA 테스트 종목')>=0;})[0];
     need(!!delBtn,'추가 종목 삭제 버튼 없음');
     win.confirm=function(){return true;};
     delBtn.click(); await wait(300);
-    var n2=qa('#main [data-asset]').length;
+    var n2=X.cardEls().length;
     need(n2===n0,'삭제 후 '+n2+'개 (기대 '+n0+')');
     q('#btnEditMode').click(); await wait(150);
     rec('pass','종목 추가/삭제 · '+n0+'→'+n1+'→'+n2);
@@ -224,8 +257,11 @@ async function run(){
     need(segs.length===2,'브리핑 구분 '+segs.length);
     need(txt(q('#main .analyst')).indexOf('애널리스트')>=0,'애널리스트 시선 없음');
     need(q('#main .quiz'),'퀴즈 블록 없음');
+    var memoBtn=q('#main .quiz [data-qmemo]');
+    if(memoBtn && !X.shown(q('#main textarea[data-memo]'))) memoBtn.click();
+    await wait(120);
     var ta=q('#main textarea[data-memo]');
-    need(!!ta,'퀴즈 메모 입력 없음');
+    need(!!ta && X.shown(ta),'퀴즈 메모 입력이 안 열림');
     ta.value='QA 메모'; ta.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(120);
     need(txt(q('#main .msave')).indexOf('저장')>=0,'자동 저장 표시 없음');
     rec('pass','브리핑 · 구분 2 · 애널리스트 · 퀴즈 메모 저장');
@@ -233,16 +269,34 @@ async function run(){
 
   try{
     var qb=q('#main .quiz');
-    var reveal=q('#main .quiz [data-reveal]')||q('#main .quiz details.ans summary');
+    var reveal=qb.querySelector('[data-qreveal]')||qb.querySelector('details.ans summary');
     if(!reveal){ rec('skip','퀴즈 해설 펼치기','요소 없음'); }
     else{
-      need(txt(q('#main .ansbody')).length>10,'해설 본문이 없음');
+      var body=qb.querySelector('.ansbody');
+      need(txt(body).length>10,'해설 본문이 없음');
+      need(!X.shown(body),'해설이 처음부터 열려 있음(내 답 먼저 원칙)');
       reveal.click(); await wait(200);
-      var open=(q('#main .quiz details.ans')||{}).open===true || q('#main .ansbody').classList.contains('on');
-      need(open,'해설이 펼쳐지지 않음');
-      rec('pass','퀴즈 해설 펼치기');
+      need(X.shown(body),'해설이 펼쳐지지 않음');
+      rec('pass','퀴즈 해설 펼치기 · 처음엔 닫힘');
     }
   }catch(e){ rec('fail','퀴즈 해설 펼치기',e.message); }
+
+  try{
+    var rb2=q('#ribbon');
+    if(!rb2) rec('skip','거시 리본 상시 표시','신규 기능 미구현');
+    else{
+      need(!rb2.hidden,'다른 탭에서 리본이 숨겨짐');
+      need(qa('#ribbon .rdot').length===6,'반전 신호 점 6개 아님');
+      rec('pass','거시 리본 상시 표시(브리핑 탭)');
+    }
+  }catch(e){ rec('fail','거시 리본 상시 표시',e.message); }
+
+  try{
+    q('#ribbon').click(); await wait(300);
+    need(q('.tab.on').getAttribute('data-tab')==='overview','리본을 눌러도 지표 탭으로 안 감');
+    rec('pass','거시 리본 탭 → 지표 홈');
+    q('.tab[data-tab="briefing"]').click(); await wait(250);
+  }catch(e){ rec('fail','거시 리본 탭 이동',e.message); }
 
   try{
     var seg1=qa('#main .seg button')[0];

@@ -594,19 +594,122 @@ details.study.s2{opacity:.72;border-color:rgba(var(--goodRGB),.3)}
 details.study.s2[open]{opacity:1}
 .stag1{font-size:9px;color:var(--warn-tx);font-weight:800;margin-left:4px}
 .stag2{font-size:9px;color:var(--good-tx);font-weight:800;margin-left:4px}
+
+/* ===== v6: 거시 리본 · 보유 요약 · 가격 지도 · 도감 필터/퀵테스트 · 퀴즈 2단계 ===== */
+/* 헤더 2단: 브랜드 줄 + 거시 리본(스크롤해도 항상 보임) */
+.hd{flex-direction:column;align-items:stretch;gap:0}
+.hdrow{display:flex;align-items:center;gap:10px}
+.ribbon{appearance:none;display:flex;align-items:center;gap:7px;width:100%;margin-top:8px;
+  border:1px solid var(--line);background:var(--card);color:var(--tx2);border-radius:10px;
+  padding:5px 8px;font-family:inherit;font-size:10px;font-weight:700;text-align:left;min-height:28px;
+  letter-spacing:-.01em;overflow:hidden}
+.ribbon[hidden]{display:none}
+.ribbon:active{transform:scale(.995)}
+.ribbon .rled{width:7px;height:7px;border-radius:50%;flex:none;background:var(--bad)}
+.ribbon .rled.amber{background:var(--warn)}.ribbon .rled.green{background:var(--good)}
+.ribbon .rlab{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-size:11px}
+.ribbon .rtag{flex:none;font-size:9px;color:var(--mu);font-weight:700}
+.ribbon .rmeter{display:flex;gap:3px;margin-left:auto;flex:none}
+.ribbon .rdot{width:8px;height:5px;border-radius:3px;background:rgba(var(--badRGB),.4)}
+.ribbon .rdot.on{background:var(--good)}
+.ribbon .rside{flex:none;color:var(--accent2);font-size:9.5px;font-variant-numeric:tabular-nums}
+
+/* 보유 · 평단 대비 수익률 */
+.pfcard .pfh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pfcard .pfh .t{font-size:11px;color:var(--mu);font-weight:700}
+.pfcard .pfh .v{font-size:18px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pfcard .pfsub{font-size:9.5px;color:var(--mu);margin-top:2px}
+.pfrow{display:grid;grid-template-columns:1fr auto;gap:4px 8px;padding:9px 0;border-top:1px dashed var(--line);align-items:baseline}
+.pfrow:first-of-type{border-top:0}
+.pfrow .pfn{font-size:11.5px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pfrow .pfs{font-size:9px;color:var(--mu);font-variant-numeric:tabular-nums;margin-top:1px}
+.pfrow .pfr{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.pfbar{grid-column:1/-1;position:relative;height:7px;border-radius:4px;background:var(--card2);margin-top:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.pfbar .mid{position:absolute;left:50%;top:-2px;width:1px;height:11px;background:var(--mu);opacity:.55}
+.pfbar i{position:absolute;top:0;height:7px;border-radius:4px}
+.pfbar i.up{background:var(--up)}
+.pfbar i.down{background:var(--down)}
+.pfbar i.flat{background:var(--mu);width:2px;left:calc(50% - 1px)}
+
+/* 종목 상세 가격 지도 */
+.pmap{margin-top:12px}
+.pmbar{position:relative;height:10px;border-radius:6px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line)}
+.pmbar .pmseg{position:absolute;top:0;height:10px;border-radius:5px}
+.pmbar .pmseg.dn{background:rgba(var(--badRGB),.32)}
+.pmbar .pmseg.up{background:rgba(var(--goodRGB),.32)}
+.pmm{position:absolute;top:-4px;width:2px;height:18px;border-radius:2px;transform:translateX(-1px)}
+.pmm.cur{background:var(--tx);box-shadow:0 0 0 1.5px var(--card)}
+.pmm.avg{background:var(--warn)}
+.pmm.stp{background:var(--bad)}
+.pmm.tgt{background:var(--good)}
+.pmticks{position:relative;height:15px;margin-top:5px;font-size:8.5px;color:var(--mu)}
+.pmticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.pmleg{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:5px;font-size:10px;color:var(--tx2)}
+.pmleg div{display:flex;align-items:center;gap:5px;min-width:0}
+.pmleg i{width:6px;height:6px;border-radius:50%;flex:none}
+.pmleg b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--tx);white-space:nowrap}
+.pmleg .pct{color:var(--mu);font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* 도감 상태 필터 · 퀵 테스트 */
+.sstatus{display:flex;gap:6px;overflow-x:auto;padding:0 2px 3px;margin:-4px 0 10px;-webkit-overflow-scrolling:touch}
+.sstatus button{flex:none;appearance:none;border:1px solid var(--line);background:var(--card);color:var(--tx2);
+  font-size:10.5px;font-weight:700;border-radius:999px;padding:0 10px;min-height:30px;font-family:inherit;line-height:1}
+.sstatus button b{font-variant-numeric:tabular-nums;margin-left:3px}
+.sstatus button.on{background:var(--card2);border-color:var(--mu);color:var(--tx)}
+.sstatus button[data-sstate="1"].on{border-color:rgba(var(--warnRGB),.5);color:var(--warn-tx)}
+.sstatus button[data-sstate="2"].on{border-color:rgba(var(--goodRGB),.5);color:var(--good-tx)}
+.sstatus button:active{transform:scale(.97)}
+.qtestbar{display:flex;gap:7px;margin:0 2px 10px}
+.qtestbar .btn{flex:1;min-height:38px;font-size:11.5px}
+.qt-prog{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--mu);font-weight:700}
+.qt-prog b{color:var(--tx);font-variant-numeric:tabular-nums}
+.qt-bar{height:5px;border-radius:3px;background:var(--card2);margin-top:5px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.qt-bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .2s}
+.qt-card{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.qt-card .qtg{font-size:9.5px;font-weight:800;color:var(--accent2);margin-bottom:5px}
+.qt-card h3{margin:0;font-size:14px;font-weight:800;letter-spacing:-.03em;line-height:1.45}
+.qt-card .qts{font-size:11px;color:var(--mu);margin-top:6px;line-height:1.6}
+.qt-card .qtb{margin-top:9px;font-size:11.5px;line-height:1.68;color:var(--tx2)}
+.qt-card .qtb p{margin:0 0 7px}
+.qt-card .qtb p:last-child{margin-bottom:0}
+.qt-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.qt-grade .btn{min-height:42px;font-size:11.5px;padding:0 6px}
+.qt-grade .btn.g0{color:var(--bad-tx);border-color:rgba(var(--badRGB),.35);background:rgba(var(--badRGB),.1)}
+.qt-grade .btn.g1{color:var(--warn-tx);border-color:rgba(var(--warnRGB),.35);background:rgba(var(--warnRGB),.1)}
+.qt-grade .btn.g2{color:var(--good-tx);border-color:rgba(var(--goodRGB),.35);background:rgba(var(--goodRGB),.1)}
+.qt-next{display:grid;grid-template-columns:1fr 1.4fr;gap:7px;margin-top:12px}
+.qt-next .btn{min-height:42px}
+.qt-done{font-size:11.5px;color:var(--tx2);line-height:1.65;margin-top:8px}
+
+/* 브리핑 퀴즈 2단계 */
+.qsteps{display:flex;gap:6px;margin-top:11px}
+.qsteps .btn{flex:1;min-height:36px;font-size:11px;padding:0 6px}
+.qmemo{margin-top:10px}
+.qmemo[hidden]{display:none}
+.ansbox{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.ansbox[hidden]{display:none}
+.qreveal{display:grid;grid-template-columns:1fr;gap:6px;margin-top:9px}
+.qhint{font-size:9.5px;color:var(--mu);margin-top:6px;line-height:1.45}
+
+/* 차트 고·저 표기 */
+.chart .src span:last-child{white-space:nowrap;flex:none}
+@media (max-width:359px){ .pmleg{grid-template-columns:1fr} .qt-grade .btn{font-size:10.5px} }
 </style>
 <script>window.__errs=[];window.addEventListener('error',function(e){window.__errs.push(String((e&&e.message)||'error'))});window.addEventListener('unhandledrejection',function(e){window.__errs.push('promise:'+String((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejection'))});</script>
 </head>
 <body>
 <header class="hd">
-  <div class="hd-l">
-    <div class="brand"><span class="mk" aria-hidden="true"><svg viewBox="0 0 12 12"><g fill="#16110a"><rect x="2.1" y="5.6" width="2.1" height="4" rx=".7"/><rect x="5" y="3.6" width="2.1" height="6" rx=".7"/><rect x="7.9" y="1.6" width="2.1" height="8" rx=".7"/></g></svg></span>거시경제·투자 레이더</div>
-    <div class="asof" id="asof">데이터 불러오는 중…</div>
+  <div class="hdrow">
+    <div class="hd-l">
+      <div class="brand"><span class="mk" aria-hidden="true"><svg viewBox="0 0 12 12"><g fill="#16110a"><rect x="2.1" y="5.6" width="2.1" height="4" rx=".7"/><rect x="5" y="3.6" width="2.1" height="6" rx=".7"/><rect x="7.9" y="1.6" width="2.1" height="8" rx=".7"/></g></svg></span>거시경제·투자 레이더</div>
+      <div class="asof" id="asof">데이터 불러오는 중…</div>
+    </div>
+    <div class="hd-r">
+      <button class="icon-btn" id="btnLive" aria-label="실시간 시세 새로고침" title="실시간 시세">↻</button>
+      <button class="icon-btn" id="btnTheme" aria-label="라이트·다크 전환" title="테마">◐</button>
+    </div>
   </div>
-  <div class="hd-r">
-    <button class="icon-btn" id="btnLive" aria-label="실시간 시세 새로고침" title="실시간 시세">↻</button>
-    <button class="icon-btn" id="btnTheme" aria-label="라이트·다크 전환" title="테마">◐</button>
-  </div>
+  <button class="ribbon" id="ribbon" type="button" hidden aria-label="현재 거시 국면 요약 · 지표 탭으로 이동"></button>
 </header>
 
 <main id="main">
@@ -641,19 +744,24 @@ details.study.s2[open]{opacity:1}
 'use strict';
 
 var DATA_URL = './data/market_state.json';
-var LS_MEMO = 'macro_radar_memos_v1';
+/* ?qa=1 : 점검용 — 앱의 실제 학습·메모·종목 데이터를 건드리지 않도록 저장 키를 분리하고
+   서비스워커를 끄는 모드. (같은 오리진의 실제 사용 데이터 보존) */
+var QA = /[?&]qa=1(&|$)/.test(location.search);
+var SUF = QA ? ':qa' : '';
+var LS_MEMO = 'macro_radar_memos_v1' + SUF;
 var LS_THEME = 'macro_radar_theme';
-var LS_AST = 'macro_radar_assets_v1';
-var LS_STUDY = 'macro_radar_study_v1';
+var LS_AST = 'macro_radar_assets_v1' + SUF;
+var LS_STUDY = 'macro_radar_study_v1' + SUF;
 /* 기본 종목에서 항상 최신 market_state.json 값으로 덮어쓰는 필드(가격·등락·차트·밸류·공시) */
 var LIVE_FIELDS = ['price','display','delta','series','seriesSource','per','pbr','fin','dart','roe','shares',
   'high52','low52','foreign','insiders','insiderSrc','barMin','barMax','barUnit','barValue','returns','leading','closeDate','quoteAt'];
 
-var S = { data:null, tab:'overview', bIdx:1, live:null, err:null,
+var S = { data:null, tab:'overview', bIdx:0, live:null, err:null,
   memos:{quiz:{},brief:{},notes:[]},
   ast:{deleted:[],overrides:{},custom:[],order:[]},
   study:{}, quoteAt:null,
-  charts:{}, finMode:{}, cseq:0, edit:false, stag:'전체' };   
+  charts:{}, finMode:{}, cseq:0, edit:false, stag:'전체',
+  sstate:'all', qt:null, openStudy:{}, syncN:0 };
 var NAV={lastBack:0, exiting:false, ready:false};
 
 /* ---------- utils ---------- */
@@ -1050,8 +1158,10 @@ function lineChart(cfg){
   S.charts[id]={type:'line', s:s, W:W, H:H, pl:pl, pw:pw, pt:pt, ph:ph, mn:mn, mx:mx, dec:dec, unit:unit, name:cfg.name||''};
 
   var est=s.some(function(p){return p.e;});
+  var hiV=Math.max.apply(null,vals), loV=Math.min.apply(null,vals);
   return '<div class="chart" data-cid="'+id+'">'+nowHtml+svg+'<div class="ctip"></div>'+
-    '<div class="src"><span>'+esc(cfg.src||'')+'</span><span>'+(est?'점선=추정 · ':'')+esc(cfg.freq||s.length+'개 시점')+'</span></div></div>';
+    '<div class="src"><span>'+esc(cfg.src||'')+'</span><span>'+(est?'점선=추정 · ':'')+esc(cfg.freq||s.length+'개 시점')+
+    ' · 고 '+exact(hiV)+' 저 '+exact(loV)+'</span></div></div>';
 }
 
 /* 분기·연간 실적: 매출·영업이익 막대 + 영업이익률 선 */
@@ -1184,7 +1294,9 @@ function bindCharts(root){
         var p=c.s[i];
         x=c.pl+(c.s.length===1?c.pw/2:(i/(c.s.length-1))*c.pw);
         var y=c.pt+(1-(p.v-c.mn)/(((c.mx-c.mn)||1)))*c.ph;
-        txt=dLong(p.d)+' · '+exact(p.v)+(c.unit||'');
+        var pv=(i>0)?c.s[i-1]:null;
+        var ch=(pv&&pv.v)?((p.v/pv.v-1)*100):null;
+        txt=dLong(p.d)+' · '+exact(p.v)+(c.unit||'')+(ch!=null?' · 직전 대비 '+sgn(ch,2):'');
         if(hdot){ hdot.setAttribute('cx',x.toFixed(2)); hdot.setAttribute('cy',(isFinite(y)?y:c.pt).toFixed(2)); hdot.style.display=''; }
         tip.style.top=Math.max(15,((isFinite(y)?y:c.pt)/c.H)*100).toFixed(1)+'%';
       }else{
@@ -1306,6 +1418,210 @@ function indCard(ind,compact){
   '</article>';
 }
 
+/* ---------- v6: 거시 리본 · 보유 요약 · 가격 지도 ---------- */
+function renderRibbon(){
+  var rb=$id('ribbon'); if(!rb) return;
+  var rg=S.data&&S.data.regime;
+  if(!rg){ rb.hidden=true; return; }
+  var met=Math.max(0,Math.min(rg.reverseTotal||0,rg.reverseCount||0)), tot=rg.reverseTotal||0;
+  var dots='';
+  for(var i=0;i<tot;i++) dots+='<i class="rdot'+(i<met?' on':'')+'"></i>';
+  var tone=met>=tot*0.67?'green':(met>=1?'amber':'');
+  var st=String(rg.stance||''), m=st.match(/방패\s*(\d+)%?\s*[:\/]\s*칼\s*(\d+)/);
+  var side=m?('방패 '+m[1]+' : 칼 '+m[2]):st;
+  rb.innerHTML='<i class="rled '+tone+'" aria-hidden="true"></i>'+
+    '<span class="rlab">'+esc(rg.label)+'</span>'+
+    '<span class="rtag">반전 '+met+'/'+tot+'</span>'+
+    '<span class="rmeter" aria-hidden="true">'+dots+'</span>'+
+    '<span class="rside">'+esc(side)+'</span>';
+  rb.hidden=false;
+  rb.title=rg.label+' · '+rg.since+' · 반전 신호 '+met+'/'+tot+' 충족 · '+st;
+}
+function priceFmt(a,v){
+  if(typeof v!=='number'||!isFinite(v)) return '–';
+  var mk=String((a&&a.market)||'').toUpperCase();
+  if(mk==='CRYPTO') return '$'+nf(v,v<100?2:0);
+  if(mk==='NASDAQ'||mk==='NYSE'||mk==='US') return '$'+nf(v,2);
+  return nf(v,0)+'원';
+}
+function holdReturn(a){
+  if(!a||typeof a.price!=='number'||typeof a.avg!=='number'||!a.avg) return null;
+  return (a.price/a.avg-1)*100;
+}
+/* 보유 종목을 평단 대비 수익률로 한눈에: 0% 기준 양방향 막대 */
+function portfolioCard(){
+  var hs=assets().filter(function(a){ return holdReturn(a)!==null; });
+  if(!hs.length) return '';
+  var rs=hs.map(holdReturn);
+  var up=rs.filter(function(v){return v>0.05;}).length;
+  var dn=rs.filter(function(v){return v<-0.05;}).length;
+  var avg=rs.reduce(function(s,v){return s+v;},0)/rs.length;
+  var maxAbs=Math.max.apply(null,rs.map(Math.abs).concat([5]));
+  var scale=Math.max(10,Math.ceil(maxAbs/5)*5);
+  var rows=hs.map(function(a,i){
+    var r=rs[i];
+    var w=Math.min(50,Math.abs(r)/scale*50);
+    var cls=r>0.05?'up':(r<-0.05?'down':'flat');
+    var style=cls==='up'?('left:50%;width:'+w.toFixed(1)+'%'):
+              (cls==='down'?('left:'+(50-w).toFixed(1)+'%;width:'+w.toFixed(1)+'%'):'');
+    return '<div class="pfrow"><span class="pfn">'+esc(a.name)+'</span>'+
+      '<span class="pfr '+dirClass(r>0.05?'up':(r<-0.05?'down':'flat'))+'">'+sgn(r,1)+'</span>'+
+      '<span class="pfs">'+esc(priceText(a))+' · 평단 '+esc(priceFmt(a,a.avg))+'</span>'+
+      '<div class="pfbar" role="img" aria-label="'+esc(a.name+' 평단 대비 '+sgn(r,1))+'" title="평단 대비 '+sgn(r,1)+'">'+
+        '<span class="mid"></span>'+(cls==='flat'?'<i class="flat"></i>':'<i class="'+cls+'" style="'+style+'"></i>')+
+      '</div></div>';
+  }).join('');
+  return '<article class="card pfcard">'+
+    '<div class="pfh"><span class="t">평단 대비 수익률</span>'+
+      '<span class="v '+dirClass(avg>0.05?'up':(avg<-0.05?'down':'flat'))+'">'+sgn(avg,1)+'</span></div>'+
+    '<div class="pfsub">보유 '+hs.length+'종목 · 단순평균 · 상승 '+up+' · 하락 '+dn+' · 막대 양끝 ±'+scale+'%</div>'+
+    rows+'</article>';
+}
+/* 상세 시트의 가격 지도: 손절 · 평단 · 현재 · 목표를 한 줄에 */
+function priceMap(a){
+  if(!a||typeof a.price!=='number') return '';
+  if(!(typeof a.stop==='number'||typeof a.avg==='number'||(a.targets&&a.targets.length))) return '';
+  var pts=[];
+  if(typeof a.stop==='number') pts.push({v:a.stop,label:'손절',cls:'stp',color:'var(--bad)'});
+  if(typeof a.avg==='number') pts.push({v:a.avg,label:'평단',cls:'avg',color:'var(--warn)'});
+  pts.push({v:a.price,label:'현재',cls:'cur',color:'var(--tx)'});
+  var tgs=(a.targets||[]).filter(function(t){ return typeof t.from==='number'; });
+  tgs.forEach(function(t){ pts.push({v:(typeof t.to==='number'?t.to:t.from),label:t.label,cls:'tgt',color:'var(--good)'}); });
+  var vals=pts.map(function(p){return p.v;});
+  var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+  var pad=(hi-lo)*0.10||Math.max(1,Math.abs(hi)*0.05); lo-=pad; hi+=pad;
+  function pos(v){ return clamp((v-lo)/((hi-lo)||1)*100); }
+  var segs='';
+  var stp=pts.filter(function(p){return p.cls==='stp';})[0];
+  if(stp){
+    var x1=pos(stp.v), x2=pos(a.price);
+    segs+='<span class="pmseg dn" style="left:'+Math.min(x1,x2).toFixed(2)+'%;width:'+Math.abs(x2-x1).toFixed(2)+'%"></span>';
+  }
+  if(tgs.length){
+    var hiT=Math.max.apply(null,tgs.map(function(t){return (typeof t.to==='number'?t.to:t.from);}));
+    var y1=pos(a.price), y2=pos(hiT);
+    segs+='<span class="pmseg up" style="left:'+Math.min(y1,y2).toFixed(2)+'%;width:'+Math.abs(y2-y1).toFixed(2)+'%"></span>';
+  }
+  var marks=pts.map(function(p){
+    return '<i class="pmm '+p.cls+'" style="left:'+pos(p.v).toFixed(2)+'%" title="'+esc(p.label+' '+priceFmt(a,p.v))+'" aria-hidden="true"></i>';
+  }).join('');
+  /* 라벨 겹침 방지: 위치 순으로 최소 16%p 간격 */
+  var labs=pts.slice().sort(function(x,y){ return pos(x.v)-pos(y.v); });
+  var last=-99, ticks='';
+  labs.forEach(function(p){
+    var q=Math.max(pos(p.v),last+16); last=q;
+    q=Math.max(3,Math.min(97,q));
+    ticks+='<span style="left:'+q.toFixed(1)+'%">'+esc(p.label)+'</span>';
+  });
+  var leg=pts.map(function(p){
+    var pc=(p.v/a.price-1)*100;
+    return '<div><i style="background:'+p.color+'"></i>'+esc(p.label)+'<b>'+esc(priceFmt(a,p.v))+'</b>'+
+      (p.cls==='cur'?'':'<span class="pct">'+sgn(pc,1)+'</span>')+'</div>';
+  }).join('');
+  return '<div class="pmap"><div class="pmbar">'+segs+marks+'</div>'+
+    '<div class="pmticks">'+ticks+'</div><div class="pmleg">'+leg+'</div></div>';
+}
+/* 종목 탭 비트코인/이더리움 등 크립토는 지표 탭 값과 동일한 스냅샷을 쓰게 맞춘다.
+   (지표·종목이 서로 다른 날 숫자를 보여주는 불일치 제거 · 실시간 성공 시에는 실시간 값이 우선) */
+function syncCryptoSnapshot(){
+  if(!S.data) return;
+  var cr=(S.data.indicators||[]).filter(function(x){return x.id==='crypto';})[0];
+  if(!cr||!cr.rows) return;
+  var n=0;
+  (S.data.assets||[]).forEach(function(a){
+    if(String(a.market||'').toUpperCase()!=='CRYPTO'||a.quoteAt) return;
+    var row=cr.rows.filter(function(r){ return r.label===a.code||r.label===a.name; })[0];
+    if(!row||typeof row.value!=='number') return;
+    var s=a.series||[], last=s[s.length-1], rs=(row.series||[])[(row.series||[]).length-1];
+    if(!last||!rs||last.d!==rs.d) return;
+    if(a.price===row.value&&a.display===row.display) return;
+    a.price=row.value;
+    if(row.display) a.display=row.display;
+    if(row.delta) a.delta=row.delta;
+    last.v=row.value;
+    n++;
+  });
+  S.syncN=n;
+}
+
+/* ---------- v6: 도감 상태 필터 · 퀵 테스트 ---------- */
+function studyFiltered(){
+  var all=(S.data&&S.data.study)||[];
+  var cur=S.stag||'전체';
+  return all.filter(function(s){
+    if(cur!=='전체'&&s.tag!==cur) return false;
+    if(S.sstate!=='all'&&studyState(s)!==S.sstate) return false;
+    return true;
+  });
+}
+function qtFind(key){
+  var all=(S.data&&S.data.study)||[];
+  for(var i=0;i<all.length;i++) if(studyKey(all[i])===key) return all[i];
+  return null;
+}
+var QT_LABEL={0:'몰랐어',1:'애매해',2:'알았어'};
+function qtStart(){
+  var pool=studyFiltered();
+  if(!pool.length) pool=((S.data&&S.data.study)||[]).slice();
+  if(!pool.length){ toast('도감 데이터가 없습니다.'); return; }
+  pool=pool.slice().sort(function(a,b){
+    var ra=studyState(a), rb=studyState(b);
+    if(ra!==rb) return ra-rb;
+    return Math.random()-0.5;
+  });
+  S.qt={ids:pool.map(studyKey), i:0, phase:'ask', log:{0:0,1:0,2:0}, last:null};
+  openSheet(qtHTML());
+}
+function qtHTML(){
+  var q=S.qt; if(!q) return '';
+  var total=q.ids.length, i=Math.max(0,Math.min(q.i,total));
+  var head='<div class="mhd"><div style="flex:1;min-width:0"><h3>⚡ 도감 퀵 테스트</h3>'+
+    '<div class="msub">제목만 보고 스스로 판정 · 상태가 바로 저장됩니다</div></div>'+
+    '<button class="mx" data-close="1" aria-label="닫기">✕</button></div>';
+  var prog='<div class="qt-prog"><span>'+esc(S.stag==='전체'?'전체':S.stag)+
+    ' · '+(S.sstate==='all'?'모든 상태':(S.sstate===0?'미학습':(S.sstate===1?'애매':'완료')))+'</span>'+
+    '<b>'+(i>=total?total:Math.min(i+1,total))+' / '+total+'</b></div>'+
+    '<div class="qt-bar"><i style="width:'+(Math.min(i,total)/total*100).toFixed(1)+'%"></i></div>';
+  if(i>=total){
+    return head+prog+'<div class="qt-card"><h3>점검 완료</h3><div class="qt-done">'+
+      total+'장을 점검했습니다.<br>이번 세션 — 알았어 '+q.log[2]+' · 애매해 '+q.log[1]+' · 몰랐어 '+q.log[0]+
+      '<br>도감 진행률 '+Math.round(studyCounts((S.data&&S.data.study)||[])[2]/(((S.data&&S.data.study)||[]).length||1)*100)+'%</div></div>'+
+      '<div class="qsteps"><button class="btn" data-close="1">도감으로 돌아가기</button>'+
+      '<button class="btn pri" data-qtrestart="1">다시 퀵 테스트</button></div>';
+  }
+  var s=qtFind(q.ids[i]);
+  if(!s) return head+prog+'<div class="qt-card"><div class="qt-done">카드를 찾지 못했습니다.</div></div>'+
+    '<div class="qsteps"><button class="btn" data-close="1">닫기</button></div>';
+  if(q.phase==='ask'){
+    return head+prog+'<div class="qt-card"><div class="qtg">'+esc(s.tag)+'</div>'+
+      '<h3>'+esc(s.title)+'</h3>'+
+      '<div class="qts">이 개념을 남에게 설명할 수 있나요? 떠올린 뒤 판정하면 상태가 바로 저장됩니다.</div>'+
+      '<div class="qt-grade">'+
+        '<button class="btn g0" data-grade="0">몰랐어</button>'+
+        '<button class="btn g1" data-grade="1">애매해</button>'+
+        '<button class="btn g2" data-grade="2">알았어</button></div></div>';
+  }
+  var gl=QT_LABEL[q.last];
+  return head+prog+'<div class="qt-card"><div class="qtg">'+esc(s.tag)+' · '+esc(gl||'')+'</div>'+
+    '<h3>'+esc(s.title)+'</h3><div class="qts">'+esc(s.summary)+'</div>'+
+    '<div class="qtb">'+(s.body||[]).slice(0,2).map(function(p){return '<p>'+rich(p)+'</p>';}).join('')+'</div></div>'+
+    '<div class="qt-next"><button class="btn" data-close="1">그만 보기</button>'+
+    '<button class="btn pri" data-qtnext="1">'+(i+1>=total?'점검 마치기':'다음 카드 ›')+'</button></div>';
+}
+function qtStep(dir){
+  var q=S.qt; if(!q) return;
+  q.i+=dir; q.phase='ask'; q.last=null;
+  rerenderSheet();
+}
+function qtGrade(v){
+  var q=S.qt; if(!q) return;
+  var s=qtFind(q.ids[q.i]); if(!s) return;
+  if(v) S.study[studyKey(s)]=v; else delete S.study[studyKey(s)];
+  saveStudy();
+  q.log[v]=(q.log[v]||0)+1; q.last=v; q.phase='done';
+  rerenderSheet();
+}
+
 /* ---------- views ---------- */
 function viewOverview(){
   var d=S.data, rg=d.regime;
@@ -1364,12 +1680,17 @@ function viewBriefing(){
   h+='<div class="analyst newline"><div class="at">🔍 [애널리스트 시선]</div><div>'+rich(b.analyst)+'</div></div>';
 
   if(b.quiz){
-    var key='quiz:'+b.quiz.id;
-    h+='<div class="quiz"><div class="qt">💡 [오늘의 사고력 퀴즈]</div><p class="q">'+rich(b.quiz.question)+'</p>'+
-      '<label class="mlabel" for="m-'+esc(b.quiz.id)+'">내 답 메모 · 저장됩니다</label>'+
-      '<textarea class="memo" id="m-'+esc(b.quiz.id)+'" data-memo="'+esc(key)+'" placeholder="내 생각을 적어두면 다음 브리핑에서 대조합니다.">'+esc(memoGet(key))+'</textarea>'+
-      '<div class="msave" data-save="'+esc(key)+'">자동 저장</div>'+
-      '<details class="ans"><summary>해설 · 내가 받은 답 보기</summary><div class="ansbody">'+richP(b.quiz.answer)+'</div></details>'+
+    var key='quiz:'+b.quiz.id, hasMemo=!!memoGet(key);
+    h+='<div class="quiz" data-quiz="'+esc(b.quiz.id)+'"><div class="qt">💡 [오늘의 사고력 퀴즈]</div><p class="q">'+rich(b.quiz.question)+'</p>'+
+      '<div class="qsteps">'+
+        '<button class="btn'+(hasMemo?'':' pri')+'" data-qmemo="1" aria-expanded="'+(hasMemo?'true':'false')+'">'+(hasMemo?'내 답 보기':'① 내 답 적어보기')+'</button>'+
+        '<button class="btn'+(hasMemo?' pri':'')+'" data-qreveal="1" aria-expanded="false">② 해설 보기</button></div>'+
+      '<div class="qmemo"'+(hasMemo?'':' hidden')+'>'+
+        '<label class="mlabel" for="m-'+esc(b.quiz.id)+'">내 답 메모 · 저장됩니다</label>'+
+        '<textarea class="memo" id="m-'+esc(b.quiz.id)+'" data-memo="'+esc(key)+'" placeholder="내 생각을 적어두면 다음 브리핑에서 대조합니다.">'+esc(memoGet(key))+'</textarea>'+
+        '<div class="msave" data-save="'+esc(key)+'">자동 저장</div></div>'+
+      '<div class="ansbox" hidden><div class="ansbody">'+richP(b.quiz.answer)+'</div></div>'+
+      '<div class="qhint">내 답을 먼저 적고 해설을 열면, 내 생각과 받은 답을 그 자리에서 대조할 수 있습니다.</div>'+
     '</div>';
   } else if(b.quizNote){
     h+='<div class="quiz"><div class="qt">💡 [오늘의 사고력 퀴즈]</div><p class="q" style="color:var(--mu);font-size:11.5px">'+esc(b.quizNote)+'</p></div>';
@@ -1445,7 +1766,9 @@ function viewScenario(){
   h+='<div class="sec"><h2>관심 · 보유 종목</h2><span class="hint">'+co.length+'종목</span></div>'+
      '<article class="card"><div class="cosum">'+co.map(function(x){
         var dd=(x.delta&&x.delta.text)?' <span class="delta '+dirClass(x.delta.dir)+'">'+esc(x.delta.text)+'</span>':'';
-        return '<div class="coln"><span class="cn2">'+esc(x.name)+'</span><span class="cv2">'+esc(x.display||'')+dd+'</span></div>';
+        var hr=holdReturn(x);
+        return '<div class="coln"><span class="cn2">'+esc(x.name)+'</span><span class="cv2">'+esc(x.display||'')+dd+
+          (hr!==null?'<span style="margin-left:4px;font-size:9px;color:'+(hr>=0?'var(--up)':'var(--down)')+'">평단 '+sgn(hr,1)+'</span>':'')+'</span></div>';
       }).join('')+'</div>'+
       '<button class="btn wide" data-goto="companies" style="margin-top:11px">종목 상세 · 재무 · 밴드 보기 ›</button></article>';
 
@@ -1460,7 +1783,8 @@ function viewScenario(){
 /* ---------- 종목 탭 ---------- */
 function viewCompanies(){
   var list=assets();
-  var h='<div class="sec"><h2>관심기업</h2><span class="hint">'+list.length+'종목'+(S.edit?' · 순서 편집 중':' · 카드의 버튼으로 상세')+'</span></div>';
+  var h=portfolioCard();
+  h+='<div class="sec"><h2>관심기업</h2><span class="hint">'+list.length+'종목'+(S.edit?' · 순서 편집 중':' · 카드의 버튼으로 상세')+'</span></div>';
   h+='<div class="toolrow top">'+
      '<button class="btn pri" id="btnAddAsset">＋ 종목 추가</button>'+
      '<button class="btn'+(S.edit?' pri':'')+'" id="btnEditMode">'+(S.edit?'✓ 편집 완료':'↕ 순서 · 편집')+'</button></div>';
@@ -1651,6 +1975,10 @@ function assetDetail(a){
      (typeof a.avg==='number'?'<span class="avg2">평단 '+nf(a.avg,0)+' · '+sgn((a.price/a.avg-1)*100,1)+'</span>':'')+'</div>';
   h+=assetUpd(a);
 
+  /* 가격 지도: 손절·평단·현재·목표를 한 줄에 */
+  var pm=priceMap(a);
+  if(pm) h+='<div class="msec"><h4>가격 지도 · 손절 · 평단 · 목표</h4>'+pm+'</div>';
+
   /* 가격 차트 */
   var refs=[];
   if(typeof a.avg==='number') refs.push({value:a.avg,label:'평단',color:'var(--warn)'});
@@ -1795,7 +2123,11 @@ function viewStudy(){
   all.forEach(function(s){ if(tags.indexOf(s.tag)<0) tags.push(s.tag); });
   var cur=S.stag||'전체';
   if(tags.indexOf(cur)<0) cur='전체';
-  var items=all.filter(function(s){ return cur==='전체'||s.tag===cur; });
+  var items=all.filter(function(s){
+    if(cur!=='전체'&&s.tag!==cur) return false;
+    if(S.sstate!=='all'&&studyState(s)!==S.sstate) return false;
+    return true;
+  });
   var idx={}; all.forEach(function(s,i){ idx[studyKey(s)]=i; });
   /* 미학습 → 애매함(?) → 완료(✓) 순으로 자동 정렬 */
   items=items.slice().sort(function(a,b){
@@ -1804,6 +2136,8 @@ function viewStudy(){
     return (idx[studyKey(a)]||0)-(idx[studyKey(b)]||0);
   });
   var c=studyCounts(all), tot=all.length||1, pct=Math.round(c[2]/tot*100);
+  var tagItems=all.filter(function(s){ return cur==='전체'||s.tag===cur; });
+  var ct=studyCounts(tagItems);
   var h='<div class="sec"><h2>공부 도감</h2><span class="hint">'+all.length+'개 · '+
       (cur==='전체'?'전체':cur+' '+items.length+'개')+'</span></div>';
   h+='<div class="sprog"><div class="nums">'+
@@ -1812,9 +2146,20 @@ function viewStudy(){
       '<span class="c2">완료<b>'+c[2]+'</b></span></div>'+
       '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
       '<span class="pct">'+pct+'%</span></div>';
+  /* 상태 필터 — 미학습만 / 애매한 것만 / 완료한 것만 */
+  h+='<div class="sstatus" role="group" aria-label="학습 상태 필터">'+
+      [['all','전체',tagItems.length],['0','미학습',ct[0]],['1','애매',ct[1]],['2','완료',ct[2]]].map(function(x){
+        return '<button data-sstate="'+x[0]+'" class="'+(String(S.sstate)===x[0]?'on':'')+'" aria-pressed="'+(String(S.sstate)===x[0]?'true':'false')+'"'+
+          (x[0]==='1'?' style="color:var(--warn-tx)"':(x[0]==='2'?' style="color:var(--good-tx)"':''))+
+          '>'+x[1]+'<b>'+x[2]+'</b></button>';
+      }).join('')+'</div>';
+  h+='<div class="qtestbar"><button class="btn pri" id="btnQuizTest">⚡ 퀵 테스트 — 제목만 보고 판정</button></div>';
   h+='<div class="sfilter">'+tags.map(function(t){
       return '<button data-stag="'+esc(t)+'" class="'+(t===cur?'on':'')+'" aria-pressed="'+(t===cur?'true':'false')+'">'+esc(t)+'</button>';
     }).join('')+'</div>';
+  if(!items.length){
+    h+='<article class="card"><p class="empty">이 필터에 해당하는 카드가 없습니다. 상태 필터를 「전체」로 바꿔보세요.</p></article>';
+  }
   h+=items.map(function(s){
     var tbl='';
     if(s.table){
@@ -1826,7 +2171,7 @@ function viewStudy(){
       [[0,'미학습'],[1,'? 애매'],[2,'✓ 완료']].map(function(p){
         return '<button type="button" data-sv="'+p[0]+'" class="'+(st===p[0]?'on':'')+'" '+
           'aria-pressed="'+(st===p[0]?'true':'false')+'">'+p[1]+'</button>';}).join('')+'</div>';
-    return '<details class="study s'+st+'"><summary><div class="srow"><span class="tg2">'+esc(s.tag)+'</span>'+
+    return '<details class="study s'+st+'"'+(S.openStudy[key]?' open':'')+'><summary><div class="srow"><span class="tg2">'+esc(s.tag)+'</span>'+
       '<span class="sn">'+esc(s.title)+'</span><span class="chv">›</span></div>'+stt+'</summary>'+
       '<div class="study-body"><p class="ss">'+esc(s.summary)+'</p>'+tbl+
       (s.body||[]).map(function(b){return '<p class="bp">'+rich(b)+'</p>';}).join('')+
@@ -1957,6 +2302,44 @@ function bindView(){
   Array.prototype.forEach.call(main.querySelectorAll('[data-stag]'),function(b){
     b.addEventListener('click',function(){ S.stag=b.getAttribute('data-stag'); render(); });
   });
+  /* 도감 상태 필터 · 퀵 테스트 */
+  Array.prototype.forEach.call(main.querySelectorAll('[data-sstate]'),function(b){
+    b.addEventListener('click',function(){
+      var v=b.getAttribute('data-sstate');
+      S.sstate=(v==='all')?'all':parseInt(v,10);
+      render();
+    });
+  });
+  var qtest=$id('btnQuizTest');
+  if(qtest) qtest.addEventListener('click',qtStart);
+  /* 상태를 바꿔도 펼쳐 둔 카드는 그대로 펼쳐지게 */
+  Array.prototype.forEach.call(main.querySelectorAll('details.study'),function(de){
+    de.addEventListener('toggle',function(){
+      var box=de.querySelector('[data-stt]'); if(!box) return;
+      var k=box.getAttribute('data-stt');
+      if(de.open) S.openStudy[k]=true; else delete S.openStudy[k];
+    });
+  });
+  /* 브리핑 퀴즈 2단계: 답 먼저 / 해설 나중 */
+  Array.prototype.forEach.call(main.querySelectorAll('[data-qmemo]'),function(b){
+    b.addEventListener('click',function(){
+      var qb=b.closest('.quiz'); if(!qb) return;
+      var box=qb.querySelector('.qmemo'); if(!box) return;
+      var willOpen=box.hasAttribute('hidden');
+      if(willOpen){ box.removeAttribute('hidden'); b.textContent='내 답 접기'; b.setAttribute('aria-expanded','true');
+        var ta=box.querySelector('textarea'); if(ta) ta.focus(); }
+      else { box.setAttribute('hidden',''); b.textContent='내 답 보기'; b.setAttribute('aria-expanded','false'); }
+    });
+  });
+  Array.prototype.forEach.call(main.querySelectorAll('[data-qreveal]'),function(b){
+    b.addEventListener('click',function(){
+      var qb=b.closest('.quiz'); if(!qb) return;
+      var box=qb.querySelector('.ansbox'); if(!box) return;
+      var willOpen=box.hasAttribute('hidden');
+      if(willOpen){ box.removeAttribute('hidden'); b.textContent='해설 접기'; b.setAttribute('aria-expanded','true'); }
+      else { box.setAttribute('hidden',''); b.textContent='② 해설 보기'; b.setAttribute('aria-expanded','false'); }
+    });
+  });
   /* 도감 3단계 상태 토글 — 즉시 저장 + 재정렬 */
   Array.prototype.forEach.call(main.querySelectorAll('.stt button'),function(b){
     b.addEventListener('click',function(ev){
@@ -1984,6 +2367,13 @@ function openSheet(html){
   bindSheet();
 }
 
+function rerenderSheet(html){
+  var sheet=$id('msheet');
+  if(html==null) html=qtHTML();
+  sheet.innerHTML=html;
+  sheet.scrollTop=0;
+  bindSheet();
+}
 function bindSheet(){
   var sheet=$id('msheet');
   Array.prototype.forEach.call(sheet.querySelectorAll('[data-close]'),function(b){
@@ -2009,6 +2399,16 @@ function bindSheet(){
       S.finMode[cur]=mode;
       openAsset(cur);
     });
+  });
+  /* 도감 퀵 테스트 */
+  Array.prototype.forEach.call(sheet.querySelectorAll('[data-grade]'),function(b){
+    b.addEventListener('click',function(){ qtGrade(parseInt(b.getAttribute('data-grade'),10)||0); });
+  });
+  Array.prototype.forEach.call(sheet.querySelectorAll('[data-qtnext]'),function(b){
+    b.addEventListener('click',function(){ qtStep(1); });
+  });
+  Array.prototype.forEach.call(sheet.querySelectorAll('[data-qtrestart]'),function(b){
+    b.addEventListener('click',function(){ qtStart(); });
   });
   bindCharts(sheet);
 }
@@ -2055,6 +2455,9 @@ function closeModal(){
   m.hidden=true;
   document.body.style.overflow='';
   S.curAsset=null;
+  S.qt=null;
+  /* 퀵 테스트에서 바뀐 학습 상태가 도감 목록·진행률에 바로 반영되게 */
+  if(S.tab==='study') render();
 }
 
 /* ---------- 뒤로가기 2단계 (안드로이드) ----------
@@ -2163,18 +2566,21 @@ function applyLive(o){
       cr.chips.push({text:'공포탐욕 '+o.fng.value+' · '+fngKo(o.fng.cls),level:o.fng.value<25?'bad':(o.fng.value>75?'warn':'')});
     }
   }
-  /* '종목' 탭 비트코인 카드도 같은 실시간 값으로 맞춘다(지표와 종목 숫자 불일치 방지) */
-  var ba=null;
-  (S.data.assets||[]).forEach(function(a){ if(a.id==='btc') ba=a; });
-  if(ba&&typeof o.btc==='number'){
-    ba.price=o.btc;
-    ba.display='$'+nf(Math.round(o.btc),0);
-    if(typeof o.btcChg==='number') ba.delta={text:sgn(o.btcChg,2),dir:o.btcChg>=0?'up':'down'};
-    if(ba.series&&ba.series.length){
-      var td=todayISO(), lst=ba.series[ba.series.length-1];
-      if(lst.d===td) lst.v=Math.round(o.btc); else ba.series.push({d:td,v:Math.round(o.btc)});
+  /* '종목' 탭의 크립토 자산도 같은 실시간 값으로 맞춘다(지표·종목 숫자 불일치 방지).
+     BTC만 고치면 ETH 카드가 이전 종가에 남아 두 탭이 어긋나므로 모든 크립토 자산을 돌린다. */
+  (S.data.assets||[]).forEach(function(a){
+    if(String(a.market||'').toUpperCase()!=='CRYPTO') return;
+    var px=null, chg=null, code=String(a.code||'').toUpperCase(), nm=String(a.name||'');
+    if(code==='BTC'||nm==='비트코인'){ px=o.btc; chg=o.btcChg; }
+    else if(code==='ETH'||nm==='이더리움'){ px=o.eth; chg=o.ethChg; }
+    if(typeof px!=='number') return;
+    a.price=px; a.display=priceFmt(a,px);
+    if(typeof chg==='number') a.delta={text:sgn(chg,2),dir:chg>=0?'up':'down'};
+    if(a.series&&a.series.length){
+      var td=todayISO(), lst=a.series[a.series.length-1];
+      if(lst.d===td) lst.v=Math.round(px); else a.series.push({d:td,v:Math.round(px)});
     }
-  }
+  });
   if(S.tab==='overview'||S.tab==='companies') render();
 }
 function todayISO(){
@@ -2267,7 +2673,7 @@ function boot(){
   S.err=null;
   fetch(DATA_URL+'?v='+Date.now(),{cache:'no-store'})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(function(d){ S.data=d; S.err=null; applyMeta(); migrateOverrideLive(); render();
+    .then(function(d){ S.data=d; S.err=null; syncCryptoSnapshot(); applyMeta(); migrateOverrideLive(); render();
       setTimeout(function(){ refreshQuotes().catch(function(){}); },500); })
     .catch(function(e){
       S.err=(e&&e.message)||'네트워크 오류';
@@ -2280,7 +2686,7 @@ function refreshData(){
     .then(function(d){
       if(!d||!d.meta) return;
       if(!S.data || d.meta.version!==S.data.meta.version){
-        S.data=d; applyMeta(); migrateOverrideLive(); render();
+        S.data=d; syncCryptoSnapshot(); applyMeta(); migrateOverrideLive(); render();
         toast('데이터 갱신 적용 · v'+d.meta.version);
       }
     }).catch(function(){});
@@ -2291,6 +2697,7 @@ function applyMeta(){
   $id('asof').title=S.data.meta.asOfLabel+' · '+S.data.meta.nextUpdate;
   var m=document.querySelector('meta[name="description"]');
   if(m) m.setAttribute('content',S.data.meta.sourceNote.slice(0,150));
+  renderRibbon();
 }
 
 /* ---------- events ---------- */
@@ -2307,6 +2714,11 @@ document.addEventListener('DOMContentLoaded',function(){
 
   $id('btnTheme').addEventListener('click',toggleTheme);
   $id('btnLive').addEventListener('click',refreshLive);
+  var rib=$id('ribbon');
+  if(rib) rib.addEventListener('click',function(){
+    if(S.tab!=='overview') setTab('overview');
+    try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); }
+  });
 
   var modal=$id('modal');
   modal.addEventListener('click',function(e){
@@ -2330,7 +2742,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(document.visibilityState==='visible') refreshData();
   });
 
-  if('serviceWorker' in navigator){
+  if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
       navigator.serviceWorker.register('./sw.js').then(function(reg){
         document.addEventListener('visibilitychange',function(){
