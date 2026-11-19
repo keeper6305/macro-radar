@@ -1424,8 +1424,7 @@ function indCard(ind,compact){
 function renderRibbon(){
   var rb=$id('ribbon'); if(!rb) return;
   var rg=S.data&&S.data.regime;
-  /* 지표 탭은 바로 아래 히어로 카드가 같은 내용을 자세히 보여주므로 중복을 피한다 */
-  if(!rg||S.tab==='overview'){ rb.hidden=true; return; }
+  if(!rg){ rb.hidden=true; return; }
   var met=Math.max(0,Math.min(rg.reverseTotal||0,rg.reverseCount||0)), tot=rg.reverseTotal||0;
   var dots='';
   for(var i=0;i<tot;i++) dots+='<i class="rdot'+(i<met?' on':'')+'"></i>';
@@ -1437,7 +1436,8 @@ function renderRibbon(){
     '<span class="rtag">반전 '+met+'/'+tot+'</span>'+
     '<span class="rmeter" aria-hidden="true">'+dots+'</span>'+
     '<span class="rside">'+esc(side)+'</span>';
-  rb.hidden=false;
+  /* 지표 탭은 바로 아래 히어로 카드가 같은 내용을 자세히 보여주므로 중복을 피해 숨긴다 */
+  rb.hidden=(S.tab==='overview');
   rb.title=rg.label+' · '+rg.since+' · 반전 신호 '+met+'/'+tot+' 충족 · '+st;
 }
 function priceFmt(a,v){
