@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macro-radar v7 폴백 QA</title>
+<style>
+body{margin:0;background:#0d1117;color:#dbe6f3;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans KR",system-ui,sans-serif}
+h1{font-size:13px;margin:0;padding:10px 12px;background:#151c26;border-bottom:1px solid #263241}
+#sum{padding:8px 12px;font-weight:700}
+.ok{color:#3ddc97}.ng{color:#ff6b74}
+pre{white-space:pre-wrap;font-size:11px;padding:0 12px 20px;margin:0;color:#c8d6e6}
+iframe{border:1px solid #33445a;background:#070b11;display:block;margin:10px 12px}
+</style>
+</head>
+<body>
+<h1>macro-radar v7 · 숫자 보유가 없을 때 평단 대비 폴백</h1>
+<div id="sum">running…</div>
+<pre id="log"></pre>
+<script>
+/* 숫자 수량이 하나도 없는 상태를 만들어(감성코퍼레이션 수량 메모를 '관심'으로) 폴백 카드를 검증한다.
+   끝나면 이 도메인의 localStorage를 원래대로 되돌린다. */
+var KEY='macro_radar_assets_v1:qa';
+var SNAP=null;
+try{ SNAP=localStorage.getItem(KEY); }catch(e){}
+try{ localStorage.setItem(KEY,JSON.stringify({deleted:['google'],overrides:{gamsung:{qty:'관심'}},custom:[],order:[]})); }catch(e){}
+
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+var R={items:[]};
+function rec(ok,name,info){ R.items.push((ok?'✅ ':'❌ ')+name+(info?' — '+info:'')); return ok; }
+
+(async function(){
+  var f=document.createElement('iframe');
+  f.width=360; f.height=800; f.src='../index.html?qa=1&fb=1&t='+Date.now();
+  document.body.appendChild(f);
+  await new Promise(function(r){ f.addEventListener('load',r,{once:true}); });
+  await wait(2200);
+  var d=f.contentDocument, W=f.contentWindow;
+  var q=function(s){ return d.querySelector(s); };
+  var qa=function(s){ return Array.prototype.slice.call(d.querySelectorAll(s)); };
+  var txt=function(el){ return el?String(el.textContent||'').replace(/\s+/g,' ').trim():''; };
+  var pass=0, fail=0;
+  try{
+    q('.tab[data-tab="companies"]').click();
+    await wait(600);
+    var pf=q('#main .pfcard');
+    if(!pf) throw new Error('포트폴리오 카드 없음');
+    if(txt(pf).indexOf('평단 대비 수익률')<0) throw new Error('폴백 카드 아님: '+txt(pf).slice(0,80));
+    var rows=qa('#main .pfcard .pfrow');
+    if(rows.length!==1) throw new Error('보유 행 '+rows.length+'(기대 1)');
+    if(!/\+0\.7%/.test(txt(pf))) throw new Error('수익률 표기 없음');
+    if(/NaN|undefined/.test(txt(q('#main')))) throw new Error('NaN/undefined 노출');
+    if(qa('#main .pfcard .pfbar').length!==rows.length) throw new Error('막대 수 불일치');
+    if(txt(pf).indexOf('이더리움')<0) throw new Error('계산 불가 보유 안내 없음');
+    rec(true,'폴백 카드 · 평단 대비 1행 · NaN 없음',txt(pf).slice(0,90)); pass++;
+  }catch(e){ rec(false,'폴백 카드',e.message); fail++; }
+  try{
+    var po={doc:d.documentElement.scrollWidth-360,body:d.body.scrollWidth-360};
+    if(po.doc>1||po.body>1) throw new Error('가로 넘침 '+po.doc+'/'+po.body);
+    if((W.__errs||[]).length) throw new Error('콘솔 에러: '+W.__errs[0]);
+    rec(true,'폴백 상태 가로 넘침 0 · 콘솔 에러 0'); pass++;
+  }catch(e){ rec(false,'폴백 레이아웃',e.message); fail++; }
+
+  try{
+    if(SNAP===null) localStorage.removeItem(KEY); else localStorage.setItem(KEY,SNAP);
+  }catch(e){}
+  document.getElementById('sum').innerHTML='<span class="ok">PASS '+pass+'</span> · <span class="ng">FAIL '+fail+'</span>';
+  document.title='QA fallback PASS '+pass+' FAIL '+fail;
+  document.getElementById('log').textContent=R.items.join('\n');
+  window.__QA={pass:pass,fail:fail,items:R.items};
+})();
+</script>
+</body>
+</html>
