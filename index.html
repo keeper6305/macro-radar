@@ -1657,7 +1657,7 @@ function viewOverview(){
         return '<li><span class="st">'+ic+'</span><span class="cn">'+esc(s.name)+
           '<span class="cv">현재 '+esc(s.now)+'</span></span></li>';}).join('')+'</ul>'+
      '</article>';
-  h+='<div class="sec"><h2>데이터 출처</h2><span class="hint">2026-11-19 조회</span></div>';
+  h+='<div class="sec"><h2>데이터 출처</h2><span class="hint">'+esc(String((d.meta||{}).asOf||'').slice(0,10))+' 조회</span></div>';
   h+='<article class="card"><ul class="srcs">'+((d.meta.dataSources||[]).map(function(s){
       return '<li><b>'+esc(s.name)+'</b><span>'+esc(s.what)+'</span><i>'+esc(s.asOf)+'</i></li>';}).join(''))+'</ul></article>';
   h+='<div class="foot">'+esc(d.meta.sourceNote)+'<br>'+esc(d.meta.disclaimer)+'</div>';
