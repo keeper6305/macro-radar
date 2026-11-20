@@ -442,7 +442,7 @@ async function run(){
     var pf3=q('#main .pfcard');
     need(!!pf3,'포트폴리오 카드 없음');
     need(txt(pf3).indexOf('포트폴리오 평가손익')>=0,'평가손익 제목 없음: '+txt(pf3).slice(0,60));
-    var cc=q('#main .pfcard .pfc');
+    var cc=qa('#main .pfcard .pfc');
     need(cc.length===2,'통화별 요약 '+cc.length+'줄(기대 2)');
     need(txt(cc[0]).indexOf('원화')>=0&&txt(cc[1]).indexOf('달러')>=0,'통화 라벨 없음');
     need(/[+-][\d,]+원/.test(txt(cc[0])),'원화 손익 금액 없음: '+txt(cc[0]));
@@ -486,7 +486,7 @@ async function run(){
   }catch(e){ rec('fail','수량·매입금액 입력',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
 
   try{
-    var miss=q('#main .pfcard .pfmiss');
+    var miss=qa('#main .pfcard .pfmiss');
     if(!miss.length) rec('skip','계산 불가 보유 안내','미구현');
     else{
       need(txt(miss[0]).indexOf('넣으면')>=0,'안내 문구 없음');
