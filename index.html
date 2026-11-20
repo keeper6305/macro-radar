@@ -1639,15 +1639,25 @@ function portfolioAvgCard(miss){
 }
 /* 상세 시트의 가격 지도: 손절 · 평단 · 현재 · 1차 · 2차 목표 구간을 한 줄에.
    현재~최종 목표를 한 덩어리로 칠하지 않고, 목표별 '구간(zone)'과 '연결 구간(conn)'을 나눈다. */
+function pmFmt(a,v){
+  if(typeof v!=='number'||!isFinite(v)) return '–';
+  if(typeof a.barValue==='number'&&isFinite(a.barValue)){
+    var bu=(a.barUnit==='$')?'$':'';
+    return bu+bigNum(v)+(bu?'':'원');
+  }
+  return priceFmt(a,v);
+}
 function priceMap(a){
   if(!a||typeof a.price!=='number') return '';
   var tgs=(a.targets||[]).filter(function(t){ return typeof t.from==='number'; });
   if(!(typeof a.stop==='number'||typeof a.avg==='number'||tgs.length)) return '';
+  /* 표시 기준은 카드 밴드와 같은 barValue(있으면 그 통화: ETH는 원) */
+  var base=(typeof a.barValue==='number'&&isFinite(a.barValue))?a.barValue:a.price;
   var pts=[];
   if(typeof a.stop==='number') pts.push({v:a.stop,label:'손절',cls:'stp',color:'var(--bad)'});
   if(typeof a.avg==='number') pts.push({v:a.avg,label:'평단',cls:'avg',color:'var(--warn)'});
-  pts.push({v:a.price,label:'현재',cls:'cur',color:'var(--tx)'});
-  var scale=[a.price];
+  pts.push({v:base,label:'현재',cls:'cur',color:'var(--tx)'});
+  var scale=[base];
   if(typeof a.stop==='number') scale.push(a.stop);
   if(typeof a.avg==='number') scale.push(a.avg);
   tgs.forEach(function(t){ scale.push(t.from); if(typeof t.to==='number') scale.push(t.to); });
@@ -1658,11 +1668,11 @@ function priceMap(a){
   var segs='';
   var stp=pts.filter(function(p){return p.cls==='stp';})[0];
   if(stp){
-    var x1=pos(stp.v), x2=pos(a.price);
+    var x1=pos(stp.v), x2=pos(base);
     segs+='<span class="pmseg dn" style="left:'+Math.min(x1,x2).toFixed(2)+'%;width:'+Math.abs(x2-x1).toFixed(2)+'%"></span>';
   }
   /* 현재 → 1차 → 2차: 사이는 옅은 연결선, 목표 구간은 진한 블록 */
-  var from=a.price;
+  var from=base;
   tgs.forEach(function(t,j){
     var to=tEnd(t);
     if(t.from>from+1e-9){
@@ -1675,7 +1685,7 @@ function priceMap(a){
     pts.push({v:t.from,label:t.label,cls:'tgt',color:'var(--good)'});
   });
   var marks=pts.map(function(p){
-    return '<i class="pmm '+p.cls+'" style="left:'+pos(p.v).toFixed(2)+'%" title="'+esc(p.label+' '+priceFmt(a,p.v))+'"></i>';
+    return '<i class="pmm '+p.cls+'" style="left:'+pos(p.v).toFixed(2)+'%" title="'+esc(p.label+' '+pmFmt(a,p.v))+'"></i>';
   }).join('');
   /* 라벨: 목표는 구간 가운데, 나머지는 가격 위치. 가까우면 두 줄로 나눠 겹침을 푼다 */
   var labs=[];
@@ -1695,13 +1705,13 @@ function priceMap(a){
     ticks+='<span class="'+(row?'r2 ':'')+(p.zl?'zl':'')+'" style="left:'+q.toFixed(1)+'%">'+esc(p.label)+'</span>';
   });
   var legItems=[];
-  if(typeof a.stop==='number') legItems.push({t:'손절',b:priceFmt(a,a.stop),pct:(a.stop/a.price-1)*100,color:'var(--bad)'});
-  if(typeof a.avg==='number') legItems.push({t:'평단',b:priceFmt(a,a.avg),pct:(a.price/a.avg-1)*100,color:'var(--warn)'});
-  legItems.push({t:'현재',b:priceFmt(a,a.price),pct:null,color:'var(--tx)'});
+  if(typeof a.stop==='number') legItems.push({t:'손절',b:pmFmt(a,a.stop),pct:(a.stop/base-1)*100,color:'var(--bad)'});
+  if(typeof a.avg==='number') legItems.push({t:'평단',b:pmFmt(a,a.avg),pct:(base/a.avg-1)*100,color:'var(--warn)'});
+  legItems.push({t:'현재',b:pmFmt(a,base),pct:null,color:'var(--tx)'});
   tgs.forEach(function(t,j){
     var to=tEnd(t);
-    var prev=(j===0)?a.price:(typeof tgs[j-1].to==='number'?tgs[j-1].to:tgs[j-1].from);
-    legItems.push({t:t.label,b:priceFmt(a,t.from)+(to!==t.from?'~'+priceFmt(a,to):''),
+    var prev=(j===0)?base:(typeof tgs[j-1].to==='number'?tgs[j-1].to:tgs[j-1].from);
+    legItems.push({t:t.label,b:pmFmt(a,t.from)+(to!==t.from?'~'+pmFmt(a,to):''),
       pct:(t.from/prev-1)*100, pctLabel:(j===0?'':'1차 대비 '), color:'var(--good)'});
   });
   var leg=legItems.map(function(p){
@@ -1711,12 +1721,12 @@ function priceMap(a){
   var note='';
   if(tgs.length>1){
     var parts=tgs.map(function(t,j){
-      var prev=(j===0)?a.price:(typeof tgs[j-1].to==='number'?tgs[j-1].to:tgs[j-1].from);
+      var prev=(j===0)?base:(typeof tgs[j-1].to==='number'?tgs[j-1].to:tgs[j-1].from);
       return t.label+' '+(j===0?'현재가 대비':'이전 목표 상단 대비')+' '+sgn((t.from/prev-1)*100,1);
     });
     note='<div class="pmnote">분할 익절 구간 · '+parts.join(' · ')+'</div>';
   }else if(tgs.length===1){
-    note='<div class="pmnote">목표 구간 '+priceFmt(a,tgs[0].from)+' 도달 시 '+sgn((tgs[0].from/a.price-1)*100,1)+'</div>';
+    note='<div class="pmnote">목표 구간 '+pmFmt(a,tgs[0].from)+' 도달 시 '+sgn((tgs[0].from/base-1)*100,1)+'</div>';
   }
   return '<div class="pmap'+(tgs.length?' tgts':'')+'"><div class="pmbar">'+segs+marks+'</div>'+
     '<div class="pmticks">'+ticks+'</div><div class="pmleg">'+leg+'</div>'+note+'</div>';
