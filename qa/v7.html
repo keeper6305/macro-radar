@@ -507,13 +507,27 @@ async function run(){
     need(qa('#msheet .pmap .pmseg.conn').length>=1,'연결 구간 없음');
     need(txt(pm2).indexOf('1차')>=0&&txt(pm2).indexOf('2차')>=0,'목표 라벨 없음');
     need(txt(pm2).indexOf('분할 익절')>=0,'분할 익절 안내 없음: '+txt(pm2).slice(0,120));
-    need(txt(pm2).indexOf('이전 목표 상단 대비')>=0,'2차 구간 기준 없음');
+    need(txt(pm2).indexOf('1차→2차')>=0,'1차→2차 구간 기준 없음: '+txt(pm2).slice(-80));
     need(qa('#msheet .pmap .pmleg > div').length===5,'범례 '+qa('#msheet .pmap .pmleg > div').length+'줄(기대 5)');
     var badp=X.overflowV('#msheet .pmleg, #msheet .pmap, #msheet .pmnote');
     need(!badp.length,'가격 지도 넘침: '+badp.join(', '));
     rec('pass','가격 지도 · 목표 구간 2단 · 연결 구간',txt(pm2).replace(/\s+/g,' ').slice(0,100));
     q('#msheet [data-close]').click(); await wait(250);
   }catch(e){ rec('fail','가격 지도 목표 구간',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    /* ETH는 가격이 달러, 목표가가 원화 — 지도가 카드 밴드와 같은 원화 기준으로 그려져야 한다 */
+    q('#main [data-asset="eth"]').click(); await wait(400);
+    var pe=q('#msheet .pmap');
+    need(!!pe,'ETH 가격 지도 없음');
+    need(txt(pe).indexOf('만원')>=0,'ETH 목표가가 원 단위로 표시되지 않음: '+txt(pe).slice(0,90));
+    need(txt(pe).indexOf('$380')<0,'ETH 목표가에 달러 기호가 붙음');
+    need(txt(pe).indexOf('현재')>=0,'ETH 현재 표시 없음');
+    var badE=X.overflowV('#msheet .pmleg, #msheet .pmap, #msheet .pmnote');
+    need(!badE.length,'ETH 지도 넘침: '+badE.join(', '));
+    rec('pass','ETH 가격 지도 · 원화 목표 정합',txt(pe).replace(/\s+/g,' ').slice(0,80));
+    q('#msheet [data-close]').click(); await wait(250);
+  }catch(e){ rec('fail','ETH 가격 지도 정합',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
 
   /* ---------- 16. v7 · 퀵 테스트 SRS 오답 회수 ---------- */
   try{

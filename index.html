@@ -653,7 +653,7 @@ details.study.s2[open]{opacity:1}
 .pmleg b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--tx);white-space:nowrap}
 .pmleg .pct{color:var(--mu);font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* v7: 목표 구간 분리 */
-.pmbar .pmseg.conn{background:rgba(var(--goodRGB),.14)}
+.pmbar .pmseg.conn{background:rgba(var(--goodRGB),.2)}
 .pmbar .pmzone{position:absolute;top:0;height:10px;border-radius:2px;background:rgba(var(--goodRGB),.34);box-shadow:inset 0 0 0 1px rgba(var(--goodRGB),.5)}
 .pmbar .pmzone.z2{background:rgba(var(--goodRGB),.52)}
 .pmbar .pmzone.z3{background:rgba(var(--goodRGB),.66)}
@@ -1558,8 +1558,7 @@ function portfolioCard(){
 
   var sub;
   if(combE!=null){
-    sub='평가금액 '+nf(Math.round(combE),0)+'원 환산 · 원화 '+nf(Math.round(eK),0)+'원 + 달러 $'+nf(eU,2)+
-        ' · 환율 '+nf(fx,2)+'원';
+    sub='평가금액 '+nf(Math.round(combE),0)+'원 환산 · 환율 '+nf(fx,2)+'원';
   }else if(both){
     sub='통화별 평가 — 환율 미확인으로 합산하지 않습니다';
   }else{
@@ -1581,7 +1580,9 @@ function portfolioCard(){
     /* 환율을 모르면 통화별로 비중을 따로 계산한다 */
     var denom=(totW!=null)?totW:(h.cur==='KRW'?eK:eU);
     var w=(denom>0)?((totW!=null?krwEq:h.evalAmt)/denom*100):0;
-    var qtyTxt=nf(h.q,h.q%1?2:0)+(h.cur==='USD'?'':'주');
+    var qtyTxt=(h.cur==='USD'&&String(h.a.market||'').toUpperCase()==='CRYPTO')
+      ?nf(h.q,h.q%1?3:0)+'개'
+      :nf(h.q,h.q%1?2:0)+'주';
     return '<div class="pfrow"><span class="pfn">'+esc(h.a.name)+'<i class="pfq">'+qtyTxt+'</i></span>'+
       '<span class="pfr '+pfDir(h.pnl)+'">'+moneyS(h.pnl,h.cur)+'</span>'+
       '<span class="pfs">평가 <b>'+money(h.evalAmt,h.cur)+'</b> · 평단 '+money(h.avg,h.cur,(h.cur==='USD'?2:1))+
@@ -1720,11 +1721,12 @@ function priceMap(a){
   }).join('');
   var note='';
   if(tgs.length>1){
-    var parts=tgs.map(function(t,j){
-      var prev=(j===0)?base:(typeof tgs[j-1].to==='number'?tgs[j-1].to:tgs[j-1].from);
-      return t.label+' '+(j===0?'현재가 대비':'이전 목표 상단 대비')+' '+sgn((t.from/prev-1)*100,1);
-    });
-    note='<div class="pmnote">분할 익절 구간 · '+parts.join(' · ')+'</div>';
+    var base2=tgs[0].from;
+    var all2=tgs.map(function(t){
+      return t.label+' '+sgn((t.from/base-1)*100,1);
+    }).join(' · ');
+    var step=(tgs[1].from/base2-1)*100;
+    note='<div class="pmnote">분할 익절 · '+all2+' (현재가 기준) · 1차→2차 '+sgn(step,1)+'</div>';
   }else if(tgs.length===1){
     note='<div class="pmnote">목표 구간 '+pmFmt(a,tgs[0].from)+' 도달 시 '+sgn((tgs[0].from/base-1)*100,1)+'</div>';
   }
