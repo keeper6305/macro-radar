@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="투자 레이더">
-<link rel="manifest" href="./manifest.json?v=8.1">
+<link rel="manifest" href="./manifest.json?v=8.2">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon-32.png" sizes="32x32">
@@ -2319,14 +2319,16 @@ function viewCompanies(){
     });
   }
   h+='<div class="sec"><h2>관심기업</h2><span class="hint">'+list.length+'종목'+(S.edit?' · 순서 편집 중':' · 카드의 버튼으로 상세')+'</span></div>';
-  h+='<div class="sigsum" role="group" aria-label="신호로 거르기">'+
+  if(!S.edit){
+    h+='<div class="sigsum" role="group" aria-label="신호로 거르기">'+
       [['all','전체',assets().length],['bad','손절 하회',cnt.bad],['warn','임박',cnt.warn],['ok','목표권',cnt.ok]].map(function(x){
         var on=(S.sigf===x[0])?' on':'';
         return '<button type="button" data-sigf="'+x[0]+'" class="'+on.trim()+'" aria-pressed="'+(on?'true':'false')+'"'+
           (x[0]!=='all'&&!x[2]?' disabled':'')+'>'+x[1]+'<b>'+x[2]+'</b></button>';
       }).join('')+'</div>';
-  if(!cnt.bad&&!cnt.warn&&!cnt.ok){
-    h+='<div class="sighint">지금 걸린 신호는 없습니다'+(near?' · 손절선에 가장 가까운 종목 '+esc(near.name)+' '+nf(near.d,1)+'%':'')+'</div>';
+    if(!cnt.bad&&!cnt.warn&&!cnt.ok){
+      h+='<div class="sighint">지금 걸린 신호는 없습니다'+(near?' · 손절선에 가장 가까운 종목 '+esc(near.name)+' '+nf(near.d,1)+'%':'')+'</div>';
+    }
   }
   h+='<div class="toolrow top">'+
      '<button class="btn pri" id="btnAddAsset">＋ 종목 추가</button>'+
@@ -2885,7 +2887,11 @@ function bindView(){
   var add=$id('btnAddAsset');
   if(add) add.addEventListener('click',function(){ openAssetForm(null); });
   var em=$id('btnEditMode');
-  if(em) em.addEventListener('click',function(){ S.edit=!S.edit; render(); window.scrollTo(0,0); });
+  if(em) em.addEventListener('click',function(){
+    S.edit=!S.edit;
+    if(S.edit) S.sigf='all';   /* 편집 중에는 거르지 않는다 */
+    render(); window.scrollTo(0,0);
+  });
   var main=$id('main');
   Array.prototype.forEach.call(main.querySelectorAll('[data-mv]'),function(b){
     b.addEventListener('click',function(ev){
@@ -3425,7 +3431,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=8.1').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=8.2').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });

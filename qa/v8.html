@@ -685,6 +685,18 @@ async function run(){
     rec('pass','v8 신호 배지 넘침 0 · 필터 줄 4버튼');
   }catch(e){ rec('fail','v8 카드 신호 배지',e.message); }
 
+  /* ---------- 18b. v8 · 편집 모드에서는 신호 줄을 숨긴다 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    need(!!q('#main .sigsum'),'신호 줄이 없음');
+    q('#btnEditMode').click(); await wait(300);
+    need(!q('#main .sigsum'),'편집 모드에서 신호 줄이 남음');
+    need(!q('#main .sighint'),'편집 모드에서 신호 안내가 남음');
+    q('#btnEditMode').click(); await wait(300);
+    need(!!q('#main .sigsum'),'편집을 끝내도 신호 줄이 안 돌아옴');
+    rec('pass','v8 편집 모드에서 신호 줄 숨김 · 복귀');
+  }catch(e){ rec('fail','v8 편집 모드 신호 줄',e.message); }
+
   /* ---------- 19. v8 · 분할 매수·매도 시뮬레이터 ---------- */
   try{
     q('.tab[data-tab="companies"]').click(); await wait(300);
