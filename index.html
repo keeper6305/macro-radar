@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="투자 레이더">
-<link rel="manifest" href="./manifest.json?v=8">
+<link rel="manifest" href="./manifest.json?v=8.1">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon-32.png" sizes="32x32">
@@ -1849,7 +1849,7 @@ function simCalc(a){
   var toB=(a.price>0)?(base/a.price):1;
   var cost=(q>0)?(inv!=null?inv*toB:(avg?avg*toB*q:null)):null;
   var avgB=(avg!=null)?avg*toB:null;
-  r.q=q; r.avg=avgB; r.cost=cost; r.toB=toB;
+  r.q=q; r.avg=avgB; r.cost=cost; r.toB=toB; r.px=px;
   if(st.mode==='sell'){
     if(!q||!(q>0)){ r.msg='보유 수량이 없어 매도를 계산할 수 없습니다. 매수로 시험해 보세요.'; return r; }
     if(add>q){ r.msg='보유 '+nf(q,q%1?3:0)+simQtyUnit(a)+'보다 많이 매도할 수 없습니다.'; return r; }
@@ -1902,14 +1902,14 @@ function simResHTML(a){
       dv==null?'신규':sgn(dv,2)+'p'));
     rows.push(row('총 수량',qf(r.q2)+unit,'',(r.q?('+'+qf(r.q2-r.q)):'')));
     rows.push(row('총 투자금',simMoney(a,r.cost2),'',(r.cost!=null?('+'+simMoney(a,r.cost2-r.cost)):'')));
-    rows.push(row('평가손익',simMoney(a,r.pnlNew),(r.pnlNew==null?'':(r.pnlNew>=0?'up':'down')),
+     rows.push(row('평가손익',simMoneyS(a,r.pnlNew),(r.pnlNew==null?'':(r.pnlNew>=0?'up':'down')),
       (r.dPnl!=null?('Δ '+simMoneyS(a,r.dPnl)):'')));
   }else{
-    rows.push(row('실현손익',simMoney(a,r.realized),(r.realized==null?'':(r.realized>=0?'up':'down')),
+    rows.push(row('실현손익',simMoneyS(a,r.realized),(r.realized==null?'':(r.realized>=0?'up':'down')),
       (r.realized==null?'평단 미입력':'')));
     rows.push(row('남은 수량',qf(r.q2)+unit,'','-' + qf(r.q-r.q2)));
     rows.push(row('남은 평단',simMoney(a,r.avg2),'',''));
-    rows.push(row('남은 평가손익',simMoney(a,r.pnlNew),(r.pnlNew==null?'':(r.pnlNew>=0?'up':'down')),''));
+    rows.push(row('남은 평가손익',simMoneyS(a,r.pnlNew),(r.pnlNew==null?'':(r.pnlNew>=0?'up':'down')),''));
   }
   rows.push(row('포트폴리오 비중',(r.wOld!=null?(nf(r.wOld,1)+'% → '+nf(r.wNew,1)+'%'):'–'),'',
     (r.wOld!=null?(((r.wNew-r.wOld)>=0?'+':'')+nf(r.wNew-r.wOld,1)+'p'):'수량 미입력')));
@@ -3425,7 +3425,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=8').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=8.1').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });

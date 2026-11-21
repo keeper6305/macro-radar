@@ -36,6 +36,12 @@ function restoreStorage(){
   }catch(e){}
 }
 snapStorage();
+/* 이전 점검 실행이 남긴 점검용(:qa) 키를 지워 항상 시드 상태에서 시작한다 */
+try{
+  Object.keys(SNAP).forEach(function(k){
+    if(/:qa$/.test(k)){ delete SNAP[k]; localStorage.removeItem(k); }
+  });
+}catch(e){}
 window.addEventListener('beforeunload',restoreStorage);
 
 var W=parseInt(new URLSearchParams(location.search).get('w')||'360',10);
