@@ -636,25 +636,47 @@ async function run(){
     var sb=qa('#main .sigsum button');
     need(sb.length===4,'신호 필터 버튼 '+sb.length+'개(기대 4)');
     need(txt(sb[0]).indexOf('전체')>=0,'전체 버튼 없음');
+    var cards0=qa('#main [data-asset]');
+    var total0=cards0.length;
+    /* 실시간 시세에 따라 배지 색이 달라지므로, 카드 DOM에서 기대값을 만든다 */
+    var tone={bad:0,warn:0,ok:0,plain:0};
+    var sigCards=0;
+    cards0.forEach(function(c){
+      var s=c.querySelector('.sigrow .sig');
+      if(!s) return;
+      sigCards++;
+      var m=String(s.className).match(/\b(bad|warn|ok)\b/);
+      tone[m?m[1]:'plain']++;
+    });
+    need(sigCards>=4,'신호 배지가 있는 카드 '+sigCards+'개(기대 4 이상)');
     var btc=q('#main [data-asset="btc"]');
     need(!!btc,'비트코인 카드 없음');
-    var bs=qa('#main [data-asset="btc"] .sigrow .sig');
-    need(bs.length>=1,'BTC 카드 신호 배지 없음');
-    need(txt(btc).indexOf('손절선 하회')>=0,'BTC 손절선 하회 배지 없음: '+txt(btc).slice(0,80));
-    need(bs[0].className.indexOf('bad')>=0,'손절선 하회 배지 색 구분 없음');
-    need(txt(bs[0]).indexOf('%')>=0,'배지에 거리 % 없음: '+txt(bs[0]));
-    var sigCards=qa('#main [data-asset] .sigrow').length;
-    need(sigCards>=1,'신호 배지 카드 '+sigCards);
-    var badBtn=qa('#main .sigsum button').filter(function(b){return b.getAttribute('data-sigf')==='bad';})[0];
-    badBtn.click(); await wait(320);
-    var only=qa('#main [data-asset]');
-    need(only.length>=1&&only.length<8,'손절 하회 필터 결과 '+only.length+'종목');
-    need(only.every(function(c){return txt(c).indexOf('손절선 하회')>=0;}),'필터에 다른 신호 카드 섞임');
-    qa('#main .sigsum button')[0].click(); await wait(320);
-    need(qa('#main [data-asset]').length===8,'전체 복귀 '+qa('#main [data-asset]').length);
+    var btxt=txt(btc);
+    need(/손절선/.test(btxt),'BTC 카드에 손절선 배지 없음: '+btxt.slice(0,90));
+    need(/(손절선 하회|손절선 [\d.]+% 앞|손절 -)/.test(btxt),'손절 배지 문구 형태 오류: '+btxt.slice(0,90));
+    need(/매수 밴드/.test(btxt),'BTC 매수 밴드 배지 없음: '+btxt.slice(0,90));
+    var b0=q('#main [data-asset="btc"] .sigrow .sig');
+    need(!!b0,'BTC .sig 없음');
+    need(/\d/.test(txt(b0)),'배지에 거리 숫자 없음: '+txt(b0));
+    var pick=tone.bad?'bad':(tone.warn?'warn':(tone.ok?'ok':''));
+    if(!pick){
+      rec('skip','v8 신호 필터','오늘은 임박·도달 신호 0건');
+    }else{
+      qa('#main .sigsum button').filter(function(b){return b.getAttribute('data-sigf')===pick;})[0].click();
+      await wait(320);
+      var only=qa('#main [data-asset]');
+      need(only.length===tone[pick],'필터 결과 '+only.length+' ≠ 기대 '+tone[pick]);
+      need(only.every(function(c){
+        var s=c.querySelector('.sigrow .sig');
+        return !!s&&String(s.className).indexOf(pick)>=0;
+      }),'필터에 다른 색 카드 섞임');
+      qa('#main .sigsum button')[0].click(); await wait(320);
+      need(qa('#main [data-asset]').length===total0,'전체 복귀 '+qa('#main [data-asset]').length+'/'+total0);
+      rec('pass','v8 카드 신호 배지 · '+sigCards+'/'+total0+'카드 · 필터 '+pick+' '+only.length+'장',txt(b0));
+    }
     var badnew=X.overflow('#main .sigrow, #main .sigsum');
     need(!badnew.length,'신호 배지 넘침: '+badnew.join(', '));
-    rec('pass','v8 카드 신호 배지 · '+bs.length+'개 · 필터 '+only.length+'/8',txt(bs[0]));
+    rec('pass','v8 신호 배지 넘침 0 · 필터 줄 4버튼');
   }catch(e){ rec('fail','v8 카드 신호 배지',e.message); }
 
   /* ---------- 19. v8 · 분할 매수·매도 시뮬레이터 ---------- */
