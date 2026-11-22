@@ -2780,7 +2780,7 @@ function assetSignals(a){
     var gp=(base/p.px-1)*100;   /* +면 현재가가 계획가 위(아직 안 옴), 0 이하면 계획가 이하(도달) */
     if(gp<=0) r.alerts.push({c:'plan',k:'p'+j+'r',t:lab+' 도달'});
     else if(gp<=2) r.alerts.push({c:'plan',k:'p'+j+'n',t:lab+' '+nf(gp,1)+'% 앞'});
-    else r.dists.push({c:'',t:'계획 '+(j+1)+'단 '+nf(gp,1)+'% 위'});
+    else r.dists.push({c:'',t:'계획 '+(j+1)+'단 '+nf(gp,1)+'% 남음'});
   });
   return r;
 }
@@ -2944,7 +2944,7 @@ function planHTML(a){
   if(saved.length){
     h+='<div class="plansum"><span class="t">저장된 계획</span>'+saved.map(function(p,j){
       var gp=planGap(a,p);
-      var st=(gp==null)?'':(gp<=0?'<em class="on">도달</em>':(gp<=2?'<em class="near">'+nf(gp,1)+'% 앞</em>':'<em>'+nf(gp,1)+'% 위</em>'));
+      var st=(gp==null)?'':(gp<=0?'<em class="on">도달</em>':(gp<=2?'<em class="near">'+nf(gp,1)+'% 앞</em>':'<em>'+nf(gp,1)+'% 남음</em>'));
       return '<span class="pi2">'+(j+1)+'단 <b>'+simMoney(a,p.px)+'</b>'+planQtyText(a,p)+st+'</span>';
     }).join('')+'</div>';
   }

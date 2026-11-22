@@ -850,7 +850,7 @@ async function run(){
     need(/1단/.test(txt(psum))&&/3단/.test(txt(psum)),'요약에 단 표시 없음: '+txt(psum));
     need(/도달/.test(txt(psum)),'요약에 도달 표시 없음: '+txt(psum));
     need(/% 앞/.test(txt(psum)),'요약에 근접 표시 없음: '+txt(psum));
-    need(/3\.1% 위/.test(txt(psum)),'요약에 거리(위) 표시 없음: '+txt(psum));
+    need(/3\.1% 남음/.test(txt(psum)),'요약에 남은 거리 표시 없음: '+txt(psum));
     q('#msheet [data-close]').click(); await wait(260);
     var pc2=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
     pc2.click(); await wait(360);
