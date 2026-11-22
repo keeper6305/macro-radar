@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macro-radar v9 shots</title>
+<style>
+html,body{margin:0;background:#000;overflow:hidden}
+iframe{display:block;border:0;background:#070b11}
+</style>
+</head>
+<body>
+<script>
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+var P=new URLSearchParams(location.search);
+var S=P.get('s')||'plan', W=parseInt(P.get('w')||'390',10), H=parseInt(P.get('h')||'844',10);
+var f=document.createElement('iframe');
+f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
+f.src='../index.html?qa=1&shot='+S+'&t='+Date.now();
+document.body.appendChild(f);
+document.title='shot '+S+' '+W;
+f.addEventListener('load',async function(){
+  var d=f.contentDocument, w=f.contentWindow;
+  var q=function(x){ return d.querySelector(x); };
+  var qa=function(x){ return Array.prototype.slice.call(d.querySelectorAll(x)); };
+  var set=function(el,v){ el.value=v; el.dispatchEvent(new w.Event('input',{bubbles:true})); };
+  try{ w.confirm=function(){ return true; }; }catch(e){}
+  await wait(2000);
+  try{
+    if(S==='plan'){
+      /* 감성코퍼레이션에 3단 매수 계획을 저장하고 계획 섹션을 보여 준다 */
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(500);
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3200'); set(q('#msheet [data-pi="1"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="2"][data-pf="px"]'),'2950');
+      q('#msheet [data-psave]').click(); await wait(600);
+      var sec=q('#msheet .msec.plan');
+      if(sec) q('#msheet').scrollTop=sec.offsetTop-90;
+      await wait(300);
+    }
+    else if(S==='plancard'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(400);
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3250');
+      set(q('#msheet [data-pi="2"][data-pf="px"]'),'3050');
+      q('#msheet [data-psave]').click(); await wait(500);
+      q('#msheet [data-close]').click(); await wait(400);
+      var g=q('#main [data-asset="gamsung"]');
+      if(g) w.scrollTo(0,g.getBoundingClientRect().top+w.scrollY-120);
+      await wait(200);
+    }
+    else if(S==='portfolio'){
+      /* 매도 5주 → 실현손익 누적 후 포트폴리오 카드 */
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      qa('#msheet [data-simmode]')[1].click(); await wait(250);
+      set(q('#simq'),'5'); set(q('#simp'),'3575'); await wait(250);
+      q('#msheet [data-simapply]').click(); await wait(600);
+      q('#msheet [data-close]').click(); await wait(500);
+      w.scrollTo(0,0);
+      await wait(200);
+    }
+    else if(S==='realhist'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      qa('#msheet [data-simmode]')[1].click(); await wait(250);
+      set(q('#simq'),'5'); set(q('#simp'),'3575'); await wait(200);
+      q('#msheet [data-simapply]').click(); await wait(550);
+      qa('#msheet [data-simmode]')[1].click(); await wait(220);
+      set(q('#simq'),'3'); set(q('#simp'),'3700'); await wait(200);
+      q('#msheet [data-simapply]').click(); await wait(550);
+      q('#msheet [data-close]').click(); await wait(500);
+      q('#main .pfcard [data-real]').click(); await wait(500);
+      q('#msheet').scrollTop=0;
+    }
+    else if(S==='brief'){
+      q('.tab[data-tab="briefing"]').click(); await wait(600);
+      w.scrollTo(0,0);
+    }
+    else if(S==='qtmix'){
+      q('.tab[data-tab="study"]').click(); await wait(500);
+      q('#btnQuizTest').click(); await wait(500);
+    }
+    else if(S==='tag'){
+      q('.tab[data-tab="study"]').click(); await wait(500);
+      var tb=q('#main .sfilter [data-stag="차트"]');
+      if(tb){ tb.click(); await wait(400); }
+      w.scrollTo(0,0);
+    }
+    else if(S==='light'){
+      q('#btnTheme').click(); await wait(300);
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      q('#msheet [data-psave]').click(); await wait(500);
+      var sec=q('#msheet .msec.plan');
+      if(sec) q('#msheet').scrollTop=sec.offsetTop-90;
+      await wait(300);
+    }
+  }catch(e){ document.title='ERR '+e.message; }
+  await wait(400);
+  document.title='ready '+S+' '+W;
+});
+</script>
+</body>
+</html>
