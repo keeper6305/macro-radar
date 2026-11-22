@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macro-radar v9 multi shots</title>
+<style>
+html,body{margin:0;background:#000;overflow:hidden}
+.row{display:flex;gap:0}
+iframe{display:block;border:0;background:#070b11;flex:none}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<script>
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+var P=new URLSearchParams(location.search);
+var LIST=(P.get('s')||'portfolio').split(',');
+var W=parseInt(P.get('w')||'375',10), H=parseInt(P.get('h')||'844',10);
+var row=document.getElementById('row');
+var boxes=[];
+
+function flow(d,w,sec,q,qa,set){
+  return (async function(){
+    if(sec==='portfolio'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      qa('#msheet [data-simmode]')[1].click(); await wait(250);
+      set(q('#simq'),'5'); set(q('#simp'),'3575'); await wait(250);
+      q('#msheet [data-simapply]').click(); await wait(650);
+      q('#msheet [data-close]').click(); await wait(550);
+      w.scrollTo(0,0);
+    }else if(sec==='realhist'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      qa('#msheet [data-simmode]')[1].click(); await wait(250);
+      set(q('#simq'),'5'); set(q('#simp'),'3575'); await wait(200);
+      q('#msheet [data-simapply]').click(); await wait(600);
+      qa('#msheet [data-simmode]')[1].click(); await wait(230);
+      set(q('#simq'),'3'); set(q('#simp'),'3700'); await wait(200);
+      q('#msheet [data-simapply]').click(); await wait(600);
+      q('#msheet [data-close]').click(); await wait(550);
+      q('#main .pfcard [data-real]').click(); await wait(550);
+    }else if(sec==='brief'){
+      q('.tab[data-tab="briefing"]').click(); await wait(700);
+      w.scrollTo(0,0);
+    }else if(sec==='qtmix'){
+      q('.tab[data-tab="study"]').click(); await wait(550);
+      q('#btnQuizTest').click(); await wait(550);
+    }else if(sec==='plan'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3530'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="1"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="2"][data-pf="px"]'),'3300');
+      q('#msheet [data-psave]').click(); await wait(700);
+      var secEl=q('#msheet .msec.plan');
+      if(secEl) q('#msheet').scrollTop=secEl.offsetTop-96;
+      await wait(300);
+    }else if(sec==='plancard'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3530'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3400');
+      set(q('#msheet [data-pi="2"][data-pf="px"]'),'3300');
+      q('#msheet [data-psave]').click(); await wait(700);
+      q('#msheet [data-close]').click(); await wait(550);
+      var g=q('#main [data-asset="gamsung"]');
+      if(g) w.scrollTo(0,g.getBoundingClientRect().top+w.scrollY-120);
+      await wait(250);
+    }else if(sec==='light'){
+      q('#btnTheme').click(); await wait(300);
+      q('.tab[data-tab="companies"]').click(); await wait(550);
+      q('#main [data-asset="gamsung"]').click(); await wait(450);
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3530'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      q('#msheet [data-psave]').click(); await wait(650);
+      var s2=q('#msheet .msec.plan');
+      if(s2) q('#msheet').scrollTop=s2.offsetTop-96;
+      await wait(300);
+    }
+  })();
+}
+
+(async function(){
+  for(var i=0;i<LIST.length;i++){
+    var f=document.createElement('iframe');
+    f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
+    f.src='../index.html?qa=1&shot='+LIST[i]+'&t='+Date.now()+i;
+    row.appendChild(f); boxes.push(f);
+  }
+  await wait(2600);
+  var out=[];
+  for(var j=0;j<boxes.length;j++){
+    var f2=boxes[j], d=f2.contentDocument, w=f2.contentWindow;
+    var q=function(x){ return d.querySelector(x); };
+    var qa=function(x){ return Array.prototype.slice.call(d.querySelectorAll(x)); };
+    var set=function(el,v){ if(!el) return; el.value=v; el.dispatchEvent(new w.Event('input',{bubbles:true})); };
+    try{ w.confirm=function(){ return true; }; }catch(e){}
+    try{ await flow(d,w,LIST[j],q,qa,set); }catch(e){ out.push(LIST[j]+':ERR '+e.message); }
+    await wait(300);
+    out.push(LIST[j]+':ok');
+  }
+  document.title='ready '+out.join(' | ');
+})();
+</script>
+</body>
+</html>
