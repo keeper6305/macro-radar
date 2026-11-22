@@ -31,9 +31,9 @@ f.addEventListener('load',async function(){
       /* 감성코퍼레이션에 3단 매수 계획을 저장하고 계획 섹션을 보여 준다 */
       q('.tab[data-tab="companies"]').click(); await wait(500);
       q('#main [data-asset="gamsung"]').click(); await wait(500);
-      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
-      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3200'); set(q('#msheet [data-pi="1"][data-pf="qty"]'),'10');
-      set(q('#msheet [data-pi="2"][data-pf="px"]'),'2950');
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3530'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="1"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="2"][data-pf="px"]'),'3300');
       q('#msheet [data-psave]').click(); await wait(600);
       var sec=q('#msheet .msec.plan');
       if(sec) q('#msheet').scrollTop=sec.offsetTop-90;
@@ -42,9 +42,9 @@ f.addEventListener('load',async function(){
     else if(S==='plancard'){
       q('.tab[data-tab="companies"]').click(); await wait(500);
       q('#main [data-asset="gamsung"]').click(); await wait(400);
-      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3400'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
-      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3250');
-      set(q('#msheet [data-pi="2"][data-pf="px"]'),'3050');
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'3530'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'3400');
+      set(q('#msheet [data-pi="2"][data-pf="px"]'),'3300');
       q('#msheet [data-psave]').click(); await wait(500);
       q('#msheet [data-close]').click(); await wait(400);
       var g=q('#main [data-asset="gamsung"]');
