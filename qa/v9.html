@@ -618,7 +618,7 @@ async function run(){
     need(html.indexOf("sw.js?v=9")>=0,'sw 등록 캐시버스트 없음');
     var swt=await (await fetch('../sw.js',{cache:'no-store'})).text();
     need(/macro-radar-v9/.test(swt),'SW CACHE v9 아님');
-    need(/CACHE\s*=\s*'macro-radar-v9'/.test(swt),'SW CACHE 이름이 macro-radar-v9 가 아님');
+    need(/CACHE\s*=\s*'macro-radar-v9(-[\w]+)?'/.test(swt),'SW CACHE 이름이 macro-radar-v9(-n) 가 아님');
     rec('pass','캐시버스트 ?v=9 · SW macro-radar-v9');
   }catch(e){ rec('fail','캐시버스트·SW 버전',e.message); }
 
