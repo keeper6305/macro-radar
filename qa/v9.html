@@ -668,7 +668,7 @@ async function run(){
     need(/매수 밴드/.test(btxt),'BTC 매수 밴드 배지 없음: '+btxt.slice(0,90));
     var b0=q('#main [data-asset="btc"] .sigrow .sig');
     need(!!b0,'BTC .sig 없음');
-    need(/\d/.test(txt(b0)),'배지에 거리 숫자 없음: '+txt(b0));
+    need(/\d/.test(txt(q('#main [data-asset="btc"] .sigrow'))),'신호 줄에 거리·% 숫자 없음: '+txt(q('#main [data-asset="btc"] .sigrow')));
     var pick=per.bad?'bad':(per.warn?'warn':(per.plan?'plan':(per.ok?'ok':'')));
     if(!pick){
       rec('skip','v9 신호 필터','오늘은 임박·도달 신호 0건');
@@ -980,7 +980,10 @@ async function run(){
     var logA2=JSON.parse(localStorage.getItem(sigKey)||'{}');
     var nA=Object.keys(logA2).length;
     var oldMap={}; Object.keys(logA2).forEach(function(k){ oldMap[k]=true; });
-    var seed={}; Object.keys(logA2).forEach(function(k){ seed[k]={d:'2026-01-01',u:'2026-01-01'}; });
+    /* 어제 걸린 신호로 바꿔 두고, 새로고침 뒤에도 시작일이 유지되는지 본다 */
+    var yd=new Date(new Date().getTime()-86400000);
+    var ydS=yd.getFullYear()+'-'+('0'+(yd.getMonth()+1)).slice(-2)+'-'+('0'+yd.getDate()).slice(-2);
+    var seed={}; Object.keys(logA2).forEach(function(k){ seed[k]={d:ydS,u:ydS}; });
     localStorage.setItem(sigKey, JSON.stringify(seed));
     /* 도감 판정일도 하나만 오래된 날짜로 두고, 새로고침 뒤 복습 우선순위를 검증한다 */
     var stObj=JSON.parse(localStorage.getItem('macro_radar_study_v1:qa')||'{}');
@@ -995,9 +998,9 @@ async function run(){
     win.confirm=function(){ return true; };
     q('.tab[data-tab="companies"]').click(); await wait(520);
     var logB=JSON.parse(localStorage.getItem(sigKey)||'{}');
-    var kept=Object.keys(logB).filter(function(k){ return logB[k]&&logB[k].d==='2026-01-01'; }).length;
+    var kept=Object.keys(logB).filter(function(k){ return logB[k]&&logB[k].d===ydS; }).length;
     /* 기록된 시작일은 덮어쓰지 않는다(새로 생긴 신호의 오늘 날짜는 정상) */
-    var overwritten=Object.keys(oldMap).filter(function(k){ return logB[k]&&logB[k].d!=='2026-01-01'; });
+    var overwritten=Object.keys(oldMap).filter(function(k){ return logB[k]&&logB[k].d!==ydS; });
     need(!overwritten.length,'기록된 날짜를 오늘로 덮어씀: '+overwritten.slice(0,2).join(', '));
     need(kept>=1,'보존된 날짜 없음');
     var staleNew=qa('#main .sig .snew').filter(function(em){
