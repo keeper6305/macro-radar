@@ -663,7 +663,7 @@ async function run(){
     var btc=q('#main [data-asset="btc"]');
     need(!!btc,'비트코인 카드 없음');
     var btxt=txt(btc);
-    need(/손절선/.test(btxt),'BTC 카드에 손절선 배지 없음: '+btxt.slice(0,90));
+    need(/손절/.test(btxt),'BTC 카드에 손절선 배지 없음: '+btxt.slice(0,90));
     need(/(손절선 하회|손절선 [\d.]+% 앞|손절 -)/.test(btxt),'손절 배지 문구 형태 오류: '+btxt.slice(0,90));
     need(/매수 밴드/.test(btxt),'BTC 매수 밴드 배지 없음: '+btxt.slice(0,90));
     var b0=q('#main [data-asset="btc"] .sigrow .sig');
@@ -966,10 +966,10 @@ async function run(){
     var logA=JSON.parse(localStorage.getItem(sigKey)||'{}');
     var nOld=Object.keys(logA).length;
     need(nOld>0,'신호 발생일 기록 없음');
-    need(Object.keys(logA).every(function(k){ return /^\d{4}-\d{2}-\d{2}$/.test(logA[k]); }),'신호일 형식 오류');
+    need(Object.keys(logA).every(function(k){ return logA[k]&&/^\d{4}-\d{2}-\d{2}$/.test(logA[k].d||''); }),'신호일 형식 오류');
     var nowS=new Date();
     var todayS=nowS.getFullYear()+'-'+('0'+(nowS.getMonth()+1)).slice(-2)+'-'+('0'+nowS.getDate()).slice(-2);
-    need(Object.keys(logA).some(function(k){ return logA[k]===todayS; }),'오늘 날짜 기록 없음');
+    need(Object.keys(logA).some(function(k){ return logA[k].d===todayS; }),'오늘 날짜 기록 없음');
     var news1=qa('#main .sig .snew');
     need(news1.length>=1,'오늘 배지 없음');
     need(txt(news1[0]).indexOf('오늘')>=0,'배지 문구: '+txt(news1[0]));
@@ -979,8 +979,9 @@ async function run(){
   try{
     var logA2=JSON.parse(localStorage.getItem(sigKey)||'{}');
     var nA=Object.keys(logA2).length;
-    var oldMap={}; Object.keys(logA2).forEach(function(k){ oldMap[k]='2026-01-01'; });
-    localStorage.setItem(sigKey, JSON.stringify(oldMap));
+    var oldMap={}; Object.keys(logA2).forEach(function(k){ oldMap[k]=true; });
+    var seed={}; Object.keys(logA2).forEach(function(k){ seed[k]={d:'2026-01-01',u:'2026-01-01'}; });
+    localStorage.setItem(sigKey, JSON.stringify(seed));
     /* 도감 판정일도 하나만 오래된 날짜로 두고, 새로고침 뒤 복습 우선순위를 검증한다 */
     var stObj=JSON.parse(localStorage.getItem('macro_radar_study_v1:qa')||'{}');
     var doneKeys=Object.keys(stObj).filter(function(k){ return stObj[k]===2; });
@@ -994,14 +995,14 @@ async function run(){
     win.confirm=function(){ return true; };
     q('.tab[data-tab="companies"]').click(); await wait(520);
     var logB=JSON.parse(localStorage.getItem(sigKey)||'{}');
-    var kept=Object.keys(logB).filter(function(k){ return logB[k]==='2026-01-01'; }).length;
-    /* 기록된 날짜는 덮어쓰지 않는다(새로 생긴 신호의 오늘 날짜는 정상) */
-    var overwritten=Object.keys(oldMap).filter(function(k){ return logB[k]&&logB[k]!=='2026-01-01'; });
+    var kept=Object.keys(logB).filter(function(k){ return logB[k]&&logB[k].d==='2026-01-01'; }).length;
+    /* 기록된 시작일은 덮어쓰지 않는다(새로 생긴 신호의 오늘 날짜는 정상) */
+    var overwritten=Object.keys(oldMap).filter(function(k){ return logB[k]&&logB[k].d!=='2026-01-01'; });
     need(!overwritten.length,'기록된 날짜를 오늘로 덮어씀: '+overwritten.slice(0,2).join(', '));
     need(kept>=1,'보존된 날짜 없음');
     var staleNew=qa('#main .sig .snew').filter(function(em){
       var sk=em.closest('.sig').getAttribute('data-sk');
-      return oldMap[sk]==='2026-01-01';
+      return !!oldMap[sk];
     });
     need(!staleNew.length,'지난 날짜 신호에 오늘 배지 '+staleNew.length+'개');
     var planB=JSON.parse(localStorage.getItem(planKey)||'{}');

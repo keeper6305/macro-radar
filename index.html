@@ -1328,13 +1328,23 @@ function realSheet(){
      '<button class="btn" data-close="1">닫기</button></div>';
   openSheet(h);
 }
+/* ---------- v9: 신호 최초 발생일 ---------- */
+/* 저장 형태: { 'id|kind': { d:'최초 걸린 날', u:'마지막으로 걸린 걸 확인한 날' } }
+   - 시세가 붙기 전 콜드 스타트·장중 등락으로 신호가 잠시 사라져도 시작일을 읽지 않게,
+     3일 넘게 안 보인 신호만 지운다. (예전 문자열 형식도 그대로 읽는다. */
+function sigRec(v){
+  if(!v) return null;
+  if(typeof v==='string') return isISO(v)?{d:v,u:v}:null;
+  if(typeof v==='object'&&isISO(v.d)) return {d:v.d, u:(isISO(v.u)?v.u:v.d)};
+  return null;
+}
 function loadSigLog(){
   try{
     var raw=localStorage.getItem(LS_SIGLOG);
     if(!raw) return;
     var o=JSON.parse(raw); if(!o||typeof o!=='object') return;
     S.siglog={};
-    Object.keys(o).forEach(function(k){ if(isISO(o[k])) S.siglog[k]=o[k]; });
+    Object.keys(o).forEach(function(k){ var r=sigRec(o[k]); if(r) S.siglog[k]=r; });
   }catch(e){}
 }
 function saveSigLog(){
@@ -2778,13 +2788,14 @@ function assetSignals(a){
 /* 임박·도달 신호가 있으면 그것만, 없으면 남은 거리를 회색 칩으로 */
 /* v9: 손절 → 매수 계획 → 목표 순으로 보여 주고, 오늘 처음 걸린 신호에 '오늘' 표시를 붙인다 */
 var SIG_ORDER={bad:0,plan:1,warn:2,ok:3};
-function sigToday(a,it){
-  if(!it||!it.k) return false;
-  return S.siglog[(a.id||'')+'|'+it.k]===todayISO();
+var SIG_GONE_DAYS=3;  /* 이 기간 넘게 안 보인 신호의 기록만 지운다 */
+function sigLogRec(a,it){
+  if(!a||!it||!it.k) return null;
+  return sigRec(S.siglog[(a.id||'')+'|'+it.k]);
 }
-function sigSince(a,it){
-  if(!it||!it.k) return '';
-  return S.siglog[(a.id||'')+'|'+it.k]||'';
+function sigToday(a,it){
+  var r=sigLogRec(a,it);
+  return !!r&&r.d===todayISO();
 }
 function sigRow(a,max){
   var s=assetSignals(a), lim=max||2;
@@ -3226,10 +3237,18 @@ function sigLogSync(){
       if(!al.k) return;
       var k=(a.id||'')+'|'+al.k;
       live[k]=1;
-      if(!log[k]){ log[k]=today; changed=true; }
+      var r=sigRec(log[k]);
+      if(!r){ log[k]={d:today,u:today}; changed=true; }
+      else if(r.u!==today){ r.u=today; log[k]=r; changed=true; }
     });
   });
-  Object.keys(log).forEach(function(k){ if(!live[k]){ delete log[k]; changed=true; } });
+  Object.keys(log).forEach(function(k){
+    if(live[k]) return;
+    var r=sigRec(log[k]);
+    if(!r){ delete log[k]; changed=true; return; }
+    var gap=daysSince(r.u);
+    if(gap==null||gap>=SIG_GONE_DAYS){ delete log[k]; changed=true; }
+  });
   if(changed){ S.siglog=log; saveSigLog(); }
 }
 function render(){
@@ -3704,7 +3723,7 @@ function importJSON(ev){
         saveReal(); cnt+=add.length;
       }
       if(o&&o.siglog&&typeof o.siglog==='object'){
-        Object.keys(o.siglog).forEach(function(k){ if(isISO(o.siglog[k])) S.siglog[k]=o.siglog[k]; });
+        Object.keys(o.siglog).forEach(function(k){ var r=sigRec(o.siglog[k]); if(r) S.siglog[k]=r; });
         saveSigLog();
       }
       if(o&&o.smeta&&typeof o.smeta==='object'){
