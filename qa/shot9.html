@@ -45,11 +45,16 @@ f.addEventListener('load',async function(){
       set(q('#msheet [data-pi="0"][data-pf="px"]'),'3530'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'10');
       set(q('#msheet [data-pi="1"][data-pf="px"]'),'3400');
       set(q('#msheet [data-pi="2"][data-pf="px"]'),'3300');
-      q('#msheet [data-psave]').click(); await wait(500);
-      q('#msheet [data-close]').click(); await wait(400);
+      var sum1=(q('#msheet .plansum')||{}).textContent||'';
+      q('#msheet [data-psave]').click(); await wait(700);
+      var sum2=(q('#msheet .plansum')||{}).textContent||'';
+      q('#msheet [data-close]').click(); await wait(500);
       var g=q('#main [data-asset="gamsung"]');
       if(g) w.scrollTo(0,g.getBoundingClientRect().top+w.scrollY-120);
       await wait(200);
+      document.title='DIAG px'+[].map.call(d.querySelectorAll('.prow input'),function(e){return e.value;}).join('/')+
+        ' | before:'+(sum1||'-')+' | after:'+(sum2||'-')+
+        ' | card:'+[].map.call(d.querySelectorAll('#main [data-asset=\"gamsung\"] .sigrow .sig'),function(e){return e.textContent;}).join(',');
     }
     else if(S==='portfolio'){
       /* 매도 5주 → 실현손익 누적 후 포트폴리오 카드 */
