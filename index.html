@@ -2795,7 +2795,7 @@ function sigRow(a,max){
     });
   }
   return '<div class="sigrow">'+items.slice(0,max||2).map(function(it){
-    return '<span class="sig'+(it.c?' '+it.c:'')+'"><i></i>'+esc(it.t)+
+    return '<span class="sig'+(it.c?' '+it.c:'')+'"'+(it.k?' data-sk="'+esc((a.id||'')+'|'+it.k)+'"':'')+'><i></i>'+esc(it.t)+
       (sigToday(a,it)?'<em class="snew">오늘</em>':'')+'</span>';
   }).join('')+'</div>';
 }
