@@ -728,8 +728,7 @@ details.study.s2[open]{opacity:1}
 .sig.bad{color:var(--bad-tx);border-color:rgba(var(--badRGB),.45);background:rgba(var(--badRGB),.14)}
 .sig.warn{color:var(--warn-tx);border-color:rgba(var(--warnRGB),.42);background:rgba(var(--warnRGB),.13)}
 .sig.ok{color:var(--good-tx);border-color:rgba(var(--goodRGB),.42);background:rgba(var(--goodRGB),.13)}
-.sigsum{display:flex;gap:6px;overflow-x:auto;padding:0 2px 3px;margin:0 0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.sigsum::-webkit-scrollbar{display:none}
+.sigsum{display:flex;flex-wrap:wrap;gap:6px;padding:0 2px 3px;margin:0 0 8px}
 .sigsum button{flex:none;appearance:none;border:1px solid var(--line);background:var(--card);color:var(--tx2);
   font:700 10.5px/1 inherit;font-family:inherit;padding:0 9px;border-radius:9px;min-height:33px;
   display:inline-flex;align-items:center;gap:4px}
