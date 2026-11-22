@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="투자 레이더">
-<link rel="manifest" href="./manifest.json?v=8.2">
+<link rel="manifest" href="./manifest.json?v=9.0">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon-32.png" sizes="32x32">
@@ -779,6 +779,63 @@ details.study.s2[open]{opacity:1}
 .secblk{scroll-margin-top:104px}
 .seg button .tick{color:var(--good-tx);margin-left:3px;font-size:9.5px}
 .qt-prog span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
+/* ===== v9: 매수 계획 · 실현손익 · 신호 발생일 · 다음 브리핑 ===== */
+.sig.plan{color:var(--accent2);border-color:rgba(var(--accRGB),.5);background:var(--accentbg)}
+.sig .snew{font-style:normal;font-size:8px;font-weight:800;margin-left:4px;padding:1px 4px;border-radius:5px;
+  background:rgba(var(--accRGB),.2);color:var(--accent2);letter-spacing:0}
+.sigsum button[data-sigf="plan"].on{border-color:rgba(var(--accRGB),.6);color:var(--accent2)}
+.pfsig.plan{color:var(--accent2)}
+.pfcard .pfh .vr{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
+.pfcard .pfh .rl{display:inline-flex;align-items:baseline;gap:4px;font-size:9px;color:var(--mu);font-weight:700;white-space:nowrap}
+.pfcard .pfh .rl b{font-size:10.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.pfcard .pfh .rl b.up{color:var(--up)}
+.pfcard .pfh .rl b.down{color:var(--down)}
+.pfcard .pfh .rl em{font-style:normal;font-size:8.5px;color:var(--mu);font-weight:700}
+.pfcard .pfh .rl .lnk{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--tx2);
+  font:800 8.5px/1 inherit;font-family:inherit;padding:0 6px;min-height:19px;border-radius:6px}
+.pfcard .pfh .rl .lnk:active{transform:scale(.96)}
+/* 분할 매수 계획 */
+.plan .pnote{font-size:9.5px;color:var(--mu);line-height:1.55;margin:0 0 9px}
+.plan .pnote b{color:var(--tx2)}
+.prows{display:grid;gap:6px}
+.prow{display:grid;grid-template-columns:34px 1fr 1fr;gap:6px;align-items:center}
+.prow .pi{font-size:10px;font-weight:800;color:var(--accent2)}
+.prow input{appearance:none;width:100%;min-width:0;background:var(--card2);border:1px solid var(--line);
+  border-radius:9px;color:var(--tx);font:600 12px/1 inherit;font-family:inherit;padding:0 9px;min-height:36px;
+  font-variant-numeric:tabular-nums}
+.prow input::placeholder{color:var(--mu);font-weight:500;font-size:10.5px}
+.plansum{margin-top:9px;display:flex;flex-wrap:wrap;gap:4px 9px;font-size:9.5px;color:var(--tx2);line-height:1.5}
+.plansum .t{font-weight:800;color:var(--mu)}
+.plansum .pi2{white-space:nowrap}
+.plansum .pi2 b{font-variant-numeric:tabular-nums;color:var(--tx)}
+.plansum em{font-style:normal;font-weight:800;color:var(--mu);margin-left:3px;font-variant-numeric:tabular-nums}
+.plansum em.on{color:var(--accent2)}
+.plansum em.near{color:var(--warn-tx)}
+.pmsg{margin-top:8px;font-size:10px;color:var(--warn-tx);line-height:1.5}
+.pmsg[hidden]{display:none}
+/* 실현손익 내역 */
+.rlist{margin-top:10px;border-top:1px solid var(--line)}
+.rrow{display:grid;grid-template-columns:1fr auto 26px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.rrow .rt{min-width:0}
+.rrow .rt b{display:block;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .rt span{display:block;font-size:9px;color:var(--mu)}
+.rrow .rv{text-align:right}
+.rrow .rv b{display:block;font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.rrow .rv b.up{color:var(--up)}
+.rrow .rv b.down{color:var(--down)}
+.rrow .rv span{display:block;font-size:9px;color:var(--mu);font-variant-numeric:tabular-nums}
+.rrow .x{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--mu);
+  width:26px;height:26px;border-radius:8px;font-size:11px;line-height:1;padding:0;display:grid;place-items:center}
+/* 다음 정기 브리핑 */
+.bnext{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;background:var(--card);display:grid;gap:4px}
+.bnext .bnt{font-size:9.5px;font-weight:800;color:var(--accent2)}
+.bnext .bnl{display:flex;align-items:baseline;gap:7px;font-size:10.5px;color:var(--tx2);min-width:0}
+.bnext .bnl b{font-size:10px;font-weight:800;color:var(--tx);flex:none;min-width:22px}
+.bnext .bnl .bt{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bnext .bnl .bd{margin-left:auto;font-size:9.5px;color:var(--mu);font-weight:700;white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
+.bnext .bnh{font-size:8.5px;color:var(--mu);line-height:1.45;margin-top:1px}
+.qt-mix{font-size:9px;color:var(--mu);margin-top:5px;line-height:1.45}
+.qt-mix b{color:var(--tx2);font-variant-numeric:tabular-nums}
 @media (max-width:359px){ .pmleg{grid-template-columns:1fr} .qt-grade .btn{font-size:10.5px} .simin{grid-template-columns:1fr} }
 </style>
 <script>window.__errs=[];window.addEventListener('error',function(e){window.__errs.push(String((e&&e.message)||'error'))});window.addEventListener('unhandledrejection',function(e){window.__errs.push('promise:'+String((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejection'))});</script>
@@ -838,6 +895,12 @@ var LS_MEMO = 'macro_radar_memos_v1' + SUF;
 var LS_THEME = 'macro_radar_theme' + SUF;
 var LS_AST = 'macro_radar_assets_v1' + SUF;
 var LS_STUDY = 'macro_radar_study_v1' + SUF;
+/* v9: 분할 매수 계획 · 실현손익 · 신호 최초 발생일 · 도감 판정일.
+   기존 키(macro_radar_assets_v1 등)의 구조는 건드리지 않고 별도 키로만 덧붙인다. */
+var LS_PLAN = 'macro_radar_plans_v1' + SUF;
+var LS_REAL = 'macro_radar_realized_v1' + SUF;
+var LS_SIGLOG = 'macro_radar_siglog_v1' + SUF;
+var LS_SMETA = 'macro_radar_study_meta_v1' + SUF;
 /* 기본 종목에서 항상 최신 market_state.json 값으로 덮어쓰는 필드(가격·등락·차트·밸류·공시) */
 var LIVE_FIELDS = ['price','display','delta','series','seriesSource','per','pbr','fin','dart','roe','shares',
   'high52','low52','foreign','insiders','insiderSrc','barMin','barMax','barUnit','barValue','returns','leading','closeDate','quoteAt'];
@@ -847,7 +910,8 @@ var S = { data:null, tab:'overview', bIdx:0, live:null, err:null,
   ast:{deleted:[],overrides:{},custom:[],order:[]},
   study:{}, quoteAt:null,
   charts:{}, finMode:{}, cseq:0, edit:false, stag:'전체',
-  sstate:'all', qt:null, openStudy:{}, syncN:0, sigf:'all', sim:null };
+  sstate:'all', qt:null, openStudy:{}, syncN:0, sigf:'all', sim:null,
+  plans:{}, real:{items:[]}, siglog:{}, smeta:{}, planDraft:null, qtSeen:{} };
 var NAV={lastBack:0, exiting:false, ready:false};
 
 /* ---------- utils ---------- */
@@ -1137,6 +1201,162 @@ function studyCounts(list){
   var c={0:0,1:0,2:0};
   (list||[]).forEach(function(s){ c[studyState(s)]++; });
   return c;
+}
+
+/* ---------- v9: 분할 매수 계획(최대 3단) ---------- */
+/* 저장 형태: { '감성코드': [{px, qty}, ...] } — px는 그 종목의 카드 표시 통화(ETH는 원)
+   수량은 비워 둘 수 있다(가격만 계획). 저장은 상세 시트의 「계획 저장」으로만. */
+function normPlanList(arr){
+  var clean=[];
+  (arr||[]).slice(0,3).forEach(function(p){
+    if(!p||typeof p!=='object') return;
+    var px=parseFloat(p.px);
+    var qty=(typeof p.qty==='number')?p.qty:parseFloat(p.qty);
+    if(!(px>0)||!isFinite(px)) return;
+    clean.push({px:px, qty:(isFinite(qty)&&qty>0)?qty:null});
+  });
+  return clean;
+}
+function loadPlans(){
+  try{
+    var raw=localStorage.getItem(LS_PLAN);
+    if(!raw) return;
+    var o=JSON.parse(raw); if(!o||typeof o!=='object') return;
+    S.plans={};
+    Object.keys(o).forEach(function(id){
+      var clean=normPlanList(o[id]);
+      if(clean.length) S.plans[id]=clean;
+    });
+  }catch(e){}
+}
+function savePlans(){
+  try{ localStorage.setItem(LS_PLAN, JSON.stringify(S.plans)); }
+  catch(e){ toast('저장 공간이 부족합니다. 백업으로 내보내 주세요.'); }
+}
+function plansOf(a){ return (a&&S.plans&&S.plans[a.id])?S.plans[a.id]:[]; }
+function planQtyText(a,p,unit){
+  if(!p||typeof p.qty!=='number'||!(p.qty>0)) return '';
+  return ' · '+nf(p.qty,p.qty%1?3:0)+(unit||simQtyUnit(a));
+}
+/* 계획 단가까지 현재가가 얼마나 떨어져 있는지(%): +면 아직 위, -면 이미 아래(도달) */
+function planGap(a,p){
+  var base=sigBase(a);
+  if(base==null||!(base>0)||!p||!(p.px>0)) return null;
+  return (p.px/base-1)*100;
+}
+
+/* ---------- v9: 매도 실현손익 · 신호 최초 발생일 · 도감 판정일 ---------- */
+function normRealItems(arr){
+  var clean=[];
+  (arr||[]).forEach(function(it){
+    if(!it||typeof it!=='object') return;
+    var pnl=typeof it.pnl==='number'?it.pnl:parseFloat(it.pnl);
+    if(!isFinite(pnl)) return;
+    clean.push({id:String(it.id||''),name:String(it.name||''),ts:String(it.ts||''),
+      qty:isFinite(parseFloat(it.qty))?parseFloat(it.qty):null,
+      px:isFinite(parseFloat(it.px))?parseFloat(it.px):null,
+      avg:isFinite(parseFloat(it.avg))?parseFloat(it.avg):null,
+      pnl:pnl, cur:(it.cur==='USD'?'USD':'KRW')});
+  });
+  return clean;
+}
+function loadReal(){
+  try{
+    var raw=localStorage.getItem(LS_REAL);
+    if(!raw) return;
+    var o=JSON.parse(raw); if(!o||typeof o!=='object') return;
+    S.real={items:normRealItems(Array.isArray(o.items)?o.items:[])};
+  }catch(e){}
+}
+function saveReal(){
+  try{ localStorage.setItem(LS_REAL, JSON.stringify(S.real)); }
+  catch(e){ toast('저장 공간이 부족합니다. 백업으로 내보내 주세요.'); }
+}
+function realAdd(a,rec){
+  S.real.items.unshift(rec);
+  if(S.real.items.length>200) S.real.items.length=200;  /* 가볍게: 최근 200건만 */
+  saveReal();
+}
+/* 통화별 합계 — 원화·달러를 섞지 않는다 */
+function realTotals(){
+  var t={KRW:0,USD:0,n:0,KRWn:0,USDn:0};
+  (S.real.items||[]).forEach(function(it){
+    if(typeof it.pnl!=='number') return;
+    if(it.cur==='USD'){ t.USD+=it.pnl; t.USDn++; } else { t.KRW+=it.pnl; t.KRWn++; }
+    t.n++;
+  });
+  return t;
+}
+function realSumText(t){
+  var parts=[];
+  if(t.KRWn) parts.push(moneyS(t.KRW,'KRW'));
+  if(t.USDn) parts.push(moneyS(t.USD,'USD'));
+  return parts.length?parts.join(' · '):money(0,'KRW');
+}
+function realSumCls(t){
+  if(t.KRWn&&t.USDn) return (t.KRW>0&&t.USD>0)?'up':((t.KRW<0&&t.USD<0)?'down':'flat');
+  var v=t.KRWn?t.KRW:(t.USDn?t.USD:0);
+  return v>0?'up':(v<0?'down':'flat');
+}
+/* 포트폴리오 요약의 총 평가손익 바로 아래에 붙는 실현손익 줄(탭하면 내역 시트) */
+function realChipHTML(){
+  var t=realTotals();
+  return '<span class="rl">실현손익 <b class="'+realSumCls(t)+'">'+realSumText(t)+'</b>'+
+    '<em>'+(t.n?t.n+'건':'아직 없음')+'</em>'+
+    '<button type="button" class="lnk" data-real="1" aria-label="실현손익 내역 보기">내역</button></span>';
+}
+function realSheet(){
+  var t=realTotals();
+  var h='<div class="mhd"><div style="flex:1;min-width:0"><h3>실현손익 내역</h3>'+
+    '<div class="msub">매도를 기록에 반영할 때 누적 · 최근 200건</div></div>'+
+    '<button class="mx" data-close="1" aria-label="닫기">✕</button></div>';
+  h+='<div class="mval"><span><b class="'+realSumCls(t)+'">'+realSumText(t)+'</b></span>'+
+     '<span class="cap" style="margin:0">'+(t.n?t.n+'건':'기록 없음')+(t.KRWn&&t.USDn?' · 통화별 합계':'')+'</span></div>';
+  if(!S.real.items.length){
+    h+='<p class="note">아직 매도 기록이 없습니다. 종목 상세 → 분할 매수·매도 시뮬레이터에서 「매도」로 계산한 뒤 「기록에 반영」하면 실현손익이 여기에 쌓입니다.</p>'+
+      '<div class="mcta"><button class="btn" data-close="1">닫기</button></div>';
+    openSheet(h); return;
+  }
+  h+='<div class="rlist">'+S.real.items.map(function(it,i){
+    return '<div class="rrow"><div class="rt"><b>'+esc(it.name||'종목')+'</b><span>'+esc(it.ts||'')+'</span></div>'+
+      '<div class="rv"><b class="'+(it.pnl>=0?'up':'down')+'">'+moneyS(it.pnl,it.cur)+'</b>'+
+      '<span>'+(it.qty!=null?nf(it.qty,it.qty%1?3:0):'–')+' × '+money(it.px,it.cur)+'</span></div>'+
+      '<button class="x" data-rdel="'+i+'" aria-label="이 기록 삭제">✕</button></div>';
+  }).join('')+'</div>';
+  h+='<p class="note">수수료·세금은 빼지 않았습니다. 잘못 넣은 기록은 ✕로 지우고 전체 초기화로 비울 수 있습니다.</p>';
+  h+='<div class="mcta"><button class="btn danger" data-rclear="1">전체 초기화</button>'+
+     '<button class="btn" data-close="1">닫기</button></div>';
+  openSheet(h);
+}
+function loadSigLog(){
+  try{
+    var raw=localStorage.getItem(LS_SIGLOG);
+    if(!raw) return;
+    var o=JSON.parse(raw); if(!o||typeof o!=='object') return;
+    S.siglog={};
+    Object.keys(o).forEach(function(k){ if(isISO(o[k])) S.siglog[k]=o[k]; });
+  }catch(e){}
+}
+function saveSigLog(){
+  try{ localStorage.setItem(LS_SIGLOG, JSON.stringify(S.siglog)); }catch(e){}
+}
+function loadSMeta(){
+  try{
+    var raw=localStorage.getItem(LS_SMETA);
+    if(!raw) return;
+    var o=JSON.parse(raw); if(!o||typeof o!=='object') return;
+    S.smeta={};
+    Object.keys(o).forEach(function(k){ if(isISO(o[k])) S.smeta[k]=o[k]; });
+  }catch(e){}
+}
+function saveSMeta(){ try{ localStorage.setItem(LS_SMETA, JSON.stringify(S.smeta)); }catch(e){} }
+/* 판정일로부터 지난 일수(오늘=0). 날짜만 비교하므로 시차·자정 경계에 안전 */
+function daysSince(iso){
+  if(!isISO(iso)) return null;
+  var d=new Date(iso+'T00:00:00');
+  var t=new Date(todayISO()+'T00:00:00');
+  if(isNaN(d.getTime())) return null;
+  return Math.round((t-d)/86400000);
 }
 
 /* ---------- charts ---------- */
@@ -1644,11 +1864,15 @@ function portfolioCard(){
     var qtyTxt=(h.cur==='USD'&&String(h.a.market||'').toUpperCase()==='CRYPTO')
       ?nf(h.q,h.q%1?3:0)+'개'
       :nf(h.q,h.q%1?2:0)+'주';
-    /* v8: 보유 행에서도 손절선 위반·임박만 짧게 표시 */
-    var sg=assetSignals(h.a).alerts[0];
+    /* v8: 보유 행에서도 손절선 위반·임박만 짧게 표시 (v9: 매수 계획 도달도) */
+    var al=assetSignals(h.a).alerts;
+    var sb=al.filter(function(x){return x.c==='bad';})[0];
+    var sw=al.filter(function(x){return x.c==='warn'&&/손절/.test(x.t);})[0];
+    var sp=al.filter(function(x){return x.c==='plan';})[0];
     var flag='';
-    if(sg&&sg.c==='bad') flag='<span class="pfsig bad">⚠ 손절선 하회</span>';
-    else if(sg&&sg.c==='warn'&&/손절/.test(sg.t)) flag='<span class="pfsig warn">⚠ 손절선 근접</span>';
+    if(sb) flag='<span class="pfsig bad">⚠ 손절선 하회</span>';
+    else if(sw) flag='<span class="pfsig warn">⚠ 손절선 근접</span>';
+    else if(sp) flag='<span class="pfsig plan">● 매수 계획</span>';
     return '<div class="pfrow"><span class="pfn">'+esc(h.a.name)+'<i class="pfq">'+qtyTxt+'</i></span>'+
       '<span class="pfr '+pfDir(h.pnl)+'">'+moneyS(h.pnl,h.cur)+'</span>'+
       '<span class="pfs">'+flag+'평가 <b>'+money(h.evalAmt,h.cur)+'</b> · 평단 '+money(h.avg,h.cur,(h.cur==='USD'?2:1))+
@@ -1658,7 +1882,7 @@ function portfolioCard(){
   }).join('');
   return '<article class="card pfcard">'+
     '<div class="pfh"><span class="t">포트폴리오 평가손익</span>'+
-      '<span class="v '+pfDir(big)+'">'+moneyS(big,bigCur)+'</span></div>'+
+      '<span class="vr"><span class="v '+pfDir(big)+'">'+moneyS(big,bigCur)+'</span>'+realChipHTML()+'</span></div>'+
     '<div class="pfsub">'+sub+'</div>'+
     curLines+rows+pfMissHTML(P.miss)+'</article>';
 }
@@ -1675,7 +1899,8 @@ function portfolioAvgCard(miss){
   if(!hs.length){
     if(!miss||!miss.length) return '';
     return '<article class="card pfcard">'+
-      '<div class="pfh"><span class="t">포트폴리오 평가손익</span><span class="v">–</span></div>'+
+      '<div class="pfh"><span class="t">포트폴리오 평가손익</span>'+
+        '<span class="vr"><span class="v">–</span>'+realChipHTML()+'</span></div>'+
       '<div class="pfsub">보유 수량·평단을 넣으면 평가금액과 평가손익이 표시됩니다</div>'+
       pfMissHTML(miss)+'</article>';
   }
@@ -1700,7 +1925,7 @@ function portfolioAvgCard(miss){
   }).join('');
   return '<article class="card pfcard">'+
     '<div class="pfh"><span class="t">평단 대비 수익률</span>'+
-      '<span class="v '+dirClass(avg>0.05?'up':(avg<-0.05?'down':'flat'))+'">'+sgn(avg,1)+'</span></div>'+
+      '<span class="vr"><span class="v '+dirClass(avg>0.05?'up':(avg<-0.05?'down':'flat'))+'">'+sgn(avg,1)+'</span>'+realChipHTML()+'</span></div>'+
     '<div class="pfsub">보유 '+hs.length+'종목 · 단순평균 · 상승 '+up+' · 하락 '+dn+' · 막대 양끝 ±'+scale+'%</div>'+
     rows+pfMissHTML(miss)+'</article>';
 }
@@ -1937,7 +2162,7 @@ function simHTML(a){
       return '<button type="button" data-simfill="'+p+'">보유 '+p+'%</button>';}).join('')+
       '<button type="button" data-simfill="px">현재가로</button></div>'+
     '<div class="simres" id="simres">'+simResHTML(a)+'</div>'+
-    '<p class="simnote">입력만으로 미리 계산합니다. 「기록에 반영」을 누를 때만 수량·평단이 저장됩니다(평균 단가 방식). 실현손익은 기록에 남지 않고, 수수료·세금은 빼지 않았습니다.</p></div>';
+    '<p class="simnote">입력만으로 미리 계산합니다. 「기록에 반영」을 누를 때만 수량·평단이 저장됩니다(평균 단가 방식). 매도는 실현손익이 포트폴리오에 누적되고, 수수료·세금은 빼지 않았습니다.</p></div>';
   return h;
 }
 function simRefresh(a){
@@ -1962,10 +2187,12 @@ function simApply(a){
   var q2=Math.round(r.q2*1000)/1000;
   var avgQ=Math.round((r.avg2/toB)*100)/100;
   var costQ=Math.round((r.cost2/toB)*100)/100;
+  var sell=(r.st.mode==='sell');
   var msg='"'+a.name+'" 기록을 이렇게 바꿀까요?\n\n'+
     '수량 '+(r.q?nf(r.q,r.q%1?3:0):'0')+unit+' → '+nf(q2,q2%1?3:0)+unit+'\n'+
     '평단 '+(r.avg!=null?simMoney(a,r.avg):'–')+' → '+simMoney(a,r.avg2)+'\n'+
-    (r.st.mode==='buy'?'투자금 '+simMoney(a,r.cost2):'남은 투자금 '+simMoney(a,r.cost2));
+    (sell?'남은 투자금 '+simMoney(a,r.cost2):'투자금 '+simMoney(a,r.cost2))+
+    ((sell&&r.realized!=null)?('\n실현손익 '+simMoneyS(a,r.realized)+'  (포트폴리오에 누적)'):'');
   if(!window.confirm(msg)) return;
   var obj={}; for(var k in a) if(Object.prototype.hasOwnProperty.call(a,k)) obj[k]=a[k];
   obj.qtyNum=q2;
@@ -1973,9 +2200,16 @@ function simApply(a){
   obj.avg=avgQ;
   obj.qty=nf(q2,q2%1?3:0)+unit+' 보유';
   upsertAsset(obj);
+  /* v9: 매도는 실현손익을 누적 기록(포트폴리오 요약에 표시) */
+  if(sell&&r.realized!=null){
+    realAdd(a,{id:a.id,name:a.name,ts:nowStamp(),
+      qty:Math.round((simNum(r.st.qty)||0)*1000)/1000,
+      px:r.px, avg:r.avg, pnl:r.realized, cur:simCur(a)});
+  }
   S.sim=null;
   openAsset(a.id);
-  toast('기록에 반영했습니다 · 수량 '+nf(q2,q2%1?3:0)+unit+' · 평단 '+simMoney(a,avgQ*toB));
+  toast('기록에 반영했습니다 · 수량 '+nf(q2,q2%1?3:0)+unit+' · 평단 '+simMoney(a,avgQ*toB)+
+    ((sell&&r.realized!=null)?(' · 실현 '+simMoneyS(a,r.realized)):''));
 }
 
 /* 종목 탭 비트코인/이더리움 등 크립토는 지표 탭 값과 동일한 스냅샷을 쓰게 맞춘다.
@@ -2019,25 +2253,48 @@ function qtFind(key){
 var QT_LABEL={0:'몰랐어',1:'애매해',2:'알았어'};
 var QT_GAP=3; /* 몰랐어·애매해 카드는 3장 뒤에 한 번 더 물어 회수한다 */
 var QT_SESSION=10; /* 사용자 규칙: 학습 세트는 10장 단위(전체는 따로 고른다) */
-function qtStart(limit){
+/* v9: 복습 우선순위 — 미학습(0) → 애매(1) → 오래된 완료(복습 필요, 2) → 최근 완료(3) */
+var STUDY_REVIEW_DAYS=7;
+function studyPrio(s){
+  var st=studyState(s);
+  if(st===0) return 0;
+  if(st===1) return 1;
+  var d=daysSince(S.smeta[studyKey(s)]);
+  if(d==null||d>=STUDY_REVIEW_DAYS) return 2;
+  return 3;
+}
+function studyReviewList(list){
+  return (list||[]).filter(function(s){ return studyState(s)===2&&studyPrio(s)===2; });
+}
+function qtPool(){
   var pool=studyFiltered();
   if(!pool.length) pool=((S.data&&S.data.study)||[]).slice();
+  return pool;
+}
+function qtStart(limit){
+  var pool=qtPool();
   if(!pool.length){ toast('도감 데이터가 없습니다.'); return; }
-  pool=pool.slice().sort(function(a,b){
-    var ra=studyState(a), rb=studyState(b);
-    if(ra!==rb) return ra-rb;
+  /* 상태·복습 필요도로 줄을 세우고, 같은 줄에서는 이번에 본 카드를 뒤로 민다 */
+  var arr=pool.map(function(s){
+    var k=studyKey(s);
+    return {k:k, p:studyPrio(s), seen:S.qtSeen[k]?1:0};
+  });
+  arr.sort(function(a,b){
+    if(a.p!==b.p) return a.p-b.p;
+    if(a.seen!==b.seen) return a.seen-b.seen;
     return Math.random()-0.5;
   });
-  var keys=pool.map(studyKey);
-  var n=(typeof limit==='number'&&limit>0)?Math.min(limit,keys.length):keys.length;
-  qtStartQueue(keys.slice(0,n),{limit:n,total:keys.length});
+  var n=(typeof limit==='number'&&limit>0)?Math.min(limit,arr.length):arr.length;
+  var picks=arr.slice(0,n), mix={0:0,1:0,2:0};
+  picks.forEach(function(x){ mix[x.p===3?2:x.p]++; S.qtSeen[x.k]=Date.now(); });
+  qtStartQueue(picks.map(function(x){return x.k;}),{limit:n,total:arr.length,mix:mix});
 }
 function qtStartQueue(keys,opt){
   keys=(keys||[]).filter(function(k){ return !!qtFind(k); });
   if(!keys.length){ toast('도감 데이터가 없습니다.'); return; }
   S.qt={queue:keys.map(function(k){return {k:k,r:0};}), i:0, phase:'ask',
         log:{0:0,1:0,2:0}, last:null, re:0, got:0, open:[],
-        limit:(opt&&opt.limit)||0, pool:(opt&&opt.total)||keys.length};
+        limit:(opt&&opt.limit)||0, pool:(opt&&opt.total)||keys.length, mix:(opt&&opt.mix)||null};
   openSheet(qtHTML());
 }
 function qtItem(){ var q=S.qt; return q?q.queue[q.i]:null; }
@@ -2052,7 +2309,8 @@ function qtHTML(){
     ' · '+(S.sstate==='all'?'모든 상태':(S.sstate===0?'미학습':(S.sstate===1?'애매':'완료')))+
     (reAll?' · 회수 '+reAll+'장':'')+(q.limit&&q.pool>q.limit?' · '+q.limit+'장 세션':'')+'</span>'+
     '<b>'+(i>=total?total:Math.min(i+1,total))+' / '+total+'</b></div>'+
-    '<div class="qt-bar"><i style="width:'+(Math.min(i,total)/total*100).toFixed(1)+'%"></i></div>';
+    '<div class="qt-bar"><i style="width:'+(Math.min(i,total)/total*100).toFixed(1)+'%"></i></div>'+
+    (q.mix?'<div class="qt-mix">이번 세션 구성 · 미학습 <b>'+q.mix[0]+'</b> · 애매 <b>'+q.mix[1]+'</b> · 복습 <b>'+q.mix[2]+'</b></div>':'');
   if(i>=total){
     var rc=q.re?('🔁 다시 확인 '+q.re+'장 — <b>'+q.got+'장 회수</b>'+
       (q.open.length?' · 남은 '+q.open.length+'장':'')+'.'):'';
@@ -2112,6 +2370,7 @@ function qtGrade(v){
   var s=qtFind(it.k); if(!s) return;
   if(v) S.study[it.k]=v; else delete S.study[it.k];
   saveStudy();
+  S.smeta[it.k]=todayISO(); saveSMeta();
   if(it.r===0){
     q.log[v]=(q.log[v]||0)+1;
     /* 몰랐어·애매해는 3장 뒤에 한 번 더(세션이 짧으면 끝에 붙는다) */
@@ -2164,11 +2423,70 @@ function viewOverview(){
   return h;
 }
 
+/* ---------- v9: 다음 정기 브리핑 안내 ---------- */
+/* 국내 마감은 평일 16:00, 미국 마감은 화~토 07:00(KST)에 자동 반영된다. */
+function nextBriefAt(kind, now){
+  now=now||new Date();
+  var i, d, w;
+  if(kind==='kr'){
+    for(i=0;i<8;i++){
+      d=new Date(now.getTime()); d.setDate(d.getDate()+i); d.setHours(16,0,0,0);
+      w=d.getDay();
+      if(w>=1&&w<=5&&d.getTime()>now.getTime()) return d;
+    }
+  }else{
+    for(i=0;i<8;i++){
+      d=new Date(now.getTime()); d.setDate(d.getDate()+i); d.setHours(7,0,0,0);
+      w=d.getDay();
+      if(w>=2&&w<=6&&d.getTime()>now.getTime()) return d;
+    }
+  }
+  return null;
+}
+var WD_KO=['일','월','화','수','목','금','토'];
+function briefWhen(dt){
+  if(!dt) return '';
+  return ('0'+(dt.getMonth()+1)).slice(-2)+'/'+('0'+dt.getDate()).slice(-2)+'('+WD_KO[dt.getDay()]+') '+
+    ('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2);
+}
+function briefIn(dt){
+  if(!dt) return '';
+  var ms=dt.getTime()-Date.now();
+  if(ms<=0) return '지금';
+  var m=Math.round(ms/60000);
+  if(m<60) return m+'분 후';
+  var hh=Math.floor(m/60), mm=m%60;
+  if(hh<24) return hh+'시간'+(mm?' '+mm+'분':'')+' 후';
+  return Math.floor(hh/24)+'일 '+(hh%24)+'시간 후';
+}
+function briefNextHTML(){
+  var now=new Date(), nk=nextBriefAt('kr',now), nu=nextBriefAt('us',now);
+  return '<div class="bnext" aria-label="다음 정기 브리핑">'+
+    '<div class="bnt">다음 정기 브리핑</div>'+
+    '<div class="bnl" data-bnext="kr"><b>국내</b><span class="bt">'+esc(briefWhen(nk))+'</span>'+
+      '<span class="bd">'+esc(briefIn(nk))+'</span></div>'+
+    '<div class="bnl" data-bnext="us"><b>미국</b><span class="bt">'+esc(briefWhen(nu))+'</span>'+
+      '<span class="bd">'+esc(briefIn(nu))+'</span></div>'+
+    '<div class="bnh">평일 16:00 국내 마감 · 화~토 07:00 미국 마감이 자동 반영됩니다</div></div>';
+}
+function tickBrief(){
+  var rows=document.querySelectorAll('[data-bnext]');
+  if(!rows.length) return;
+  var now=new Date();
+  Array.prototype.forEach.call(rows,function(el){
+    var dt=nextBriefAt(el.getAttribute('data-bnext'),now);
+    var t=el.querySelector('.bt'), d=el.querySelector('.bd');
+    if(t) t.textContent=briefWhen(dt);
+    if(d) d.textContent=briefIn(dt);
+  });
+}
+
 function viewBriefing(){
   var items=S.data.briefings.items;
   if(S.bIdx>=items.length) S.bIdx=0;
   var b=items[S.bIdx];
-  var h='<div class="seg">'+items.map(function(it,i){
+  var h=briefNextHTML();
+  h+='<div class="seg">'+items.map(function(it,i){
       var done=(it.quiz&&memoGet('quiz:'+it.quiz.id))?'<span class="tick" title="퀴즈 답 메모 있음" aria-label="퀴즈 답 메모 있음">✓</span>':'';
       return '<button data-bidx="'+i+'" class="'+(i===S.bIdx?'on':'')+'">'+esc(it.market)+' '+esc(it.time.split(' ')[0])+done+'</button>';
     }).join('')+'</div>';
@@ -2303,10 +2621,10 @@ function viewCompanies(){
   var list=assets();
   var h=portfolioCard();
   /* v8: 손절·목표 신호 집계 — 목록 위에서 바로 거른다 */
-  var cnt={bad:0,warn:0,ok:0}, near=null;
+  var cnt={bad:0,warn:0,ok:0,plan:0}, near=null;
   list.forEach(function(a){
-    var s=assetSignals(a);
-    if(s.alerts.length) cnt[s.alerts[0].c]+=1;
+    var s=assetSignals(a), seen={};
+    s.alerts.forEach(function(al){ if(al.c&&!seen[al.c]){ seen[al.c]=1; cnt[al.c]=(cnt[al.c]||0)+1; } });
     if(typeof a.stop==='number'&&a.stop>0){
       var b=sigBase(a);
       if(b){ var d=(b/a.stop-1)*100; if(d>=0&&(!near||d<near.d)) near={d:d,name:a.name}; }
@@ -2315,18 +2633,19 @@ function viewCompanies(){
   if(S.sigf!=='all'&&!S.edit){
     list=list.filter(function(a){
       var s=assetSignals(a);
-      return s.alerts.length>0&&s.alerts[0].c===S.sigf;
+      return s.alerts.some(function(al){ return al.c===S.sigf; });
     });
   }
   h+='<div class="sec"><h2>관심기업</h2><span class="hint">'+list.length+'종목'+(S.edit?' · 순서 편집 중':' · 카드의 버튼으로 상세')+'</span></div>';
   if(!S.edit){
     h+='<div class="sigsum" role="group" aria-label="신호로 거르기">'+
-      [['all','전체',assets().length],['bad','손절 하회',cnt.bad],['warn','임박',cnt.warn],['ok','목표권',cnt.ok]].map(function(x){
+      [['all','전체',assets().length],['bad','손절 하회',cnt.bad],['warn','임박',cnt.warn],
+       ['plan','매수 계획',cnt.plan],['ok','목표권',cnt.ok]].map(function(x){
         var on=(S.sigf===x[0])?' on':'';
         return '<button type="button" data-sigf="'+x[0]+'" class="'+on.trim()+'" aria-pressed="'+(on?'true':'false')+'"'+
           (x[0]!=='all'&&!x[2]?' disabled':'')+'>'+x[1]+'<b>'+x[2]+'</b></button>';
       }).join('')+'</div>';
-    if(!cnt.bad&&!cnt.warn&&!cnt.ok){
+    if(!cnt.bad&&!cnt.warn&&!cnt.ok&&!cnt.plan){
       h+='<div class="sighint">지금 걸린 신호는 없습니다'+(near?' · 손절선에 가장 가까운 종목 '+esc(near.name)+' '+nf(near.d,1)+'%':'')+'</div>';
     }
   }
@@ -2423,8 +2742,8 @@ function assetSignals(a){
   if(base==null||!(base>0)) return r;
   if(typeof a.stop==='number'&&a.stop>0){
     var g=(base/a.stop-1)*100;
-    if(g<0) r.alerts.push({c:'bad',t:'손절선 하회 '+nf(Math.abs(g),1)+'%'});
-    else if(g<=2) r.alerts.push({c:'warn',t:'손절선 '+nf(g,1)+'% 앞'});
+    if(g<0) r.alerts.push({c:'bad',k:'stop',t:'손절선 하회 '+nf(Math.abs(g),1)+'%'});
+    else if(g<=2) r.alerts.push({c:'warn',k:'stopnear',t:'손절선 '+nf(g,1)+'% 앞'});
     else r.dists.push({c:'',t:'손절 -'+nf(g,1)+'%'});
   }
   var tgs=(a.targets||[]).filter(function(t){ return t&&typeof t.from==='number'&&t.from>0; });
@@ -2433,26 +2752,51 @@ function assetSignals(a){
     var lab=String(t.label||((j+1)+'차'));
     var buy=/매수/.test(lab);
     if(buy){
-      if(base>=to) r.alerts.push({c:'ok',t:lab+' 위 '+nf((base/to-1)*100,0)+'%'});
-      else if(base>=t.from) r.alerts.push({c:'ok',t:lab+' 진입'});
-      else if((t.from/base-1)*100<=3) r.alerts.push({c:'warn',t:lab+' '+nf((t.from/base-1)*100,1)+'% 앞'});
+      if(base>=to) r.alerts.push({c:'ok',k:'t'+j+'r',t:lab+' 위 '+nf((base/to-1)*100,0)+'%'});
+      else if(base>=t.from) r.alerts.push({c:'ok',k:'t'+j+'r',t:lab+' 진입'});
+      else if((t.from/base-1)*100<=3) r.alerts.push({c:'warn',k:'t'+j+'n',t:lab+' '+nf((t.from/base-1)*100,1)+'% 앞'});
       else r.dists.push({c:'',t:lab+' +'+nf((t.from/base-1)*100,1)+'%'});
     }else{
-      if(base>=to) r.alerts.push({c:'ok',t:lab+' 목표 도달'});
-      else if(base>=t.from) r.alerts.push({c:'ok',t:lab+' 목표권'});
-      else if((t.from/base-1)*100<=5) r.alerts.push({c:'warn',t:lab+' 목표 '+nf((t.from/base-1)*100,1)+'% 앞'});
+      if(base>=to) r.alerts.push({c:'ok',k:'t'+j+'r',t:lab+' 목표 도달'});
+      else if(base>=t.from) r.alerts.push({c:'ok',k:'t'+j+'r',t:lab+' 목표권'});
+      else if((t.from/base-1)*100<=5) r.alerts.push({c:'warn',k:'t'+j+'n',t:lab+' 목표 '+nf((t.from/base-1)*100,1)+'% 앞'});
       else r.dists.push({c:'',t:lab+' +'+nf((t.from/base-1)*100,1)+'%'});
     }
+  });
+  /* v9: 분할 매수 계획 — 계획 단가에 닿았거나(도달) 2% 이내로 가까우면(근접) 카드에 올린다 */
+  plansOf(a).forEach(function(p,j){
+    if(!p||!(p.px>0)) return;
+    var lab='매수 계획 '+(j+1)+'단';
+    var gp=(p.px/base-1)*100;   /* +면 현재가가 계획 위, 0 이하면 도달 */
+    if(gp<=0) r.alerts.push({c:'plan',k:'p'+j+'r',t:lab+' 도달'});
+    else if(gp<=2) r.alerts.push({c:'plan',k:'p'+j+'n',t:lab+' '+nf(gp,1)+'% 앞'});
+    else r.dists.push({c:'',t:'계획 '+(j+1)+'단 -'+nf(gp,1)+'%'});
   });
   return r;
 }
 /* 임박·도달 신호가 있으면 그것만, 없으면 남은 거리를 회색 칩으로 */
+/* v9: 손절 → 매수 계획 → 목표 순으로 보여 주고, 오늘 처음 걸린 신호에 '오늘' 표시를 붙인다 */
+var SIG_ORDER={bad:0,plan:1,warn:2,ok:3};
+function sigToday(a,it){
+  if(!it||!it.k) return false;
+  return S.siglog[(a.id||'')+'|'+it.k]===todayISO();
+}
+function sigSince(a,it){
+  if(!it||!it.k) return '';
+  return S.siglog[(a.id||'')+'|'+it.k]||'';
+}
 function sigRow(a,max){
   var s=assetSignals(a);
   var items=s.alerts.length?s.alerts:s.dists;
   if(!items.length) return '';
+  if(s.alerts.length){
+    items=items.slice().sort(function(x,y){
+      return (SIG_ORDER[x.c]==null?9:SIG_ORDER[x.c])-(SIG_ORDER[y.c]==null?9:SIG_ORDER[y.c]);
+    });
+  }
   return '<div class="sigrow">'+items.slice(0,max||2).map(function(it){
-    return '<span class="sig'+(it.c?' '+it.c:'')+'"><i></i>'+esc(it.t)+'</span>';
+    return '<span class="sig'+(it.c?' '+it.c:'')+'"><i></i>'+esc(it.t)+
+      (sigToday(a,it)?'<em class="snew">오늘</em>':'')+'</span>';
   }).join('')+'</div>';
 }
 
@@ -2557,6 +2901,82 @@ function insiderTable(a){
   return h;
 }
 
+/* ---------- v9: 분할 매수 계획(최대 3단) — 상세 시트에서 저장 ---------- */
+function planDraft(a){
+  if(!S.planDraft||S.planDraft.id!==a.id){
+    var cur=plansOf(a), rows=[];
+    for(var i=0;i<3;i++){
+      var p=cur[i];
+      rows.push({px:(p&&p.px)?String(Math.round(p.px*100)/100):'',
+                 qty:(p&&typeof p.qty==='number')?String(p.qty):''});
+    }
+    S.planDraft={id:a.id, rows:rows};
+  }
+  return S.planDraft;
+}
+function planUnit(a){ return simCur(a)==='USD'?'$':'원'; }
+function planHTML(a){
+  var d=planDraft(a), saved=plansOf(a), unit=planUnit(a), unitQ=simQtyUnit(a);
+  var h='<div class="msec plan"><h4>분할 매수 계획 · 최대 3단</h4>'+
+    '<div class="pnote">단가를 저장해 두면 현재가가 그 단가의 <b>2% 이내</b>로 오면 <b>근접</b>, 닿으면 <b>도달</b> 신호가 카드·신호 필터에 붙습니다. 수량은 비워도 됩니다.</div>';
+  h+='<div class="prows">';
+  for(var i=0;i<3;i++){
+    var r=d.rows[i]||{px:'',qty:''};
+    h+='<div class="prow"><span class="pi">'+(i+1)+'단</span>'+
+      '<input data-pf="px" data-pi="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(r.px)+'" placeholder="단가('+unit+')" aria-label="'+(i+1)+'단 단가">'+
+      '<input data-pf="qty" data-pi="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(r.qty)+'" placeholder="수량('+unitQ+') 선택" aria-label="'+(i+1)+'단 수량">'+
+      '</div>';
+  }
+  h+='</div>';
+  if(saved.length){
+    h+='<div class="plansum"><span class="t">저장된 계획</span>'+saved.map(function(p,j){
+      var gp=planGap(a,p);
+      var st=(gp==null)?'':(gp<=0?'<em class="on">도달</em>':(gp<=2?'<em class="near">'+nf(gp,1)+'% 앞</em>':'<em>'+nf(gp,1)+'% 위</em>'));
+      return '<span class="pi2">'+(j+1)+'단 <b>'+simMoney(a,p.px)+'</b>'+planQtyText(a,p)+st+'</span>';
+    }).join('')+'</div>';
+  }
+  h+='<div class="pmsg" id="planmsg" hidden></div>';
+  h+='<div class="simcta"><button class="btn" type="button" data-pclear="1"'+(saved.length?'':' disabled')+'>계획 지우기</button>'+
+     '<button class="btn pri" type="button" data-psave="1">계획 저장</button></div>';
+  h+='</div>';
+  return h;
+}
+function planSave(a){
+  var d=planDraft(a), rows=[], err='';
+  d.rows.forEach(function(r,i){
+    var has=(String(r.px||'').trim()||String(r.qty||'').trim());
+    if(!has) return;
+    var px=simNum(r.px), q=simNum(r.qty);
+    if(!(px>0)){ if(!err) err=(i+1)+'단 단가를 확인하세요.'; return; }
+    if(String(r.qty||'').trim()&&!(q>0)){ if(!err) err=(i+1)+'단 수량을 확인하세요.'; return; }
+    rows.push({px:px, qty:(q>0?q:null)});
+  });
+  var msg=$id('planmsg');
+  if(err){
+    if(msg){ msg.textContent=err; msg.className='pmsg bad'; msg.hidden=false; }
+    toast(err); return;
+  }
+  if(!rows.length){
+    if(msg){ msg.textContent='단가를 하나 이상 입력하세요.'; msg.className='pmsg bad'; msg.hidden=false; }
+    toast('단가를 하나 이상 입력하세요.'); return;
+  }
+  S.plans[a.id]=rows; savePlans();
+  toast('계획을 저장했습니다 · '+rows.map(function(p,j){ return (j+1)+'단 '+simMoney(a,p.px); }).join(' · '));
+  var sheet=$id('msheet'), top=sheet?sheet.scrollTop:0;
+  openAsset(a.id);
+  if(sheet) sheet.scrollTop=top;
+}
+function planClear(a){
+  if(!S.plans[a.id]) return;
+  if(!window.confirm('"'+a.name+'"의 분할 매수 계획을 지울까요?')) return;
+  delete S.plans[a.id]; savePlans();
+  S.planDraft=null;
+  toast('매수 계획을 지웠습니다.');
+  var sheet=$id('msheet'), top=sheet?sheet.scrollTop:0;
+  openAsset(a.id);
+  if(sheet) sheet.scrollTop=top;
+}
+
 function assetDetail(a){
   var isCrypto=String(a.market||'').toUpperCase()==='CRYPTO';
   var h='<div class="mhd"><div style="flex:1;min-width:0"><h3>'+esc(a.name)+'</h3>'+
@@ -2573,6 +2993,8 @@ function assetDetail(a){
   if(pm) h+='<div class="msec"><h4>가격 지도 · 손절 · 평단 · 목표</h4>'+pm+'</div>';
   /* 분할 매수·매도 시뮬레이터 */
   h+=simHTML(a);
+  /* 분할 매수 계획 · 카드 신호 연동 */
+  h+=planHTML(a);
 
   /* 가격 차트 */
   var refs=[];
@@ -2738,8 +3160,10 @@ function viewStudy(){
   var c=studyCounts(all), tot=all.length||1, pct=Math.round(c[2]/tot*100);
   var tagItems=all.filter(function(s){ return cur==='전체'||s.tag===cur; });
   var ct=studyCounts(tagItems);
+  var rv=studyReviewList(all).length;
   var hint=all.length+'개 · '+(cur==='전체'?'전체':cur);
   if(S.sstate!=='all') hint+=' · '+(S.sstate===1?'애매':(S.sstate===2?'완료':'미학습'))+' '+items.length+'개';
+  if(rv) hint+=' · 복습 필요 '+rv;
   var h='<div class="sec"><h2>공부 도감</h2><span class="hint">'+hint+'</span></div>';
   h+='<div class="sprog"><div class="nums">'+
       '<span>미학습<b>'+c[0]+'</b></span>'+
@@ -2754,8 +3178,9 @@ function viewStudy(){
           (x[0]==='1'?' style="color:var(--warn-tx)"':(x[0]==='2'?' style="color:var(--good-tx)"':''))+
           '>'+x[1]+'<b>'+x[2]+'</b></button>';
       }).join('')+'</div>';
-  h+='<div class="qtestbar"><button class="btn pri" id="btnQuizTest" data-qtlimit="'+QT_SESSION+'">⚡ 퀵 테스트 '+QT_SESSION+'장</button>'+
-     '<button class="btn" data-qtlimit="0">전체 '+items.length+'장</button></div>';
+  var qtN=Math.min(QT_SESSION,items.length);
+  h+='<div class="qtestbar"><button class="btn pri" id="btnQuizTest" data-qtlimit="'+QT_SESSION+'"'+(items.length?'':' disabled')+'>⚡ 퀵 테스트 '+qtN+'장</button>'+
+     '<button class="btn" data-qtlimit="0"'+(items.length?'':' disabled')+'>전체 '+items.length+'장</button></div>';
   h+='<div class="sfilter">'+tags.map(function(t){
       return '<button data-stag="'+esc(t)+'" class="'+(t===cur?'on':'')+'" aria-pressed="'+(t===cur?'true':'false')+'">'+esc(t)+'</button>';
     }).join('')+'</div>';
@@ -2787,6 +3212,22 @@ function viewStudy(){
 }
 
 /* ---------- render ---------- */
+/* v9: 신호가 처음 걸린 날을 가볍게 기록해 '오늘 새로'를 구분한다.
+   지금 걸리지 않는 신호의 기록은 지우므로, 다시 걸리면 그날이 새 날짜가 된다. */
+function sigLogSync(){
+  if(!S.data) return;
+  var today=todayISO(), log=S.siglog||{}, changed=false, live={};
+  assets().forEach(function(a){
+    assetSignals(a).alerts.forEach(function(al){
+      if(!al.k) return;
+      var k=(a.id||'')+'|'+al.k;
+      live[k]=1;
+      if(!log[k]){ log[k]=today; changed=true; }
+    });
+  });
+  Object.keys(log).forEach(function(k){ if(!live[k]){ delete log[k]; changed=true; } });
+  if(changed){ S.siglog=log; saveSigLog(); }
+}
 function render(){
   var main=$id('main');
   if(S.err){
@@ -2796,6 +3237,7 @@ function render(){
     return;
   }
   if(!S.data) return;
+  sigLogSync();
   S.charts={};
   var html='';
   if(S.tab==='overview') html=viewOverview();
@@ -2926,6 +3368,10 @@ function bindView(){
       render();
     });
   });
+  /* v9: 포트폴리오 실현손익 내역 */
+  Array.prototype.forEach.call(main.querySelectorAll('[data-real]'),function(b){
+    b.addEventListener('click',function(ev){ ev.stopPropagation(); realSheet(); });
+  });
   /* 도감 상태 필터 · 퀵 테스트 */
   Array.prototype.forEach.call(main.querySelectorAll('[data-sstate]'),function(b){
     b.addEventListener('click',function(){
@@ -2976,6 +3422,7 @@ function bindView(){
       var v=parseInt(b.getAttribute('data-sv'),10)||0;
       if(v) S.study[sid]=v; else delete S.study[sid];
       saveStudy();
+      S.smeta[sid]=todayISO(); saveSMeta();
       render();
     });
   });
@@ -3081,12 +3528,36 @@ function bindSheet(){
       simRefresh(a);
     });
   });
+  /* v9: 분할 매수 계획 입력 — 초안만 갱신하고 시트를 다시 그리지 않는다 */
+  Array.prototype.forEach.call(sheet.querySelectorAll('[data-pf]'),function(el){
+    el.addEventListener('input',function(){
+      var a=assetById(S.curAsset||''); if(!a) return;
+      var d=planDraft(a), i=parseInt(el.getAttribute('data-pi'),10)||0;
+      if(!d.rows[i]) return;
+      d.rows[i][el.getAttribute('data-pf')]=el.value;
+    });
+  });
   /* 결과 영역은 다시 그려지므로 버튼은 시트 한 곳에서 받는다 */
   sheet.onclick=function(ev){
     var t=ev.target;
     if(!t||!t.closest) return;
+    /* v9: 실현손익 내역 — 종목과 무관한 시트 */
+    if(t.closest('[data-rclear]')){
+      if(!S.real.items.length) return;
+      if(!window.confirm('실현손익 기록 '+S.real.items.length+'건을 모두 지울까요? 되돌릴 수 없습니다.')) return;
+      S.real={items:[]}; saveReal(); realSheet(); render(); toast('실현손익 기록을 초기화했습니다.');
+      return;
+    }
+    if(t.closest('[data-rdel]')){
+      var ri=parseInt(t.closest('[data-rdel]').getAttribute('data-rdel'),10);
+      if(!(ri>=0)||!S.real.items[ri]) return;
+      S.real.items.splice(ri,1); saveReal(); realSheet(); render(); toast('기록을 지웠습니다.');
+      return;
+    }
     var a=assetById(S.curAsset||'');
     if(!a) return;
+    if(t.closest('[data-psave]')){ planSave(a); return; }
+    if(t.closest('[data-pclear]')){ planClear(a); return; }
     if(t.closest('[data-simapply]')){ simApply(a); return; }
     if(t.closest('[data-simreset]')){
       S.sim=null; simGet(a);
@@ -3178,7 +3649,8 @@ function navBack(){
 
 /* ---------- memo io ---------- */
 function exportJSON(){
-  var payload={app:'macro-radar',version:3,exportedAt:nowStamp(),memos:S.memos,assets:S.ast};
+  var payload={app:'macro-radar',version:4,exportedAt:nowStamp(),memos:S.memos,assets:S.ast,
+    plans:S.plans,realized:S.real,siglog:S.siglog,smeta:S.smeta};
   var s=JSON.stringify(payload,null,2);
   var blob=new Blob([s],{type:'application/json'});
   var a=document.createElement('a');
@@ -3212,6 +3684,27 @@ function importJSON(ev){
                custom:Array.isArray(A.custom)?A.custom:[],
                order:Array.isArray(A.order)?A.order:[]};
         saveAssets(); cnt+=S.ast.custom.length;
+      }
+      /* v9: 계획·실현손익·신호일·판정일 (없는 예전 백업도 그대로 불러온다) */
+      if(o&&o.plans&&typeof o.plans==='object'){
+        Object.keys(o.plans).forEach(function(id){
+          var clean=normPlanList(o.plans[id]);
+          if(clean.length){ S.plans[id]=clean; cnt+=clean.length; } else delete S.plans[id];
+        });
+        savePlans();
+      }
+      if(o&&o.realized&&Array.isArray(o.realized.items)){
+        var add=normRealItems(o.realized.items);
+        S.real.items=S.real.items.concat(add).slice(0,200);
+        saveReal(); cnt+=add.length;
+      }
+      if(o&&o.siglog&&typeof o.siglog==='object'){
+        Object.keys(o.siglog).forEach(function(k){ if(isISO(o.siglog[k])) S.siglog[k]=o.siglog[k]; });
+        saveSigLog();
+      }
+      if(o&&o.smeta&&typeof o.smeta==='object'){
+        Object.keys(o.smeta).forEach(function(k){ if(isISO(o.smeta[k])) S.smeta[k]=o.smeta[k]; });
+        saveSMeta();
       }
       render();
       toast('불러왔습니다 · '+cnt+'개 항목');
@@ -3392,6 +3885,10 @@ document.addEventListener('DOMContentLoaded',function(){
   loadMemos();
   loadAssets();
   loadStudy();
+  loadPlans();
+  loadReal();
+  loadSigLog();
+  loadSMeta();
   navInit();
   window.addEventListener('popstate',navBack);
 
@@ -3424,6 +3921,7 @@ document.addEventListener('DOMContentLoaded',function(){
   boot();
   setTimeout(function(){ if(!S.live) refreshLive(); },1200);
   setTimeout(function(){ refreshQuotes().catch(function(){}); },3000);
+  setInterval(tickBrief,30000);
 
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='visible') refreshData();
@@ -3431,7 +3929,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=8.2').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=9.0').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });
