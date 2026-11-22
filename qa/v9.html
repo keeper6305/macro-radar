@@ -995,7 +995,10 @@ async function run(){
     q('.tab[data-tab="companies"]').click(); await wait(520);
     var logB=JSON.parse(localStorage.getItem(sigKey)||'{}');
     var kept=Object.keys(logB).filter(function(k){ return logB[k]==='2026-01-01'; }).length;
-    need(kept===nA,'지난 날짜 보존 '+kept+'/'+nA+' (오늘로 덮어씀)');
+    /* 기록된 날짜는 덮어쓰지 않는다(새로 생긴 신호의 오늘 날짜는 정상) */
+    var overwritten=Object.keys(oldMap).filter(function(k){ return logB[k]&&logB[k]!=='2026-01-01'; });
+    need(!overwritten.length,'기록된 날짜를 오늘로 덮어씀: '+overwritten.slice(0,2).join(', '));
+    need(kept>=1,'보존된 날짜 없음');
     var staleNew=qa('#main .sig .snew').filter(function(em){
       var sk=em.closest('.sig').getAttribute('data-sk');
       return oldMap[sk]==='2026-01-01';

@@ -911,7 +911,7 @@ var S = { data:null, tab:'overview', bIdx:0, live:null, err:null,
   study:{}, quoteAt:null,
   charts:{}, finMode:{}, cseq:0, edit:false, stag:'전체',
   sstate:'all', qt:null, openStudy:{}, syncN:0, sigf:'all', sim:null,
-  plans:{}, real:{items:[]}, siglog:{}, smeta:{}, planDraft:null, qtSeen:{} };
+  plans:{}, real:{items:[]}, siglog:{}, smeta:{}, planDraft:null, qtSeen:{}, dirty:false };
 var NAV={lastBack:0, exiting:false, ready:false};
 
 /* ---------- utils ---------- */
@@ -2206,6 +2206,7 @@ function simApply(a){
       qty:Math.round((simNum(r.st.qty)||0)*1000)/1000,
       px:r.px, avg:r.avg, pnl:r.realized, cur:simCur(a)});
   }
+  S.dirty=true;
   S.sim=null;
   openAsset(a.id);
   toast('기록에 반영했습니다 · 수량 '+nf(q2,q2%1?3:0)+unit+' · 평단 '+simMoney(a,avgQ*toB)+
@@ -2786,14 +2787,16 @@ function sigSince(a,it){
   return S.siglog[(a.id||'')+'|'+it.k]||'';
 }
 function sigRow(a,max){
-  var s=assetSignals(a);
-  var items=s.alerts.length?s.alerts:s.dists;
-  if(!items.length) return '';
+  var s=assetSignals(a), lim=max||2;
+  var items;
   if(s.alerts.length){
-    items=items.slice().sort(function(x,y){
+    items=s.alerts.slice().sort(function(x,y){
       return (SIG_ORDER[x.c]==null?9:SIG_ORDER[x.c])-(SIG_ORDER[y.c]==null?9:SIG_ORDER[y.c]);
     });
-  }
+    /* 임박·도달이 1개뿐이면 남는 자리를 거리 칩으로 채운다 — 신호 하나 뜨면 손절 거리가 사라지지 않게 */
+    for(var i=0;i<s.dists.length&&items.length<lim;i++) items.push(s.dists[i]);
+  } else items=s.dists;
+  if(!items.length) return '';
   return '<div class="sigrow">'+items.slice(0,max||2).map(function(it){
     return '<span class="sig'+(it.c?' '+it.c:'')+'"'+(it.k?' data-sk="'+esc((a.id||'')+'|'+it.k)+'"':'')+'><i></i>'+esc(it.t)+
       (sigToday(a,it)?'<em class="snew">오늘</em>':'')+'</span>';
@@ -2961,6 +2964,7 @@ function planSave(a){
     toast('단가를 하나 이상 입력하세요.'); return;
   }
   S.plans[a.id]=rows; savePlans();
+  S.dirty=true;  /* 뒤쪽 카드·신호 필터도 다시 그리게 */
   toast('계획을 저장했습니다 · '+rows.map(function(p,j){ return (j+1)+'단 '+simMoney(a,p.px); }).join(' · '));
   var sheet=$id('msheet'), top=sheet?sheet.scrollTop:0;
   openAsset(a.id);
@@ -2970,7 +2974,7 @@ function planClear(a){
   if(!S.plans[a.id]) return;
   if(!window.confirm('"'+a.name+'"의 분할 매수 계획을 지울까요?')) return;
   delete S.plans[a.id]; savePlans();
-  S.planDraft=null;
+  S.planDraft=null; S.dirty=true;
   toast('매수 계획을 지웠습니다.');
   var sheet=$id('msheet'), top=sheet?sheet.scrollTop:0;
   openAsset(a.id);
@@ -3615,7 +3619,8 @@ function closeModal(){
   S.qt=null;
   S.sim=null;
   /* 퀵 테스트에서 바뀐 학습 상태가 도감 목록·진행률에 바로 반영되게 */
-  if(S.tab==='study') render();
+  /* v9: 계획·시뮬레이터·실현손익처럼 목록 뒤 데이터가 바뀐 경우에도 다시 그린다 */
+  if(S.tab==='study'||S.dirty){ S.dirty=false; render(); }
 }
 
 /* ---------- 뒤로가기 2단계 (안드로이드) ----------
