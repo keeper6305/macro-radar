@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macro-radar v10 shots</title>
+<style>
+html,body{margin:0;background:#000;overflow:hidden}
+iframe{display:block;border:0;background:#070b11}
+</style>
+</head>
+<body>
+<script>
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+var P=new URLSearchParams(location.search);
+var S=P.get('s')||'mf', W=parseInt(P.get('w')||'390',10), H=parseInt(P.get('h')||'844',10);
+var STAMPS=P.get('stamps')||'';
+var f=document.createElement('iframe');
+f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
+f.src='../index.html?qa=1&shot='+S+'&t='+Date.now()+(STAMPS?('&stamps='+encodeURIComponent(STAMPS)):'');
+document.body.appendChild(f);
+document.title='shot '+S+' '+W;
+var d,w;
+function q(x){ return d.querySelector(x); }
+function qa(x){ return Array.prototype.slice.call(d.querySelectorAll(x)); }
+function set(el,v){ el.value=v; el.dispatchEvent(new w.Event('input',{bubbles:true})); }
+function reload(){ return new Promise(function(r){ f.addEventListener('load',r,{once:true}); w.location.reload(); }); }
+function dS(off){
+  var n=new Date(); var t=new Date(n.getFullYear(),n.getMonth(),n.getDate()-off);
+  return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+}
+async function addTemp(price,avg,qty,inv){
+  q('#btnAddAsset').click(); await wait(400);
+  set(q('#msheet [data-f="name"]'),'QA 후보 종목');
+  set(q('#msheet [data-f="price"]'),String(price));
+  set(q('#msheet [data-f="avg"]'),String(avg));
+  set(q('#msheet [data-f="qtyNum"]'),String(qty));
+  set(q('#msheet [data-f="invested"]'),String(inv));
+  q('#btnSaveAsset').click(); await wait(700);
+}
+function rowsOf(){
+  var card=qa('#main [data-asset]').filter(function(c){ return c.textContent.indexOf('QA 후보 종목')>=0; })[0];
+  return card?card.getAttribute('data-asset'):null;
+}
+async function openTemp(){
+  var id=rowsOf();
+  q('#main [data-asset="'+id+'"]').click(); await wait(700);
+  return id;
+}
+async function sell(qty,px){
+  qa('#msheet [data-simmode]')[1].click(); await wait(250);
+  set(q('#simq'),String(qty)); set(q('#simp'),String(px)); await wait(250);
+  q('#msheet [data-simapply]').click(); await wait(650);
+}
+f.addEventListener('load',async function(){
+  d=f.contentDocument; w=f.contentWindow;
+  try{ w.confirm=function(){ return true; }; }catch(e){}
+  await wait(2200);
+  try{
+    if(S==='mf'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      await addTemp(10000,9000,10,90000);
+      await openTemp();
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'10100'); set(q('#msheet [data-pi="0"][data-pf="qty"]'),'3');
+      set(q('#msheet [data-pi="1"][data-pf="px"]'),'9800');
+      q('#msheet [data-psave]').click(); await wait(650);
+      q('#msheet [data-close]').click(); await wait(500);
+      var box=q('#main .mfsum');
+      w.scrollTo(0,0);
+      document.title='ready mf '+(box?box.textContent.replace(/\s+/g,' '):'none');
+    }
+    else if(S==='real'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      await addTemp(10000,9000,10,90000);
+      await openTemp();
+      await sell(5,11000);
+      await sell(5,8000);
+      q('#msheet [data-close]').click(); await wait(500);
+      var RK='macro_radar_realized_v1:qa';
+      var o=JSON.parse(localStorage.getItem(RK)||'{"items":[]}');
+      o.items.push({id:'qa-old',name:'QA 지난달',ts:'2026-10-15 10:00',qty:5,px:9450,avg:9000,pnl:2250,cur:'KRW'});
+      localStorage.setItem(RK,JSON.stringify(o));
+      await reload(); await wait(2600); d=f.contentDocument; w=f.contentWindow; w.confirm=function(){return true;};
+      q('.tab[data-tab="companies"]').click(); await wait(600);
+      q('#main .pfcard [data-real]').click(); await wait(700);
+      q('#msheet').scrollTop=0;
+      document.title='ready real '+((q('#msheet .rstat')||{}).textContent||'none');
+    }
+    else if(S==='sage'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      await addTemp(10000,9000,10,90000);
+      var id=await openTemp();
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'10100');
+      q('#msheet [data-psave]').click(); await wait(650);
+      q('#msheet [data-close]').click(); await wait(500);
+      var SG='macro_radar_siglog_v1:qa';
+      var sg=JSON.parse(localStorage.getItem(SG)||'{}');
+      Object.keys(sg).forEach(function(k){ if(k.indexOf(id+'|')===0) sg[k]={d:dS(3),u:dS(1)}; });
+      localStorage.setItem(SG,JSON.stringify(sg));
+      await reload(); await wait(2600); d=f.contentDocument; w=f.contentWindow;
+      q('.tab[data-tab="companies"]').click(); await wait(700);
+      q('#main [data-asset="'+id+'"]').click(); await wait(700);
+      var sec=q('#msheet .sage');
+      if(sec) q('#msheet').scrollTop=Math.max(0,sec.offsetTop-120);
+      document.title='ready sage '+((sec||{}).textContent||'none');
+    }
+    else if(S==='cycle'){
+      q('.tab[data-tab="study"]').click(); await wait(700);
+      w.scrollTo(0,0);
+      document.title='ready cycle '+((q('#main .scycle')||{}).textContent||'none');
+    }
+    else if(S==='delay'){
+      q('.tab[data-tab="briefing"]').click(); await wait(800);
+      w.scrollTo(0,0);
+      document.title='ready delay '+((q('#main .bdelay')||{}).textContent||'none');
+    }
+    else if(S==='dark'){
+      q('.tab[data-tab="companies"]').click(); await wait(500);
+      await addTemp(10000,9000,10,90000);
+      await openTemp();
+      set(q('#msheet [data-pi="0"][data-pf="px"]'),'10100');
+      q('#msheet [data-psave]').click(); await wait(650);
+      q('#msheet [data-close]').click(); await wait(600);
+      w.scrollTo(0,0);
+      document.title='ready dark';
+    }
+  }catch(e){ document.title='ERR '+e.message; }
+  await wait(400);
+  if(document.title.indexOf('ready')<0) document.title='done '+S+' '+W;
+});
+</script>
+</body>
+</html>
