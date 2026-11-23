@@ -15,6 +15,8 @@ function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 var P=new URLSearchParams(location.search);
 var S=P.get('s')||'mf', W=parseInt(P.get('w')||'390',10), H=parseInt(P.get('h')||'844',10);
 var STAMPS=P.get('stamps')||'';
+/* 촬영은 항상 맨 상태에서: 이전 촬영이 남긴 점검 키(:qa)를 지운다 */
+try{ Object.keys(localStorage).forEach(function(k){ if(/:qa$/.test(k)) localStorage.removeItem(k); }); }catch(e){}
 var f=document.createElement('iframe');
 f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
 f.src='../index.html?qa=1&shot='+S+'&t='+Date.now()+(STAMPS?('&stamps='+encodeURIComponent(STAMPS)):'');
