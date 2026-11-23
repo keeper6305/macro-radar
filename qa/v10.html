@@ -477,8 +477,14 @@ async function run(){
       q('#btnSaveAsset').click(); await wait(450);
       q('.tab[data-tab="companies"]').click(); await wait(350);
       var t3=txt(q('#main .pfcard'));
-      need(t3.indexOf('35,750원')>=0,'수량×현재가 평가액(35,750원) 없음: '+t3.slice(0,160));
-      need(t3.indexOf('+5,750원')>=0,'매입금액 대비 손익(+5,750원) 없음');
+      /* 현재가는 매일 바뀐다 — 카드의 표시가를 읽어 기대값을 만든다(v9은 3,575원 고정이었음) */
+      var gpx=parseFloat(txt(q('#main [data-asset="gamsung"] .apx b')).replace(/[^\d.]/g,''));
+      need(gpx>0,'감성 현재가를 읽지 못함');
+      var e10=Math.round(gpx*10), e43=Math.round(gpx*43);
+      var p10=e10-30000, p43=e43-30000;
+      var fm=function(v){ return v.toLocaleString('ko-KR'); };
+      need(t3.indexOf(fm(e10)+'원')>=0,'수량×현재가 평가액('+fm(e10)+'원) 없음: '+t3.slice(0,160));
+      need(t3.indexOf((p10>=0?'+':'')+fm(p10)+'원')>=0,'매입금액 대비 손익 없음('+fm(p10)+'원)');
       /* 되돌리기: 숫자 필드를 비우면 기존 평단×수량으로 계산 */
       q('#main [data-edit="gamsung"]').click(); await wait(350);
       var fq2=q('#msheet [data-f="qtyNum"]'), fi2=q('#msheet [data-f="invested"]');
@@ -486,7 +492,7 @@ async function run(){
       fi2.value=''; fi2.dispatchEvent(new win.Event('input',{bubbles:true}));
       q('#btnSaveAsset').click(); await wait(450);
       var t4=txt(q('#main .pfcard'));
-      need(t4.indexOf('153,725원')>=0,'되돌린 뒤 43주 평가액(153,725원) 없음: '+t4.slice(0,160));
+      need(t4.indexOf(fm(e43)+'원')>=0,'되돌린 뒤 43주 평가액('+fm(e43)+'원) 없음: '+t4.slice(0,160));
       rec('pass','수량·매입금액 입력 → 평가액/손익 계산 · 비우면 평단×수량');
     }
   }catch(e){ rec('fail','수량·매입금액 입력',e.message); try{q('#msheet [data-close]').click();}catch(_){} }

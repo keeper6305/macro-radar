@@ -1035,6 +1035,9 @@ function dShort(d){ if(!isISO(d)) return String(d==null?'':d);
   return ('0'+d.slice(5,7)).slice(-2)+'.'+d.slice(8,10); }
 function dLong(d){ if(!isISO(d)) return String(d==null?'':d);
   return d.slice(0,4)+'.'+d.slice(5,7)+'.'+d.slice(8,10); }
+/* 신호 이력처럼 '11/21' 표기가 필요한 곳 (앱의 종가 표기는 11.23) */
+function dSlash(d){ if(!isISO(d)) return String(d==null?'':d);
+  return d.slice(5,7)+'/'+d.slice(8,10); }
 function fmtMoney(v,unit){ if(typeof v!=='number'||!isFinite(v)) return '–';
   if(unit==='억 원'){ return Math.abs(v)>=10000 ? nf(v/10000,1)+'조' : nf(v,0)+'억'; }
   if(unit==='십억 달러'||unit==='$B'){ return '$'+nf(v,1)+'B'; }
@@ -3205,7 +3208,7 @@ function sigAgeHTML(a){
     var r=sigLogRec(a,al);
     if(!r) return;
     var d=daysSince(r.d);
-    var when=(r.d===todayISO())?'오늘 걸림':(dShort(r.d)+'부터 걸림'+(d!=null?' ('+(d+1)+'일째)':''));
+    var when=(r.d===todayISO())?'오늘 걸림':(dSlash(r.d)+'부터 걸림'+(d!=null?' ('+(d+1)+'일째)':''));
     rows.push('<div class="sa"><span>'+esc(al.t)+'</span><em>'+esc(when)+'</em></div>');
   });
   if(!rows.length) return '';
