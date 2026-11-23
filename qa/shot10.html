@@ -19,6 +19,9 @@ var f=document.createElement('iframe');
 f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
 f.src='../index.html?qa=1&shot='+S+'&t='+Date.now()+(STAMPS?('&stamps='+encodeURIComponent(STAMPS)):'');
 document.body.appendChild(f);
+/* 화면보다 긴 기기 높이는 비율로 줄여 한 장에 담는다(촬영 전용) */
+var SC=Math.min(1,(window.innerHeight-8)/H);
+if(SC<1){ f.style.transformOrigin='top left'; f.style.transform='scale('+SC+')'; }
 document.title='shot '+S+' '+W;
 var d,w;
 function q(x){ return d.querySelector(x); }
