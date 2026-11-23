@@ -57,7 +57,10 @@ async function sell(qty,px){
   set(q('#simq'),String(qty)); set(q('#simp'),String(px)); await wait(250);
   q('#msheet [data-simapply]').click(); await wait(650);
 }
+var RAN=false;
 f.addEventListener('load',async function(){
+  if(RAN) return;  /* 안에서 reload() 할 때 시나리오가 다시 시작되지 않게 */
+  RAN=true;
   d=f.contentDocument; w=f.contentWindow;
   try{ w.confirm=function(){ return true; }; }catch(e){}
   await wait(2200);
