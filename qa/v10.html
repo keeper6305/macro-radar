@@ -1406,6 +1406,13 @@ async function run(){
     rec('pass','v10 반영 대기 판정 정합 · 기본 '+got+'건 · 기준 '+stm.kr+'/'+stm.us);
   }catch(e){ rec('fail','v10 반영 대기 판정 정합',e.message); }
 
+  /* ---------- 34. 전 시나리오를 지난 뒤 콘솔 에러 0 ---------- */
+  try{
+    var errsF=(win.__errs||[]).slice();
+    need(!errsF.length,'콘솔 에러 '+errsF.length+'건: '+errsF[0]);
+    rec('pass','전 시나리오 뒤 콘솔 에러 0');
+  }catch(e){ rec('fail','전 시나리오 뒤 콘솔 에러',e.message); }
+
   /* ---------- 결과 ---------- */
   restoreStorage();
   var sum=document.getElementById('sum');
