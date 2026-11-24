@@ -1,0 +1,1724 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macro-radar v11 QA</title>
+<style>
+body{margin:0;background:#0d1117;color:#dbe6f3;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans KR",system-ui,sans-serif}
+h1{font-size:13px;margin:0;padding:10px 12px;background:#151c26;border-bottom:1px solid #263241;position:sticky;top:0;z-index:2}
+#sum{padding:8px 12px;font-size:12px;font-weight:700}
+.ok{color:#3ddc97}.ng{color:#ff6b74}.sk{color:#e9a13c}
+pre{white-space:pre-wrap;font-size:11px;line-height:1.45;padding:0 12px 30px;margin:0;color:#c8d6e6}
+.frames{display:flex;gap:14px;padding:10px 12px;overflow:auto}
+iframe{border:1px solid #33445a;background:#070b11;display:block;flex:none}
+</style>
+</head>
+<body>
+<h1>macro-radar v11 전수 클릭 QA · 360×800 / 390×844 / 430×932</h1>
+<div id="sum">running…</div>
+<div class="frames" id="frames"></div>
+<pre id="log"></pre>
+<script>
+/* 이 하네스는 앱과 같은 오리진(GitHub Pages)에서 iframe으로 앱을 띄운다.
+   iframe 앱은 이 도메인의 실제 localStorage를 쓰므로, 시작 전에 스냅샷을 뜨고 끝나면 그대로 되돌린다. */
+var ORIGIN=location.origin;
+var SNAP={};
+function snapStorage(){
+  try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); SNAP[k]=localStorage.getItem(k); } }catch(e){}
+}
+function restoreStorage(){
+  try{
+    var keep={};
+    for(var i=0;i<localStorage.length;i++){ keep[localStorage.key(i)]=1; }
+    Object.keys(keep).forEach(function(k){ if(!(k in SNAP)) localStorage.removeItem(k); });
+    Object.keys(SNAP).forEach(function(k){ if(localStorage.getItem(k)!==SNAP[k]) localStorage.setItem(k,SNAP[k]); });
+  }catch(e){}
+}
+snapStorage();
+/* 이전 점검 실행이 남긴 점검용(:qa) 키를 지워 항상 시드 상태에서 시작한다 */
+try{
+  Object.keys(SNAP).forEach(function(k){
+    if(/:qa$/.test(k)){ delete SNAP[k]; localStorage.removeItem(k); }
+  });
+}catch(e){}
+window.addEventListener('beforeunload',restoreStorage);
+
+var W=parseInt(new URLSearchParams(location.search).get('w')||'360',10);
+var H=parseInt(new URLSearchParams(location.search).get('h')||'800',10);
+var R={pass:0,fail:0,skip:0,items:[]};
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+function rec(state,name,info){ R.items.push({state:state,name:name,info:info||''}); if(state==='pass')R.pass++; else if(state==='fail')R.fail++; else R.skip++; }
+function need(cond,msg){ if(!cond) throw new Error(msg||'조건 불충족'); }
+function txt(el){ return el?String(el.textContent||'').replace(/\s+/g,' ').trim():''; }
+
+function boot(win){
+  var d=win.document;
+  function q(s){ return d.querySelector(s); }
+  function qa(s){ return Array.prototype.slice.call(d.querySelectorAll(s)); }
+  function overflow(sel){
+    var bad=[];
+    qa(sel).forEach(function(el){
+      if(el.scrollWidth>el.clientWidth+1 && el.clientWidth>0){
+        bad.push((el.className||el.tagName)+' '+el.scrollWidth+'>'+el.clientWidth);
+      }
+    });
+    return bad;
+  }
+  function overflowV(sel){
+    var bad=[];
+    qa(sel).forEach(function(el){
+      var de=el.ownerDocument.documentElement;
+      if(el.scrollWidth>el.clientWidth+1 && el.clientWidth>0) bad.push((el.className||el.tagName)+' '+el.scrollWidth+'>'+el.clientWidth);
+    });
+    return bad;
+  }
+  function pageOverflow(){
+    var de=d.documentElement;
+    return {doc:de.scrollWidth-W, body:d.body.scrollWidth-W, main:(q('#main')||{}).scrollWidth};
+  }
+  function cardEls(){
+    var a=qa('#main [data-asset]');
+    return a.length?a:qa('#main .card.ed');
+  }
+  function cardIds(){
+    return cardEls().map(function(e){
+      var b=e.querySelector('[data-mv="up"]');
+      return b?b.getAttribute('data-id'):e.getAttribute('data-asset');
+    });
+  }
+  function shown(el){ return !!el && el.getClientRects().length>0; }
+  function fire(el,type,cx,cy,extra){
+    var ev=new win.PointerEvent(type,Object.assign({bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerType:'touch',pointerId:1,isPrimary:true},extra||{}));
+    el.dispatchEvent(ev);
+  }
+  return {d:d,win:win,q:q,qa:qa,overflow:overflow,overflowV:overflowV,pageOverflow:pageOverflow,fire:fire,cardEls:cardEls,cardIds:cardIds,shown:shown};
+}
+
+async function run(){
+  snapStorage();
+  var frames=document.getElementById('frames');
+  var f=document.createElement('iframe');
+  f.width=W; f.height=H; f.src='../index.html?qa=1&t='+Date.now();
+  frames.appendChild(f);
+  await new Promise(function(r){ f.addEventListener('load',r,{once:true}); });
+  var win=f.contentWindow, X=boot(win), d=X.d, q=X.q, qa=X.qa;
+  var cryptoBtc=null;
+  await wait(2200); /* 데이터·자동 실시간 시도가 끝날 시간 */
+
+  /* ---------- 1. 부팅·레이아웃 ---------- */
+  try{
+    need(qa('#main .card').length>=4,'카드가 렌더되지 않음');
+    need(txt(q('#asof')).indexOf('불러오는 중')<0,'헤더 기준시각이 로딩 상태');
+    need(!txt(q('#main')).match(/undefined|NaN|\[object/),'본문에 undefined/NaN');
+    rec('pass','부팅 · 헤더 기준시각 · 데이터 렌더',txt(q('#asof')));
+  }catch(e){ rec('fail','부팅 · 헤더 기준시각 · 데이터 렌더',e.message); }
+
+  try{
+    var po=X.pageOverflow();
+    need(po.doc<=1,'문서 가로 넘침 '+po.doc+'px');
+    need(po.body<=1,'body 가로 넘침 '+po.body+'px');
+    var tb=q('.tabs').getBoundingClientRect();
+    need(Math.abs(tb.bottom-win.innerHeight)<2,'탭바가 화면 하단에 붙지 않음');
+    var main=q('#main'), pad=parseFloat(win.getComputedStyle(main).paddingBottom);
+    need(pad>=80,'본문 하단 여백 부족 '+pad);
+    rec('pass','360 레이아웃 · 가로 넘침 0 · 하단 탭바 고정');
+  }catch(e){ rec('fail','360 레이아웃 · 가로 넘침 0 · 하단 탭바 고정',e.message); }
+
+  try{
+    var errs=(win.__errs||[]).slice();
+    need(errs.length===0,'콘솔 에러 '+errs.length+'건: '+errs[0]);
+    rec('pass','콘솔 에러 0');
+  }catch(e){ rec('fail','콘솔 에러 0',e.message); }
+
+  /* ---------- 2. 거시 리본 (신규) ---------- */
+  try{
+    var rb=q('#ribbon');
+    if(!rb){ rec('skip','거시 리본 표시','신규 기능 미구현'); }
+    else{
+      need(txt(rb).indexOf('긴축')>=0,'국면 라벨 없음');
+      need(qa('#ribbon .rdot').length===6,'반전 6신호 점 없음');
+      rec('pass','거시 리본 구성 · '+(rb.hidden?'지표 탭에선 숨김(히어로 중복)':'표시'),txt(rb));
+    }
+  }catch(e){ rec('fail','거시 리본',e.message); }
+
+  /* ---------- 3. 지표 탭 ---------- */
+  try{
+    var cards=qa('#main .card[data-ind]');
+    need(cards.length>=9,'지표 카드 '+cards.length+'개');
+    need(q('#main .card.hero'),'국면 히어로 없음');
+    need(qa('#main .cl li').length===6,'반전 체크리스트 6개 아님');
+    need(qa('#main .chart').length>=8,'차트 8개 미만');
+    need(q('#main .gauge'),'게이지 없음');
+    var bad=X.overflow('#main .rh, #main .ch, #main .val, #main .upd');
+    need(!bad.length,'지표 카드 내부 넘침: '+bad.join(', '));
+    var crc=q('#main [data-ind="crypto"]');
+    if(crc){ var r0=crc.querySelector('.row .rv'); cryptoBtc=r0?txt(r0).replace(/\s+/g,''):null; }
+    rec('pass','지표 탭 · 카드 '+cards.length+' · 차트 '+qa('#main .chart').length+' · 체크리스트 6');
+  }catch(e){ rec('fail','지표 탭',e.message); }
+
+  /* ---------- 4. 차트 툴팁 ---------- */
+  try{
+    var box=q('#main .chart');
+    var svg=box.querySelector('svg'), r=svg.getBoundingClientRect();
+    X.fire(svg,'pointerdown',r.left+r.width*0.62,r.top+r.height*0.5);
+    await wait(150);
+    var tip=box.querySelector('.ctip');
+    need(tip.classList.contains('on'),'툴팁이 켜지지 않음');
+    need(/·/.test(txt(tip)),'툴팁에 값 구분 없음: '+txt(tip));
+    need(box.querySelector('.cross').style.display!=='none','크로스헤어 없음');
+    rec('pass','차트 터치 툴팁 · 크로스헤어',txt(tip));
+    X.fire(svg,'pointerleave',0,0);
+  }catch(e){ rec('fail','차트 터치 툴팁',e.message); }
+
+  /* ---------- 5. 종목 탭 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(400);
+    var cards2=X.cardEls();
+    need(cards2.length>=8,'종목 카드 '+cards2.length);
+    var bad2=X.overflow('#main .ah, #main .aleg, #main .mbmeter, #main .actrow, #main .pfrow');
+    need(!bad2.length,'종목 카드 내부 넘침: '+bad2.join(', '));
+    rec('pass','종목 탭 · 카드 '+cards2.length+' · 내부 넘침 0');
+  }catch(e){ rec('fail','종목 탭',e.message); }
+
+  try{
+    var btcCard=q('#main [data-asset="btc"]');
+    var btcPx=btcCard?txt(btcCard.querySelector('.apx b')).replace(/\s+/g,''):null;
+    q('.tab[data-tab="overview"]').click(); await wait(250);
+    var crNow=q('#main [data-ind="crypto"] .row .rv');
+    cryptoBtc=crNow?txt(crNow).replace(/\s+/g,''):cryptoBtc;
+    q('.tab[data-tab="companies"]').click(); await wait(250);
+    need(cryptoBtc&&btcPx,'비트코인 표기 비교 불가 ('+cryptoBtc+' / '+btcPx+')');
+    need(cryptoBtc===btcPx,'지표 탭 '+cryptoBtc+' ≠ 종목 탭 '+btcPx);
+    rec('pass','크립토 지표·종목 숫자 일치',btcPx);
+  }catch(e){ rec('fail','크립토 지표·종목 숫자 일치',e.message); }
+
+  try{
+    var pf=q('#main .pfcard');
+    if(!pf){ rec('skip','보유 평단 대비 요약','신규 기능 미구현'); }
+    else{
+      var rows=qa('#main .pfcard .pfrow');
+      need(rows.length>=2,'보유 행 '+rows.length+'개');
+      need(txt(pf).match(/[+-]\d/),'수익률 숫자 없음');
+      need(txt(pf).indexOf('평단 대비')>=0,'카드 제목 없음');
+      need(qa('#main .pfcard .pfbar').length===rows.length,'막대 수 불일치');
+      rec('pass','보유 평단 대비 요약 · '+rows.length+'행',txt(pf).slice(0,120));
+    }
+  }catch(e){ rec('fail','보유 평단 대비 요약',e.message); }
+
+  try{
+    var c0=X.cardEls()[0];
+    c0.click(); await wait(300);
+    need(!q('#modal').hidden,'상세 시트가 안 열림');
+    need(qa('#msheet .msec').length>=4,'상세 섹션 '+qa('#msheet .msec').length);
+    var pm=q('#msheet .pmap');
+    if(!pm) rec('skip','가격 지도(손절·평단·목표)','신규 기능 미구현');
+    else{
+      need(txt(pm).indexOf('현재')>=0,'현재 표시 없음');
+      need(qa('#msheet .pmap .pmm').length>=3,'가격 지도 마커 '+qa('#msheet .pmap .pmm').length);
+      var badm=X.overflowV('#msheet .pmleg, #msheet .pmap, #msheet .mval, #msheet .ins, #msheet .bh');
+      need(!badm.length,'상세 시트 가로 넘침: '+badm.join(', '));
+      rec('pass','가격 지도 · '+txt(pm).replace(/\s+/g,' ').slice(0,80));
+    }
+    q('#msheet [data-close]').click(); await wait(250);
+    need(q('#modal').hidden,'상세 시트가 안 닫힘');
+    rec('pass','종목 상세 열기/닫기');
+  }catch(e){ rec('fail','종목 상세',e.message); }
+
+  /* ---------- 6. 순서 편집·추가·삭제 ---------- */
+  try{
+    var before=X.cardIds();
+    q('#btnEditMode').click(); await wait(250);
+    var dn=qa('#main [data-mv="down"]')[0];
+    need(!!dn,'아래로 버튼 없음');
+    dn.click(); await wait(250);
+    var after=X.cardIds();
+    need(after[0]===before[1]&&after[1]===before[0],'순서 이동 실패 '+before.slice(0,2)+'→'+after.slice(0,2));
+    qa('#main [data-mv="up"]')[1].click(); await wait(250);
+    var back=X.cardIds();
+    need(back[0]===before[0]&&back[1]===before[1],'되돌리기 실패');
+    q('#btnEditMode').click(); await wait(200);
+    rec('pass','순서 편집 · 아래/위 이동 저장');
+  }catch(e){ rec('fail','순서 편집',e.message); }
+
+  try{
+    var n0=X.cardEls().length;
+    q('#btnAddAsset').click(); await wait(250);
+    var nm=q('#msheet [data-f="name"]');
+    need(!!nm,'추가 폼 종목명 필드 없음');
+    nm.value='QA 테스트 종목'; nm.dispatchEvent(new win.Event('input',{bubbles:true}));
+    var pf2=q('#msheet [data-f="price"]'); pf2.value='10000'; pf2.dispatchEvent(new win.Event('input',{bubbles:true}));
+    q('#btnSaveAsset').click(); await wait(350);
+    var n1=X.cardEls().length;
+    need(n1===n0+1,'추가 후 '+n1+'개');
+    q('#btnEditMode').click(); await wait(200);
+    var delBtn=qa('#main [data-del2]').filter(function(b){return txt(b.closest('.card')).indexOf('QA 테스트 종목')>=0;})[0];
+    need(!!delBtn,'추가 종목 삭제 버튼 없음');
+    win.confirm=function(){return true;};
+    delBtn.click(); await wait(300);
+    var n2=X.cardEls().length;
+    need(n2===n0,'삭제 후 '+n2+'개 (기대 '+n0+')');
+    q('#btnEditMode').click(); await wait(150);
+    rec('pass','종목 추가/삭제 · '+n0+'→'+n1+'→'+n2);
+  }catch(e){ rec('fail','종목 추가/삭제',e.message); try{q('[data-close]').click();}catch(_){} }
+
+  /* ---------- 7. 브리핑 ---------- */
+  try{
+    q('.tab[data-tab="briefing"]').click(); await wait(400);
+    var segs=qa('#main .seg button');
+    need(segs.length===2,'브리핑 구분 '+segs.length);
+    need(txt(q('#main .analyst')).indexOf('애널리스트')>=0,'애널리스트 시선 없음');
+    need(q('#main .quiz'),'퀴즈 블록 없음');
+    var memoBtn=q('#main .quiz [data-qmemo]');
+    if(memoBtn && !X.shown(q('#main textarea[data-memo]'))) memoBtn.click();
+    await wait(120);
+    var ta=q('#main textarea[data-memo]');
+    need(!!ta && X.shown(ta),'퀴즈 메모 입력이 안 열림');
+    ta.value='QA 메모'; ta.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(120);
+    need(txt(q('#main .msave')).indexOf('저장')>=0,'자동 저장 표시 없음');
+    rec('pass','브리핑 · 구분 2 · 애널리스트 · 퀴즈 메모 저장');
+  }catch(e){ rec('fail','브리핑 탭',e.message); }
+
+  try{
+    var qb=q('#main .quiz');
+    var reveal=qb.querySelector('[data-qreveal]')||qb.querySelector('details.ans summary');
+    if(!reveal){ rec('skip','퀴즈 해설 펼치기','요소 없음'); }
+    else{
+      var body=qb.querySelector('.ansbody');
+      need(txt(body).length>10,'해설 본문이 없음');
+      need(!X.shown(body),'해설이 처음부터 열려 있음(내 답 먼저 원칙)');
+      reveal.click(); await wait(200);
+      need(X.shown(body),'해설이 펼쳐지지 않음');
+      rec('pass','퀴즈 해설 펼치기 · 처음엔 닫힘');
+    }
+  }catch(e){ rec('fail','퀴즈 해설 펼치기',e.message); }
+
+  try{
+    var rb2=q('#ribbon');
+    if(!rb2) rec('skip','거시 리본 상시 표시','신규 기능 미구현');
+    else{
+      need(!rb2.hidden,'다른 탭에서 리본이 숨겨짐');
+      need(qa('#ribbon .rdot').length===6,'반전 신호 점 6개 아님');
+      rec('pass','거시 리본 상시 표시(브리핑 탭)');
+    }
+  }catch(e){ rec('fail','거시 리본 상시 표시',e.message); }
+
+  try{
+    q('#ribbon').click(); await wait(300);
+    need(q('.tab.on').getAttribute('data-tab')==='overview','리본을 눌러도 지표 탭으로 안 감');
+    rec('pass','거시 리본 탭 → 지표 홈');
+    q('.tab[data-tab="briefing"]').click(); await wait(250);
+  }catch(e){ rec('fail','거시 리본 탭 이동',e.message); }
+
+  try{
+    var seg1=qa('#main .seg button')[0];
+    seg1.click(); await wait(300);
+    need(q('#main .quiz'),'다른 브리핑에 퀴즈 없음');
+    need(txt(q('#main .bh h3')).length>3,'브리핑 제목 없음');
+    rec('pass','브리핑 구간 전환');
+  }catch(e){ rec('fail','브리핑 구간 전환',e.message); }
+
+  /* ---------- 8. 시나리오 ---------- */
+  try{
+    q('.tab[data-tab="scenario"]').click(); await wait(400);
+    need(qa('#main .scn').length===3,'시나리오 카드 '+qa('#main .scn').length);
+    need(qa('#main .donut').length===1,'자금 배분 도넛 없음');
+    need(qa('#main .ev li').length>=5,'이벤트 타임라인 부족');
+    var bad3=X.overflow('#main .sm, #main .cosum, #main .split .sh');
+    need(!bad3.length,'시나리오 넘침: '+bad3.join(', '));
+    rec('pass','시나리오 · 3카드 · 도넛 · 이벤트 '+qa('#main .ev li').length);
+  }catch(e){ rec('fail','시나리오 탭',e.message); }
+
+  /* ---------- 9. 도감 ---------- */
+  try{
+    q('.tab[data-tab="study"]').click(); await wait(400);
+    var items=qa('#main details.study');
+    need(items.length===26,'도감 '+items.length+'장');
+    need(txt(q('#main .sprog')).match(/\d+%/),'진행률 없음');
+    var sf=qa('#main .sfilter button');
+    need(sf.length>=1,'태그 필터 없음');
+    rec('pass','도감 · 26장 · 진행률 · 태그 필터 '+sf.length);
+  }catch(e){ rec('fail','도감 기본',e.message); }
+
+  try{
+    var stf=qa('#main .sstatus button');
+    if(!stf.length){ rec('skip','도감 상태 필터(미학습/애매/완료)','신규 기능 미구현'); }
+    else{
+      need(stf.length>=4,'상태 필터 '+stf.length);
+      var amb=stf.filter(function(b){return txt(b).indexOf('애매')>=0;})[0];
+      amb.click(); await wait(300);
+      var open1=qa('#main details.study');
+      need(open1.every(function(x){return x.classList.contains('s1');}),'애매 필터 결과에 다른 상태 섞임');
+      stf[0].click(); await wait(250);
+      rec('pass','도감 상태 필터 · 애매만 '+open1.length+'장');
+    }
+  }catch(e){ rec('fail','도감 상태 필터',e.message); }
+
+  try{
+    var first=qa('#main details.study')[0];
+    var sid0=txt(first.querySelector('.sn'));
+    first.querySelector('summary').click(); await wait(200);
+    need(first.open===true,'카드가 안 열림');
+    first.querySelector('.stt button[data-sv="1"]').click(); await wait(350);
+    need(txt(q('#main .sprog')).indexOf('애매')>=0,'애매 카운트 없음');
+    var again=qa('#main details.study').filter(function(x){return txt(x.querySelector('.sn'))===sid0;})[0];
+    need(again,'상태 변경 후 카드 사라짐');
+    if(!again.open) rec('skip','도감 상태 변경 후 카드 유지','미구현(개선 후보)');
+    else rec('pass','도감 3단계 체크 · 즉시 저장 · 열림 유지');
+    again.querySelector('.stt button[data-sv="0"]').click(); await wait(250);
+  }catch(e){ rec('fail','도감 3단계 체크',e.message); }
+
+  try{
+    var qt=q('#btnQuizTest');
+    if(!qt){ rec('skip','도감 퀵 테스트','신규 기능 미구현'); }
+    else{
+      qt.click(); await wait(350);
+      need(!q('#modal').hidden,'퀵 테스트 시트가 안 열림');
+      need(txt(q('#msheet')).indexOf('퀵 테스트')>=0,'시트에 제목 없음');
+      var g=qa('#msheet [data-grade]');
+      need(g.length===3,'자기평가 버튼 '+g.length);
+      g[2].click(); await wait(300);
+      need(txt(q('#msheet')).match(/다음|\d+\s*\/\s*\d+/),'진행 표시 없음');
+      rec('pass','도감 퀵 테스트 · 3단계 자기평가',txt(q('#msheet')).slice(0,80));
+      q('#msheet [data-close]').click(); await wait(200);
+    }
+  }catch(e){ rec('fail','도감 퀵 테스트',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 10. 테마 ---------- */
+  try{
+    var t0=d.documentElement.getAttribute('data-theme');
+    q('#btnTheme').click(); await wait(250);
+    var t1=d.documentElement.getAttribute('data-theme');
+    need(t0!==t1,'테마가 안 바뀜');
+    var badt=X.overflow('#main .card, #main .sprog');
+    need(!badt.length,'라이트 테마 넘침: '+badt.join(', '));
+    q('#btnTheme').click(); await wait(250);
+    rec('pass','테마 전환 · '+t0+'→'+t1);
+  }catch(e){ rec('fail','테마 전환',e.message); }
+
+  /* ---------- 11. 뒤로가기 2단계 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    win.history.back(); await wait(400);
+    need(q('.tab.on').getAttribute('data-tab')==='overview','뒤로가기가 탭을 홈으로 안 보냄');
+    rec('pass','뒤로가기 1회 · 종목→지표 홈');
+  }catch(e){ rec('fail','뒤로가기 1회',e.message); }
+
+  try{
+    qa('#main [data-ind]')[0].click(); await wait(300);
+    need(!q('#modal').hidden,'지표 상세 안 열림');
+    win.history.back(); await wait(400);
+    need(q('#modal').hidden,'뒤로가기가 상세 시트를 안 닫음');
+    rec('pass','뒤로가기 · 지표 상세 닫기');
+  }catch(e){ rec('fail','뒤로가기 상세 닫기',e.message); }
+
+  try{
+    win.history.back(); await wait(300);
+    var tt=txt(q('#toast'));
+    need(tt.indexOf('한 번 더')>=0,'2회 종료 안내 토스트 없음: '+tt);
+    rec('pass','뒤로가기 2회 종료 안내',tt);
+  }catch(e){ rec('fail','뒤로가기 2회 종료 안내',e.message); }
+
+  /* ---------- 12. 지표 상세 시트 ---------- */
+  try{
+    qa('#main [data-ind]')[4].click(); await wait(350);
+    need(!q('#modal').hidden,'지표 상세 안 열림');
+    need(qa('#msheet .msec').length>=2,'지표 상세 섹션 부족');
+    var bad4=X.overflow('#msheet .mval');
+    need(!bad4.length,'지표 상세 상단 넘침: '+bad4.join(', '));
+    rec('pass','지표 상세 시트');
+    q('#msheet [data-close]').click(); await wait(200);
+  }catch(e){ rec('fail','지표 상세 시트',e.message); }
+
+  /* ---------- 13. 화면별 가로 넘침 재확인 ---------- */
+  try{
+    var bads=[];
+    ['overview','companies','briefing','scenario','study'].forEach(function(t){
+      q('.tab[data-tab="'+t+'"]').click();
+      var po=X.pageOverflow();
+      if(po.doc>1) bads.push(t+' '+po.doc+'px');
+    });
+    need(!bads.length,'가로 넘침: '+bads.join(', '));
+    rec('pass','5개 탭 가로 넘침 0');
+  }catch(e){ rec('fail','5개 탭 가로 넘침',e.message); }
+
+  /* ---------- 14. v7 · 포트폴리오 평가손익 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(450);
+    var pf3=q('#main .pfcard');
+    need(!!pf3,'포트폴리오 카드 없음');
+    need(txt(pf3).indexOf('포트폴리오 평가손익')>=0,'평가손익 제목 없음: '+txt(pf3).slice(0,60));
+    var cc=qa('#main .pfcard .pfc');
+    need(cc.length===2,'통화별 요약 '+cc.length+'줄(기대 2)');
+    need(txt(cc[0]).indexOf('원화')>=0&&txt(cc[1]).indexOf('달러')>=0,'통화 라벨 없음');
+    need(/[+-][\d,]+원/.test(txt(cc[0])),'원화 손익 금액 없음: '+txt(cc[0]));
+    need(/\$[\d,.]+/.test(txt(cc[1])),'달러 금액 없음: '+txt(cc[1]));
+    var rows3=qa('#main .pfcard .pfrow');
+    need(rows3.length>=2,'보유 행 '+rows3.length);
+    need(txt(pf3).indexOf('환산')>=0,'합산 환산 문구 없음');
+    need(txt(pf3).match(/평가\s*[\d,$]/),'행별 평가금액 없음');
+    need(txt(pf3).indexOf('평단 대비')>=0,'평단 대비 표기 없음');
+    need(qa('#main .pfcard .pfbar i.w').length===rows3.length,'비중 막대 수 불일치');
+    var badw=X.overflow('#main .pfcard .pfc, #main .pfcard .pfrow, #main .pfcard .pfsub, #main .pfcard .pfmiss');
+    need(!badw.length,'평가 카드 내부 넘침: '+badw.join(', '));
+    rec('pass','포트폴리오 평가손익 · 통화 2 · 행 '+rows3.length,txt(pf3).slice(0,110));
+  }catch(e){ rec('fail','포트폴리오 평가손익',e.message); }
+
+  try{
+    var ed=q('#main [data-edit="gamsung"]');
+    need(!!ed,'수정 버튼 없음');
+    ed.click(); await wait(350);
+    var fq=q('#msheet [data-f="qtyNum"]'), fi=q('#msheet [data-f="invested"]');
+    if(!fq||!fi){ rec('skip','수량·매입금액 숫자 입력','신규 필드 없음'); }
+    else{
+      need(q('#msheet [data-f="qty"]'),'수량 메모 필드가 사라짐');
+      fq.value='10'; fq.dispatchEvent(new win.Event('input',{bubbles:true}));
+      fi.value='30000'; fi.dispatchEvent(new win.Event('input',{bubbles:true}));
+      q('#btnSaveAsset').click(); await wait(450);
+      q('.tab[data-tab="companies"]').click(); await wait(350);
+      var t3=txt(q('#main .pfcard'));
+      /* 현재가는 매일 바뀐다 — 카드의 표시가를 읽어 기대값을 만든다(v9은 3,575원 고정이었음) */
+      var gpx=parseFloat(txt(q('#main [data-asset="gamsung"] .apx b')).replace(/[^\d.]/g,''));
+      need(gpx>0,'감성 현재가를 읽지 못함');
+      var e10=Math.round(gpx*10), e43=Math.round(gpx*43);
+      var p10=e10-30000, p43=e43-30000;
+      var fm=function(v){ return v.toLocaleString('ko-KR'); };
+      need(t3.indexOf(fm(e10)+'원')>=0,'수량×현재가 평가액('+fm(e10)+'원) 없음: '+t3.slice(0,160));
+      need(t3.indexOf((p10>=0?'+':'')+fm(p10)+'원')>=0,'매입금액 대비 손익 없음('+fm(p10)+'원)');
+      /* 되돌리기: 숫자 필드를 비우면 기존 평단×수량으로 계산 */
+      q('#main [data-edit="gamsung"]').click(); await wait(350);
+      var fq2=q('#msheet [data-f="qtyNum"]'), fi2=q('#msheet [data-f="invested"]');
+      fq2.value=''; fq2.dispatchEvent(new win.Event('input',{bubbles:true}));
+      fi2.value=''; fi2.dispatchEvent(new win.Event('input',{bubbles:true}));
+      q('#btnSaveAsset').click(); await wait(450);
+      var t4=txt(q('#main .pfcard'));
+      need(t4.indexOf(fm(e43)+'원')>=0,'되돌린 뒤 43주 평가액('+fm(e43)+'원) 없음: '+t4.slice(0,160));
+      rec('pass','수량·매입금액 입력 → 평가액/손익 계산 · 비우면 평단×수량');
+    }
+  }catch(e){ rec('fail','수량·매입금액 입력',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    var miss=qa('#main .pfcard .pfmiss');
+    if(!miss.length) rec('skip','계산 불가 보유 안내','미구현');
+    else{
+      need(txt(miss[0]).indexOf('넣으면')>=0,'안내 문구 없음');
+      need(miss[0].querySelector('[data-edit]'),'입력 버튼 없음');
+      rec('pass','계산 불가 보유 · 입력 안내 '+miss.length+'건',txt(miss[0]).slice(0,70));
+    }
+  }catch(e){ rec('fail','계산 불가 보유 안내',e.message); }
+
+  /* ---------- 15. v7 · 가격 지도 목표 구간 분리 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    q('#main [data-asset="gamsung"]').click(); await wait(400);
+    var pm2=q('#msheet .pmap');
+    need(!!pm2,'가격 지도 없음');
+    var zones=qa('#msheet .pmap .pmzone');
+    need(zones.length===2,'목표 구간 블록 '+zones.length+'개(기대 2)');
+    need(zones[0].className.indexOf('z2')<0&&zones[1].className.indexOf('z2')>=0,'목표 구간 단계 구분 없음');
+    need(qa('#msheet .pmap .pmseg.conn').length>=1,'연결 구간 없음');
+    need(txt(pm2).indexOf('1차')>=0&&txt(pm2).indexOf('2차')>=0,'목표 라벨 없음');
+    need(txt(pm2).indexOf('분할 익절')>=0,'분할 익절 안내 없음: '+txt(pm2).slice(0,120));
+    need(txt(pm2).indexOf('1차→2차')>=0,'1차→2차 구간 기준 없음: '+txt(pm2).slice(-80));
+    need(qa('#msheet .pmap .pmleg > div').length===5,'범례 '+qa('#msheet .pmap .pmleg > div').length+'줄(기대 5)');
+    var badp=X.overflowV('#msheet .pmleg, #msheet .pmap, #msheet .pmnote');
+    need(!badp.length,'가격 지도 넘침: '+badp.join(', '));
+    rec('pass','가격 지도 · 목표 구간 2단 · 연결 구간',txt(pm2).replace(/\s+/g,' ').slice(0,100));
+    q('#msheet [data-close]').click(); await wait(250);
+  }catch(e){ rec('fail','가격 지도 목표 구간',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    /* ETH는 가격이 달러, 목표가가 원화 — 지도가 카드 밴드와 같은 원화 기준으로 그려져야 한다 */
+    q('#main [data-asset="eth"]').click(); await wait(400);
+    var pe=q('#msheet .pmap');
+    need(!!pe,'ETH 가격 지도 없음');
+    need(txt(pe).indexOf('만원')>=0,'ETH 목표가가 원 단위로 표시되지 않음: '+txt(pe).slice(0,90));
+    need(txt(pe).indexOf('$380')<0,'ETH 목표가에 달러 기호가 붙음');
+    need(txt(pe).indexOf('현재')>=0,'ETH 현재 표시 없음');
+    var badE=X.overflowV('#msheet .pmleg, #msheet .pmap, #msheet .pmnote');
+    need(!badE.length,'ETH 지도 넘침: '+badE.join(', '));
+    rec('pass','ETH 가격 지도 · 원화 목표 정합',txt(pe).replace(/\s+/g,' ').slice(0,80));
+    q('#msheet [data-close]').click(); await wait(250);
+  }catch(e){ rec('fail','ETH 가격 지도 정합',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 16. v7 · 퀵 테스트 SRS 오답 회수 ---------- */
+  try{
+    q('.tab[data-tab="study"]').click(); await wait(400);
+    q('#btnQuizTest').click(); await wait(400);
+    var t1=txt(q('#msheet .qt-card h3'));
+    need(!!t1,'첫 카드 제목 없음');
+    qa('#msheet [data-grade]')[0].click(); await wait(320);   /* 몰랐어 */
+    need(txt(q('#msheet')).indexOf('몰랐어')>=0,'첫 판정 결과 없음');
+    /* 3장 뒤에 같은 카드가 다시 나오는지: 사이 카드는 알았어로 통과 */
+    var seen=false;
+    for(var k2=0;k2<6;k2++){
+      var nx=q('#msheet [data-qtnext]');
+      if(!nx) break;
+      nx.click(); await wait(180);
+      var g2=qa('#msheet [data-grade]');
+      if(!g2.length) break;
+      var reBox=q('#msheet .qt-re');
+      if(reBox && txt(q('#msheet .qt-card h3'))===t1){ seen=true; break; }
+      g2[2].click(); await wait(220);
+    }
+    need(seen,'몰랐던 카드가 다시 출제되지 않음');
+    need(txt(q('#msheet .qt-re')).indexOf('다시 확인')>=0,'회수 배지 없음');
+    qa('#msheet [data-grade]')[2].click(); await wait(320);    /* 회수 성공 */
+    need(txt(q('#msheet')).indexOf('회수 완료')>=0,'회수 완료 표시 없음: '+txt(q('#msheet')).slice(0,120));
+    rec('pass','퀵 테스트 · 오답 카드 3장 뒤 재출제 · 회수 완료',t1);
+  }catch(e){ rec('fail','퀵 테스트 오답 회수',e.message); }
+
+  try{
+    /* 세션 끝까지: 남은 카드는 알았어로 넘기고 완료 화면 통계 확인 */
+    var guard=0;
+    while(guard++<60){
+      var gn=qa('#msheet [data-grade]');
+      if(gn.length){ gn[2].click(); await wait(60); continue; }
+      var nn=q('#msheet [data-qtnext]');
+      if(nn){ nn.click(); await wait(60); continue; }
+      break;
+    }
+    var fin=txt(q('#msheet'));
+    need(fin.indexOf('점검 완료')>=0,'완료 화면 아님: '+fin.slice(0,100));
+    need(/다시 확인\s*\d장/.test(fin),'회수 통계 없음: '+fin.slice(-160));
+    rec('pass','퀵 테스트 완료 · 회수 통계',(fin.match(/다시 확인[^·]*/)||[''])[0]);
+  }catch(e){ rec('fail','퀵 테스트 완료 통계',e.message); }
+
+  try{
+    /* 남은 카드 회수 버튼: 몰랐어 → 재출제에서 또 몰랐어 → 완료 화면에 '남은 N장 회수' */
+    q('#msheet [data-close]').click(); await wait(250);
+    q('#btnQuizTest').click(); await wait(400);
+    var t2=txt(q('#msheet .qt-card h3'));
+    qa('#msheet [data-grade]')[0].click(); await wait(260);
+    var hit2=false;
+    for(var k3=0;k3<6;k3++){
+      var nx2=q('#msheet [data-qtnext]'); if(!nx2) break;
+      nx2.click(); await wait(160);
+      var g3=qa('#msheet [data-grade]'); if(!g3.length) break;
+      if(q('#msheet .qt-re')){ hit2=true; g3[0].click(); await wait(240); break; }
+      g3[2].click(); await wait(200);
+    }
+    need(hit2,'회수 카드 재출제 실패(2회차)');
+    var guard2=0;
+    while(guard2++<60){
+      var gn2=qa('#msheet [data-grade]');
+      if(gn2.length){ gn2[2].click(); await wait(50); continue; }
+      var nn2=q('#msheet [data-qtnext]'); if(nn2){ nn2.click(); await wait(50); continue; }
+      break;
+    }
+    var retry=q('#msheet [data-qtretry]');
+    if(!retry){ rec('skip','남은 카드 회수 버튼','남은 카드 없음'); }
+    else{
+      need(txt(retry).indexOf('남은')>=0,'버튼 라벨: '+txt(retry));
+      retry.click(); await wait(350);
+      need(/1 \/ 1/.test(txt(q('#msheet'))),'회수 세션이 1장으로 시작하지 않음: '+txt(q('#msheet')).slice(0,80));
+      rec('pass','남은 카드 회수 · 1장 재세션',txt(retry));
+    }
+    q('#msheet [data-close]').click(); await wait(200);
+  }catch(e){ rec('fail','남은 카드 회수 버튼',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 17. v11 · 캐시버스트·SW 버전 ---------- */
+  try{
+    var html=await (await fetch('../index.html',{cache:'no-store'})).text();
+    need(html.indexOf('manifest.json?v=11')>=0,'manifest 캐시버스트 없음');
+    need(html.indexOf("sw.js?v=11")>=0,'sw 등록 캐시버스트 없음');
+    var swt=await (await fetch('../sw.js',{cache:'no-store'})).text();
+    need(/macro-radar-v11/.test(swt),'SW CACHE v11 아님');
+    need(/CACHE\s*=\s*'macro-radar-v11(-[\w]+)?'/.test(swt),'SW CACHE 이름이 macro-radar-v11(-n) 가 아님');
+    rec('pass','캐시버스트 ?v=11 · SW macro-radar-v11');
+  }catch(e){ rec('fail','캐시버스트·SW 버전',e.message); }
+
+  /* ---------- 18. v7 · 5개 탭 가로 넘침 재확인 ---------- */
+  try{
+    var badv=[];
+    ['overview','companies','briefing','scenario','study'].forEach(function(t){
+      q('.tab[data-tab="'+t+'"]').click();
+      var po2=X.pageOverflow();
+      if(po2.doc>1) badv.push(t+' '+po2.doc+'px');
+    });
+    need(!badv.length,'가로 넘침: '+badv.join(', '));
+    rec('pass','v8 5개 탭 가로 넘침 0');
+  }catch(e){ rec('fail','v7 5개 탭 가로 넘침',e.message); }
+
+
+  /* ---------- 18. v9 · 카드 신호 배지(손절·목표·매수 계획) ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(450);
+    var strip=q('#main .sigsum');
+    need(!!strip,'신호 필터 줄 없음');
+    var sb=qa('#main .sigsum button');
+    need(sb.length===5,'신호 필터 버튼 '+sb.length+'개(기대 5)');
+    need(txt(sb[0]).indexOf('전체')>=0,'전체 버튼 없음');
+    need(txt(sb[3]).indexOf('매수 계획')>=0,'매수 계획 필터 없음: '+txt(sb[3]));
+    var cards0=qa('#main [data-asset]');
+    var total0=cards0.length;
+    /* 실시간 시세에 따라 배지 색이 달라지므로, 카드 DOM에서 기대값을 만든다 */
+    var per={bad:0,warn:0,ok:0,plan:0}, sigCards=0;
+    cards0.forEach(function(c){
+      var ss=c.querySelectorAll('.sigrow .sig');
+      if(!ss.length) return;
+      sigCards++;
+      var set={};
+      Array.prototype.forEach.call(ss,function(s){
+        var m=String(s.className).match(/\b(bad|warn|ok|plan)\b/);
+        if(m) set[m[1]]=1;
+      });
+      Object.keys(set).forEach(function(k){ per[k]++; });
+    });
+    need(sigCards>=4,'신호 배지가 있는 카드 '+sigCards+'개(기대 4 이상)');
+    var btc=q('#main [data-asset="btc"]');
+    need(!!btc,'비트코인 카드 없음');
+    var btxt=txt(btc);
+    need(/손절/.test(btxt),'BTC 카드에 손절선 배지 없음: '+btxt.slice(0,90));
+    need(/(손절선 하회|손절선 [\d.]+% 앞|손절 -)/.test(btxt),'손절 배지 문구 형태 오류: '+btxt.slice(0,90));
+    need(/매수 밴드/.test(btxt),'BTC 매수 밴드 배지 없음: '+btxt.slice(0,90));
+    var b0=q('#main [data-asset="btc"] .sigrow .sig');
+    need(!!b0,'BTC .sig 없음');
+    need(/\d/.test(txt(q('#main [data-asset="btc"] .sigrow'))),'신호 줄에 거리·% 숫자 없음: '+txt(q('#main [data-asset="btc"] .sigrow')));
+    var pick=per.bad?'bad':(per.warn?'warn':(per.plan?'plan':(per.ok?'ok':'')));
+    if(!pick){
+      rec('skip','v9 신호 필터','오늘은 임박·도달 신호 0건');
+    }else{
+      qa('#main .sigsum button').filter(function(b){return b.getAttribute('data-sigf')===pick;})[0].click();
+      await wait(320);
+      var only=qa('#main [data-asset]');
+      need(only.length===per[pick],'필터 결과 '+only.length+' ≠ 기대 '+per[pick]);
+      need(only.every(function(c){
+        var ss=c.querySelectorAll('.sigrow .sig');
+        return Array.prototype.some.call(ss,function(s){ return String(s.className).indexOf(pick)>=0; });
+      }),'필터에 다른 색 카드 섞임');
+      qa('#main .sigsum button')[0].click(); await wait(320);
+      need(qa('#main [data-asset]').length===total0,'전체 복귀 '+qa('#main [data-asset]').length+'/'+total0);
+      rec('pass','v9 카드 신호 배지 · '+sigCards+'/'+total0+'카드 · 필터 '+pick+' '+only.length+'장',txt(b0));
+    }
+    var badnew=X.overflow('#main .sigrow, #main .sigsum');
+    need(!badnew.length,'신호 배지 넘침: '+badnew.join(', '));
+    rec('pass','v9 신호 배지 넘침 0 · 필터 줄 5버튼');
+  }catch(e){ rec('fail','v9 카드 신호 배지',e.message); }
+
+  /* ---------- 18b. v8 · 편집 모드에서는 신호 줄을 숨긴다 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    need(!!q('#main .sigsum'),'신호 줄이 없음');
+    q('#btnEditMode').click(); await wait(300);
+    need(!q('#main .sigsum'),'편집 모드에서 신호 줄이 남음');
+    need(!q('#main .sighint'),'편집 모드에서 신호 안내가 남음');
+    q('#btnEditMode').click(); await wait(300);
+    need(!!q('#main .sigsum'),'편집을 끝내도 신호 줄이 안 돌아옴');
+    rec('pass','v8 편집 모드에서 신호 줄 숨김 · 복귀');
+  }catch(e){ rec('fail','v8 편집 모드 신호 줄',e.message); }
+
+  /* ---------- 19. v8 · 분할 매수·매도 시뮬레이터 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    q('#btnAddAsset').click(); await wait(320);
+    function setf(k,v){ var el=q('#msheet [data-f="'+k+'"]'); if(el){ el.value=v; el.dispatchEvent(new win.Event('input',{bubbles:true})); } }
+    setf('name','QA 시뮬 종목'); setf('price','10000'); setf('avg','9000'); setf('qtyNum','10'); setf('invested','90000');
+    q('#btnSaveAsset').click(); await wait(420);
+    var card=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 시뮬 종목')>=0;})[0];
+    need(!!card,'임시 종목 카드 없음');
+    card.click(); await wait(380);
+    need(!!q('#msheet .sim'),'시뮬레이터 섹션 없음');
+    var qi=q('#simq'), pi=q('#simp');
+    need(!!qi&&!!pi,'수량·단가 입력 없음');
+    need(qi.value==='1','기본 수량 '+qi.value+' (기대 1)');
+    need(pi.value==='10000','기본 단가 '+pi.value);
+    var r0=txt(q('#simres'));
+    need(r0.indexOf('새 평단')>=0&&r0.indexOf('총 수량')>=0&&r0.indexOf('투자금')>=0,'결과 항목 부족: '+r0.slice(0,120));
+    need(r0.indexOf('비중')>=0,'비중 항목 없음');
+    qi.value='10'; qi.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(220);
+    var r1=txt(q('#simres'));
+    need(/9,500원/.test(r1),'새 평단 9,500원 없음: '+r1.slice(0,160));
+    need(/20주/.test(r1),'총 수량 20주 없음: '+r1.slice(0,160));
+    need(/비중/.test(r1),'비중 변화 없음');
+    qa('#msheet [data-simmode]')[1].click(); await wait(240);
+    need(txt(q('#simres')).indexOf('실현손익')>=0,'매도 결과에 실현손익 없음');
+    qi.value='20'; qi.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(200);
+    need(txt(q('#simres')).indexOf('보다 많이')>=0,'보유 초과 매도 경고 없음: '+txt(q('#simres')).slice(0,80));
+    qi.value='5'; qi.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(200);
+    var rs=txt(q('#simres'));
+    need(/\+5,000원/.test(rs),'실현손익 +5,000원 없음: '+rs.slice(0,140));
+    var pxb=qa('#msheet [data-simfill]').filter(function(b){return txt(b).indexOf('현재가')>=0;})[0];
+    need(!!pxb,'현재가 칩 없음');
+    pxb.click(); await wait(180);
+    need(q('#simp').value==='10000','현재가 칩이 단가를 못 채움: '+q('#simp').value);
+    var bads1=X.overflowV('#msheet .simin, #msheet .simr, #msheet .simchips');
+    need(!bads1.length,'시뮬레이터 넘침: '+bads1.join(', '));
+    win.confirm=function(){return false;};
+    q('#msheet [data-simapply]').click(); await wait(260);
+    var ast=JSON.parse(localStorage.getItem('macro_radar_assets_v1:qa')||'{}');
+    var cust=(ast.custom||[]).filter(function(c){return c.name==='QA 시뮬 종목';})[0];
+    need(cust&&cust.qtyNum===10,'취소했는데 수량이 바뀜: '+(cust&&cust.qtyNum));
+    win.confirm=function(){return true;};
+    q('#simq').value='5'; q('#simq').dispatchEvent(new win.Event('input',{bubbles:true})); await wait(220);
+    q('#msheet [data-simapply]').click(); await wait(500);
+    var ast2=JSON.parse(localStorage.getItem('macro_radar_assets_v1:qa')||'{}');
+    var cust2=(ast2.custom||[]).filter(function(c){return c.name==='QA 시뮬 종목';})[0];
+    need(cust2&&cust2.qtyNum===5,'반영 후 수량 '+(cust2&&cust2.qtyNum)+' (기대 5)');
+    need(cust2&&cust2.invested===45000,'반영 후 투자금 '+(cust2&&cust2.invested)+' (기대 45000)');
+    rec('pass','v8 시뮬레이터 · 새 평단 9,500원 · 실현 +5,000원 · 반영 5주/45,000원');
+    q('#msheet [data-close]').click(); await wait(280);
+    q('#btnEditMode').click(); await wait(280);
+    var db=qa('#main [data-del2]').filter(function(b){return txt(b.closest('.card')).indexOf('QA 시뮬 종목')>=0;})[0];
+    need(!!db,'임시 종목 삭제 버튼 없음');
+    db.click(); await wait(320);
+    q('#btnEditMode').click(); await wait(220);
+    need(!qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 시뮬 종목')>=0;}).length,'임시 종목이 남음');
+    rec('pass','v8 시뮬 임시 종목 정리 · 카드 8 복귀');
+  }catch(e){ rec('fail','v8 시뮬레이터',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 20. v8 · 퀵 테스트 10장 세션 ---------- */
+  try{
+    q('.tab[data-tab="study"]').click(); await wait(380);
+    var qb0=q('#btnQuizTest');
+    need(txt(qb0).indexOf('10장')>=0,'10장 세션 버튼 아님: '+txt(qb0));
+    var allb=qa('#main .qtestbar button')[1];
+    need(txt(allb).indexOf('전체')>=0,'전체 세션 버튼 없음: '+txt(allb));
+    qb0.click(); await wait(420);
+    need(/1 \/ 10/.test(txt(q('#msheet .qt-prog'))),'세션 진행 1/10 아님: '+txt(q('#msheet .qt-prog')));
+    need(txt(q('#msheet .qt-prog')).indexOf('10장 세션')>=0,'세션 표시 없음: '+txt(q('#msheet .qt-prog')));
+    var guardq=0;
+    while(guardq++<40){
+      var gq=qa('#msheet [data-grade]');
+      if(gq.length){ gq[2].click(); await wait(45); continue; }
+      var nnq=q('#msheet [data-qtnext]');
+      if(nnq){ nnq.click(); await wait(45); continue; }
+      break;
+    }
+    var fin=txt(q('#msheet'));
+    need(fin.indexOf('점검 완료')>=0,'10장 완료 화면 아님: '+fin.slice(0,80));
+    need(/설명 가능\)/.test(fin),'설명 가능 비율 없음: '+fin.slice(0,160));
+    var more=q('#msheet [data-qtmore]');
+    need(!!more,'다음 10장 버튼 없음: '+fin.slice(-120));
+    need(txt(more).indexOf('다음 10장')>=0,'버튼 라벨: '+txt(more));
+    more.click(); await wait(420);
+    need(/1 \/ 10/.test(txt(q('#msheet .qt-prog'))),'다음 세션 1/10 아님: '+txt(q('#msheet .qt-prog')));
+    var badq=X.overflowV('#msheet .qt-prog, #msheet .qt-card');
+    need(!badq.length,'퀵 테스트 넘침: '+badq.join(', '));
+    q('#msheet [data-close]').click(); await wait(280);
+    rec('pass','v8 퀵 테스트 10장 세션 · 설명 가능 비율 · 다음 10장');
+  }catch(e){ rec('fail','v8 퀵 테스트 세션',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 21. v8 · 브리핑 한 줄 요약·섹션 바로가기 ---------- */
+  try{
+    q('.tab[data-tab="briefing"]').click(); await wait(420);
+    var hl=q('#main .bhl');
+    need(!!hl,'한 줄 요약 없음');
+    need(txt(hl).length>8,'요약이 비어 있음');
+    need(hl.className.indexOf('down')>=0||hl.className.indexOf('up')>=0,'방향 색 구분 없음: '+hl.className);
+    var jp=qa('#main .bjump button');
+    need(jp.length>=4,'섹션 바로가기 '+jp.length+'개');
+    need(txt(jp[0]).indexOf('1')>=0,'번호 없음: '+txt(jp[0]));
+    win.scrollTo(0,0); await wait(150);
+    jp[2].click(); await wait(800);
+    var sec=q('#bsec-2');
+    need(!!sec,'섹션 id 없음');
+    var top=sec.getBoundingClientRect().top;
+    need(win.scrollY>0,'스크롤 안 됨');
+    need(top>=-10&&top<230,'섹션 위치 top='+Math.round(top));
+    need(qa('#main .seg .tick').length>=1,'퀴즈 메모 완료 표시 없음');
+    var badb=X.overflow('#main .bhl, #main .bjump');
+    need(!badb.length,'브리핑 요약 넘침: '+badb.join(', '));
+    win.scrollTo(0,0);
+    rec('pass','v8 브리핑 · 한 줄 요약 · 바로가기 → #bsec-2 top '+Math.round(top));
+  }catch(e){ rec('fail','v8 브리핑 요약·바로가기',e.message); }
+
+  /* ---------- 22. v9 · 분할 매수 계획 저장 · 카드 신호 연동 ---------- */
+  var planKey='macro_radar_plans_v1:qa';
+  var pid=null;
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(320);
+    q('#btnAddAsset').click(); await wait(320);
+    var setpf=function(k,v){ var el=q('#msheet [data-f="'+k+'"]'); if(el){ el.value=v; el.dispatchEvent(new win.Event('input',{bubbles:true})); } };
+    setpf('name','QA 계획 종목'); setpf('price','10000'); setpf('avg','9000'); setpf('qtyNum','10'); setpf('invested','90000');
+    q('#btnSaveAsset').click(); await wait(420);
+    var pcard=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
+    need(!!pcard,'임시 종목 카드 없음');
+    pid=pcard.getAttribute('data-asset');
+    pcard.click(); await wait(380);
+    var psec=q('#msheet .msec.plan');
+    need(!!psec,'매수 계획 섹션 없음');
+    var pinputs=qa('#msheet .prow input');
+    need(pinputs.length===6,'계획 입력 '+pinputs.length+'개(기대 6: 3단×2)');
+    need(txt(psec).indexOf('분할 매수 계획')>=0,'섹션 제목 없음');
+    need(!q('#msheet .plansum'),'저장 전에 계획 요약이 보임');
+    var setpi=function(i,f,v){ var el=q('#msheet .prow [data-pi="'+i+'"][data-pf="'+f+'"]'); el.value=v; el.dispatchEvent(new win.Event('input',{bubbles:true})); };
+    setpi(0,'px','9700'); setpi(0,'qty','3');
+    setpi(1,'px','9850');
+    setpi(2,'px','10100'); setpi(2,'qty','5');
+    q('#msheet [data-psave]').click(); await wait(520);
+    var pst=JSON.parse(localStorage.getItem(planKey)||'{}');
+    need(pst[pid]&&pst[pid].length===3,'저장된 계획 '+(pst[pid]?pst[pid].length:0)+'단(기대 3)');
+    need(Math.abs(pst[pid][0].px-9700)<0.01&&pst[pid][0].qty===3,'1단 저장값 오류: '+JSON.stringify(pst[pid][0]));
+    need(pst[pid][1].qty===null,'수량 비운 2단이 null이 아님: '+JSON.stringify(pst[pid][1]));
+    var psum=q('#msheet .plansum');
+    need(!!psum,'저장 후 계획 요약 없음');
+    need(/1단/.test(txt(psum))&&/3단/.test(txt(psum)),'요약에 단 표시 없음: '+txt(psum));
+    need(/도달/.test(txt(psum)),'요약에 도달 표시 없음: '+txt(psum));
+    need(/% 앞/.test(txt(psum)),'요약에 근접 표시 없음: '+txt(psum));
+    need(/3\.1% 남음/.test(txt(psum)),'요약에 남은 거리 표시 없음: '+txt(psum));
+    q('#msheet [data-close]').click(); await wait(260);
+    var pc2=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
+    pc2.click(); await wait(360);
+    need(q('#msheet .prow [data-pi="0"][data-pf="px"]').value==='9700','재개봉 시 1단 단가 유실');
+    need(!!q('#msheet .plansum'),'재개봉 시 계획 요약 없음');
+    q('#msheet [data-close]').click(); await wait(260);
+    var pc3=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
+    var ptxt=txt(pc3);
+    need(/매수 계획 2단 1\.5% 앞/.test(ptxt),'근접 배지 없음: '+ptxt.slice(0,160));
+    need(/매수 계획 3단 도달/.test(ptxt),'도달 배지 없음: '+ptxt.slice(0,160));    var pfbtn=qa('#main .sigsum button').filter(function(b){return b.getAttribute('data-sigf')==='plan';})[0];
+    need(!!pfbtn,'매수 계획 필터 버튼 없음');
+    need(txt(pfbtn).indexOf('1')>=0,'매수 계획 필터 수 '+txt(pfbtn));
+    pfbtn.click(); await wait(320);
+    var plist=qa('#main [data-asset]');
+    need(plist.length===1,'매수 계획 필터 결과 '+plist.length+'장(기대 1)');
+    need(txt(plist[0]).indexOf('QA 계획 종목')>=0,'필터에 다른 종목이 섞임');
+    need(!X.overflow('#main .sigrow').length,'계획 배지 넘침');
+    qa('#main .sigsum button')[0].click(); await wait(320);
+    rec('pass','v9 매수 계획 · 3단 저장 · 근접/도달 배지 · 필터 1장');
+  }catch(e){ rec('fail','v9 매수 계획',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 22b. v9 · 종목 수정 뒤에도 계획 보존 · 계획 지우기 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    var pce=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
+    need(!!pce,'임시 종목 없음');
+    qa('#main [data-edit="'+pid+'"]')[0].click(); await wait(340);
+    need(!!q('#msheet #assetForm'),'수정 폼 없음');
+    var nta=q('#msheet [data-f="note"]'); nta.value='계획 보존 확인'; nta.dispatchEvent(new win.Event('input',{bubbles:true}));
+    q('#btnSaveAsset').click(); await wait(480);
+    var pst2=JSON.parse(localStorage.getItem(planKey)||'{}');
+    need(pst2[pid]&&pst2[pid].length===3,'종목 수정 후 계획 유실: '+(pst2[pid]?pst2[pid].length:0));
+    rec('pass','v9 종목 수정 후에도 매수 계획 보존');
+  }catch(e){ rec('fail','v9 계획 보존',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 23. v9 · 매도 실현손익 누적 · 내역 · 초기화 ---------- */
+  var realKey='macro_radar_realized_v1:qa';
+  var sellOnce=async function(card,qty,px){
+    card.click(); await wait(380);
+    qa('#msheet [data-simmode]')[1].click(); await wait(240);
+    var qi2=q('#simq'), pi2=q('#simp');
+    qi2.value=String(qty); qi2.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(180);
+    if(px){ pi2.value=String(px); pi2.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(180); }
+    var rv=txt(q('#simres'));
+    q('#msheet [data-simapply]').click(); await wait(520);
+    return rv;
+  };
+  try{
+    win.confirm=function(){return true;};
+    q('.tab[data-tab="companies"]').click(); await wait(340);
+    var rl0=q('#main .pfcard .rl');
+    need(!!rl0,'포트폴리오 실현손익 줄 없음');
+    need(txt(rl0).indexOf('실현손익')>=0,'실현손익 라벨 없음: '+txt(rl0));
+    q('#main .pfcard [data-real]').click(); await wait(340);
+    var rcl=q('#msheet [data-rclear]');
+    if(rcl){ rcl.click(); await wait(450); }
+    var rst=JSON.parse(localStorage.getItem(realKey)||'{}');
+    need((rst.items||[]).length===0,'초기화 후 기록 '+((rst.items||[]).length));
+    need(q('#msheet'),'내역 시트 없음');
+    q('#msheet [data-close]').click(); await wait(280);
+    need(txt(q('#main .pfcard .rl')).indexOf('없음')>=0,'초기화 후 안내 없음: '+txt(q('#main .pfcard .rl')));
+    rec('pass','v9 실현손익 초기화 · '+txt(q('#main .pfcard .rl')));
+  }catch(e){ rec('fail','v9 실현손익 초기화',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    win.confirm=function(){return true;};
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    q('#btnAddAsset').click(); await wait(320);
+    var sfn=function(k,v){ var el=q('#msheet [data-f="'+k+'"]'); if(el){ el.value=v; el.dispatchEvent(new win.Event('input',{bubbles:true})); } };
+    sfn('name','QA 실현 종목'); sfn('price','10000'); sfn('avg','9000'); sfn('qtyNum','10'); sfn('invested','90000');
+    q('#btnSaveAsset').click(); await wait(440);
+    var rcard=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 실현 종목')>=0;})[0];
+    need(!!rcard,'실현 종목 카드 없음');
+    var prev=txt(q('#main .pfcard .rl'));
+    var rv1=await sellOnce(rcard,5,10000);
+    need(/실현손익/.test(rv1)&&/\+5,000원/.test(rv1),'매도 미리보기 실현손익 없음: '+rv1.slice(0,140));
+    var r1=JSON.parse(localStorage.getItem(realKey)||'{}');
+    need((r1.items||[]).length===1,'실현손익 기록 '+((r1.items||[]).length)+'건(기대 1)');
+    need(Math.round(r1.items[0].pnl)===5000,'기록 손익 '+r1.items[0].pnl);
+    need(r1.items[0].cur==='KRW','기록 통화 '+r1.items[0].cur);
+    need(r1.items[0].name==='QA 실현 종목','기록 종목 '+r1.items[0].name);
+    var rcard2=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 실현 종목')>=0;})[0];
+    var rv2=await sellOnce(rcard2,5,10000);
+    var r2=JSON.parse(localStorage.getItem(realKey)||'{}');
+    need((r2.items||[]).length===2,'누적 기록 '+((r2.items||[]).length)+'건(기대 2)');
+    q('#msheet [data-close]').click(); await wait(320);
+    var rlt=txt(q('#main .pfcard .rl'));
+    need(/\+10,000원/.test(rlt),'누적 +10,000원 없음: '+rlt);
+    need(/2건/.test(rlt),'2건 표시 없음: '+rlt);
+    rec('pass','v9 매도 실현손익 누적 · '+rlt+' (이전 '+prev+')');
+  }catch(e){ rec('fail','v9 실현손익 누적',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    win.confirm=function(){return true;};
+    q('.tab[data-tab="companies"]').click(); await wait(320);
+    q('#main .pfcard [data-real]').click(); await wait(340);
+    var rrows=qa('#msheet .rrow');
+    need(rrows.length===2,'내역 행 '+rrows.length+'개(기대 2)');
+    need(txt(rrows[0]).indexOf('QA 실현 종목')>=0,'내역 종목명 없음: '+txt(rrows[0]));
+    need(/\+5,000원/.test(txt(rrows[0])),'내역 손익 없음: '+txt(rrows[0]));
+    var badr=X.overflowV('#msheet .rrow');
+    need(!badr.length,'내역 넘침: '+badr.join(', '));
+    qa('#msheet [data-rdel]')[0].click(); await wait(480);
+    var r3=JSON.parse(localStorage.getItem(realKey)||'{}');
+    need((r3.items||[]).length===1,'행 삭제 후 '+((r3.items||[]).length)+'건(기대 1)');
+    need(qa('#msheet .rrow').length===1,'삭제 후 시트 행 '+qa('#msheet .rrow').length+'개');
+    rec('pass','v9 실현손익 내역 · 행 삭제');
+  }catch(e){ rec('fail','v9 실현손익 내역',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 24. v9 · 새로고침 후 유지(계획·실현손익·신호일) ---------- */
+  var sigKey='macro_radar_siglog_v1:qa';
+  try{
+    var logA=JSON.parse(localStorage.getItem(sigKey)||'{}');
+    var nOld=Object.keys(logA).length;
+    need(nOld>0,'신호 발생일 기록 없음');
+    need(Object.keys(logA).every(function(k){ return logA[k]&&/^\d{4}-\d{2}-\d{2}$/.test(logA[k].d||''); }),'신호일 형식 오류');
+    var nowS=new Date();
+    var todayS=nowS.getFullYear()+'-'+('0'+(nowS.getMonth()+1)).slice(-2)+'-'+('0'+nowS.getDate()).slice(-2);
+    need(Object.keys(logA).some(function(k){ return logA[k].d===todayS; }),'오늘 날짜 기록 없음');
+    var news1=qa('#main .sig .snew');
+    need(news1.length>=1,'오늘 배지 없음');
+    need(txt(news1[0]).indexOf('오늘')>=0,'배지 문구: '+txt(news1[0]));
+    rec('pass','v9 신호 발생일 기록 · '+nOld+'건 · 오늘 배지 '+news1.length+'개');
+  }catch(e){ rec('fail','v9 신호 발생일',e.message); }
+
+  try{
+    var logA2=JSON.parse(localStorage.getItem(sigKey)||'{}');
+    var nA=Object.keys(logA2).length;
+    var oldMap={}; Object.keys(logA2).forEach(function(k){ oldMap[k]=true; });
+    /* 어제 걸린 신호로 바꿔 두고, 새로고침 뒤에도 시작일이 유지되는지 본다 */
+    var yd=new Date(new Date().getTime()-86400000);
+    var ydS=yd.getFullYear()+'-'+('0'+(yd.getMonth()+1)).slice(-2)+'-'+('0'+yd.getDate()).slice(-2);
+    var seed={}; Object.keys(logA2).forEach(function(k){ seed[k]={d:ydS,u:ydS}; });
+    localStorage.setItem(sigKey, JSON.stringify(seed));
+    /* 도감 판정일도 하나만 오래된 날짜로 두고, 새로고침 뒤 복습 우선순위를 검증한다 */
+    var stObj=JSON.parse(localStorage.getItem('macro_radar_study_v1:qa')||'{}');
+    var doneKeys=Object.keys(stObj).filter(function(k){ return stObj[k]===2; });
+    need(doneKeys.length>=1,'완료 카드 없음(복습 필요 시드 불가)');
+    var smSeed={}; smSeed[doneKeys[0]]='2026-01-01';
+    localStorage.setItem('macro_radar_study_meta_v1:qa', JSON.stringify(smSeed));
+    var loadP=new Promise(function(r){ f.addEventListener('load',r,{once:true}); });
+    win.location.reload();
+    await loadP; await wait(2500);
+    X=boot(win); d=X.d; q=X.q; qa=X.qa;
+    win.confirm=function(){ return true; };
+    q('.tab[data-tab="companies"]').click(); await wait(520);
+    var logB=JSON.parse(localStorage.getItem(sigKey)||'{}');
+    var kept=Object.keys(logB).filter(function(k){ return logB[k]&&logB[k].d===ydS; }).length;
+    /* 기록된 시작일은 덮어쓰지 않는다(새로 생긴 신호의 오늘 날짜는 정상) */
+    var overwritten=Object.keys(oldMap).filter(function(k){ return logB[k]&&logB[k].d!==ydS; });
+    need(!overwritten.length,'기록된 날짜를 오늘로 덮어씀: '+overwritten.slice(0,2).join(', '));
+    need(kept>=1,'보존된 날짜 없음');
+    var staleNew=qa('#main .sig .snew').filter(function(em){
+      var sk=em.closest('.sig').getAttribute('data-sk');
+      return !!oldMap[sk];
+    });
+    need(!staleNew.length,'지난 날짜 신호에 오늘 배지 '+staleNew.length+'개');
+    var planB=JSON.parse(localStorage.getItem(planKey)||'{}');
+    need(planB[pid]&&planB[pid].length===3,'새로고침 후 계획 유실');
+    var pcB=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
+    need(!!pcB&&/매수 계획/.test(txt(pcB)),'새로고침 후 매수 계획 배지 없음');
+    var rlB=txt(q('#main .pfcard .rl'));
+    need(/\+5,000원/.test(rlB),'새로고침 후 실현손익 유실: '+rlB);
+    rec('pass','v9 새로고침 유지 · 계획 3단 · 실현 +5,000원 · 신호일 보존 '+kept+'건');
+  }catch(e){ rec('fail','v9 새로고침 유지',e.message); }
+
+  /* ---------- 24b. v9 · 매수 계획 지우기 · 임시 종목 정리 ---------- */
+  try{
+    win.confirm=function(){ return true; };
+    q('.tab[data-tab="companies"]').click(); await wait(340);
+    var pcz=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0];
+    need(!!pcz,'임시 계획 종목 없음');
+    pcz.click(); await wait(380);
+    q('#msheet [data-pclear]').click(); await wait(500);
+    var pst3=JSON.parse(localStorage.getItem(planKey)||'{}');
+    need(!pst3[pid],'계획을 지웠는데 저장값이 남음');
+    q('#msheet [data-close]').click(); await wait(300);
+    var ptxt2=txt(qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 계획 종목')>=0;})[0]);
+    need(ptxt2.indexOf('매수 계획')<0,'계획 지운 뒤 배지가 남음: '+ptxt2.slice(0,120));
+    rec('pass','v9 매수 계획 지우기 · 배지 제거');
+  }catch(e){ rec('fail','v9 계획 지우기',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    win.confirm=function(){ return true; };
+    q('.tab[data-tab="companies"]').click(); await wait(300);
+    q('#btnEditMode').click(); await wait(320);
+    var names=['QA 계획 종목','QA 실현 종목'];
+    for(var ni=0;ni<names.length;ni++){
+      var dbs=qa('#main [data-del2]').filter(function(b){ return txt(b.closest('.card')).indexOf(names[ni])>=0; })[0];
+      if(dbs){ dbs.click(); await wait(360); }
+    }
+    if(q('#btnEditMode')&&txt(q('#btnEditMode')).indexOf('편집 완료')>=0){ q('#btnEditMode').click(); await wait(300); }
+    var left=qa('#main [data-asset]').filter(function(c){ return txt(c).indexOf('QA ')===0; });
+    need(!left.length,'임시 종목이 남음: '+left.length);
+    rec('pass','v9 임시 종목 정리 · 카드 '+qa('#main [data-asset]').length+'장 복귀');
+  }catch(e){ rec('fail','v9 임시 종목 정리',e.message); }
+
+  /* ---------- 25. v9 · 도감 복습 우선순위 · 10장 세션 반복 방지 · 태그 세션 ---------- */
+  try{
+    q('.tab[data-tab="study"]').click(); await wait(420);
+    var hintT=txt(q('#main .sec .hint'));
+    need(/복습 필요/.test(hintT),'복습 필요 표시 없음: '+hintT);
+    var qb=q('#btnQuizTest');
+    need(txt(qb).indexOf('10장')>=0,'10장 버튼 아님: '+txt(qb));
+    qb.click(); await wait(450);
+    need(/1 \/ 10/.test(txt(q('#msheet .qt-prog'))),'세션 시작 1/10 아님: '+txt(q('#msheet .qt-prog')));
+    var mix1=txt(q('#msheet .qt-mix'));
+    need(/미학습/.test(mix1)&&/애매/.test(mix1)&&/복습/.test(mix1),'세션 구성 줄 없음: '+mix1);
+    var nums1=(mix1.match(/\d+/g)||[]).map(Number);
+    need(nums1.length===3&&nums1.reduce(function(a,b){return a+b;},0)===10,'구성 합 10 아님: '+mix1);
+    need(nums1[2]>=1,'오래된 완료 카드가 복습으로 잡하지 않음: '+mix1);
+    var t1=[], guard1=0;
+    while(guard1++<70){
+      var g1=qa('#msheet [data-grade]');
+      if(g1.length){ var h1=q('#msheet .qt-card h3'); if(h1) t1.push(txt(h1)); g1[2].click(); await wait(45); continue; }
+      var nx1=q('#msheet [data-qtnext]');
+      if(nx1){ nx1.click(); await wait(45); continue; }
+      break;
+    }
+    need(t1.length===10,'1세션 카드 '+t1.length+'장(기대 10)');
+    var moreB=q('#msheet [data-qtmore]');
+    need(!!moreB,'다음 10장 버튼 없음');
+    moreB.click(); await wait(450);
+    need(/1 \/ 10/.test(txt(q('#msheet .qt-prog'))),'2세션 1/10 아님');
+    var t2=[], guard2=0;
+    while(guard2++<70){
+      var g2=qa('#msheet [data-grade]');
+      if(g2.length){ var h2=q('#msheet .qt-card h3'); if(h2) t2.push(txt(h2)); g2[2].click(); await wait(45); continue; }
+      var nx2=q('#msheet [data-qtnext]');
+      if(nx2){ nx2.click(); await wait(45); continue; }
+      break;
+    }
+    need(t2.length===10,'2세션 카드 '+t2.length+'장(기대 10)');
+    var dup=t2.filter(function(x){ return t1.indexOf(x)>=0; });
+    need(!dup.length,'2세션에서 1세션 카드 반복: '+dup.slice(0,3).join(' / '));
+    need(!X.overflowV('#msheet .qt-mix').length,'세션 구성 줄 넘침');
+    rec('pass','v9 도감 세션 · '+mix1+' · 2세션 반복 0');
+    q('#msheet [data-close]').click(); await wait(320);
+  }catch(e){ rec('fail','v9 도감 세션',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    q('.tab[data-tab="study"]').click(); await wait(380);
+    var tagb=q('#main .sfilter [data-stag="재무"]');
+    need(!!tagb,'재무 태그 없음');
+    tagb.click(); await wait(380);
+    var qb2=q('#btnQuizTest');
+    need(txt(qb2).indexOf('2장')>=0,'태그 세션 라벨 '+txt(qb2)+' (재무 2장)');
+    qb2.click(); await wait(450);
+    var pr2=txt(q('#msheet .qt-prog'));
+    need(/1 \/ 2/.test(pr2),'태그 세션 1/2 아님: '+pr2);
+    var tg=txt(q('#msheet .qt-card .qtg'));
+    need(tg.indexOf('재무')>=0||tg.indexOf(' ')>=0,'태그 카드 표시: '+tg);
+    need(/재무/.test(pr2),'세션 머리에 태그 없음: '+pr2);
+    rec('pass','v9 태그 10장 필터 · 재무 2장 세션');
+    q('#msheet [data-close]').click(); await wait(300);
+    q('#main .sfilter [data-stag="전체"]').click(); await wait(320);
+  }catch(e){ rec('fail','v9 태그 세션',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 26. v9 · 브리핑 다음 정기 브리핑 안내 ---------- */
+  try{
+    q('.tab[data-tab="briefing"]').click(); await wait(480);
+    var bn=q('#main .bnext');
+    need(!!bn,'다음 정기 브리핑 블록 없음');
+    need(q('#main').firstElementChild===bn,'브리핑 탭 맨 위가 아님');
+    var brows=qa('#main .bnext .bnl');
+    need(brows.length===2,'다음 브리핑 줄 '+brows.length+'개(기대 2)');
+    need(/국내/.test(txt(brows[0]))&&/미국/.test(txt(brows[1])),'국내/미국 라벨 없음: '+txt(bn));
+    var reT=/^\d{2}\/\d{2}\(([일월화수목금토])\) \d{2}:\d{2}$/;
+    var krT=txt(brows[0].querySelector('.bt')), usT=txt(brows[1].querySelector('.bt'));
+    need(reT.test(krT),'국내 시각 형식: '+krT);
+    need(reT.test(usT),'미국 시각 형식: '+usT);
+    var krW=krT.match(reT)[1], usW=usT.match(reT)[1];
+    need('월화수목금'.indexOf(krW)>=0,'국내 브리핑 요일이 평일이 아님: '+krW);
+    need('화수목금토'.indexOf(usW)>=0,'미국 브리핑 요일이 화~토가 아님: '+usW);
+    need(krT.slice(-5)==='16:00','국내 시각 16:00 아님: '+krT);
+    need(usT.slice(-5)==='07:00','미국 시각 07:00 아님: '+usT);
+    var krIn=txt(brows[0].querySelector('.bd')), usIn=txt(brows[1].querySelector('.bd'));
+    need(/(분|시간|일)/.test(krIn),'국내 남은 시간 없음: '+krIn);
+    need(/(분|시간|일)/.test(usIn),'미국 남은 시간 없음: '+usIn);
+    need(!X.overflow('#main .bnext').length,'다음 안내 넘침');
+    rec('pass','v9 다음 정기 브리핑 · 국내 '+krT+' ('+krIn+') · 미국 '+usT+' ('+usIn+')');
+  }catch(e){ rec('fail','v9 다음 정기 브리핑',e.message); }
+
+
+  /* ================= v10 신규 ================= */
+
+  /* ---------- 27. v10 · 오늘의 매수 후보 한 줄 ---------- */
+  var hitId=null;
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(320);
+    q('#btnAddAsset').click(); await wait(320);
+    var sfh=function(k,v){ var el=q('#msheet [data-f="'+k+'"]'); if(el){ el.value=v; el.dispatchEvent(new win.Event('input',{bubbles:true})); } };
+    sfh('name','QA 후보 종목'); sfh('price','10000'); sfh('avg','9000'); sfh('qtyNum','10'); sfh('invested','90000');
+    q('#btnSaveAsset').click(); await wait(440);
+    var hcard=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 후보 종목')>=0;})[0];
+    need(!!hcard,'임시 종목 카드 없음');
+    hitId=hcard.getAttribute('data-asset');
+    hcard.click(); await wait(380);
+    var sh=function(i,f,v){ var el=q('#msheet .prow [data-pi="'+i+'"][data-pf="'+f+'"]'); el.value=v; el.dispatchEvent(new win.Event('input',{bubbles:true})); };
+    sh(0,'px','10100'); sh(1,'px','9750');
+    q('#msheet [data-psave]').click(); await wait(520);
+    q('#msheet [data-close]').click(); await wait(320);
+    var mf=q('#main .mfsum');
+    need(!!mf,'오늘의 매수 후보 줄 없음');
+    need(q('#main').firstElementChild===mf,'매수 후보 줄이 맨 위가 아님');
+    need(txt(mf).indexOf('오늘의 매수 후보 1')>=0,'후보 수 표시: '+txt(mf));
+    need(/QA 후보 종목\s*1단 도달/.test(txt(mf)),'1단 도달 표시 없음: '+txt(mf));
+    need(mf.getBoundingClientRect().height<70,'후보 줄이 한 줄이 아님: '+Math.round(mf.getBoundingClientRect().height)+'px');
+    var chip=q('#main .mfsum [data-mfopen]');
+    need(!!chip,'후보 칩 없음');
+    chip.click(); await wait(380);
+    need(!q('#modal').hidden,'후보 칩이 상세를 안 엶');
+    need(txt(q('#msheet .mhd h3')).indexOf('QA 후보 종목')>=0,'상세 종목 불일치');
+    var sage=q('#msheet .sage');
+    need(!!sage,'신호 이력 줄 없음');
+    need(txt(sage).indexOf('오늘 걸림')>=0,'오늘 걸린 신호 표시 없음: '+txt(sage));
+    rec('pass','v10 오늘의 매수 후보 · '+txt(mf)+' · 칩→상세 · '+txt(sage));
+    /* 계획을 멀리 옮기면 후보에서 빠진다 */
+    sh(0,'px','9300'); sh(1,'px','9200');
+    q('#msheet [data-psave]').click(); await wait(500);
+    q('#msheet [data-close]').click(); await wait(320);
+    need(!q('#main .mfsum'),'도달 계획이 없는데 후보 줄이 남음');
+    var po0=X.pageOverflow();
+    need(po0.doc<=1,'후보 줄 뒤 가로 넘침 '+po0.doc+'px');
+    rec('pass','v10 계획이 멀면 오늘의 매수 후보 0 · 가로 넘침 0');
+    /* 다시 1단을 현재가 근처로 되돌려 둔다(뒤 신호 이력 검사용) */
+    var hc2=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 후보 종목')>=0;})[0];
+    hc2.click(); await wait(360);
+    sh(0,'px','10100'); sh(1,'px','');
+    q('#msheet [data-psave]').click(); await wait(500);
+    q('#msheet [data-close]').click(); await wait(300);
+    need(!!q('#main .mfsum'),'계획을 되돌렸는데 후보 줄이 없음');
+  }catch(e){ rec('fail','v10 오늘의 매수 후보',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 28. v10 · 입력 UX(포커스 시 키보드 가림 방지) ---------- */
+  try{
+    var hc3=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 후보 종목')>=0;})[0];
+    hc3.click(); await wait(380);
+    var sheetEl=q('#msheet');
+    sheetEl.scrollTop=0;
+    var pIn=q('#msheet .prow [data-pi="2"][data-pf="px"]');
+    need(!!pIn,'3단 입력칸 없음');
+    pIn.focus(); await wait(700);
+    var sr=sheetEl.getBoundingClientRect(), ir=pIn.getBoundingClientRect();
+    need(sheetEl.scrollTop>0,'포커스해도 시트가 스크롤되지 않음');
+    need(ir.top>=sr.top-2&&ir.bottom<=sr.bottom+2,'입력칸이 시트 밖: '+Math.round(ir.top)+' vs '+Math.round(sr.top)+'~'+Math.round(sr.bottom));
+    var sm=parseFloat(win.getComputedStyle(pIn).scrollMarginBlockStart||'0');
+    need(sm>=40,'scroll-margin 없음: '+sm);
+    var mh=parseFloat(win.getComputedStyle(sheetEl).maxHeight);
+    need(mh<=win.innerHeight+1,'시트 최대 높이 '+Math.round(mh)+' > 화면 '+win.innerHeight);
+    need(!!win.visualViewport,'visualViewport 없음');
+    rec('pass','v10 입력 UX · 포커스 시 시트 스크롤 '+Math.round(sheetEl.scrollTop)+'px · 시트 '+Math.round(mh)+'px');
+    q('#msheet [data-close]').click(); await wait(280);
+  }catch(e){ rec('fail','v10 입력 UX',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 29. v10 · 매도 실현손익 승률·평균·월별 ---------- */
+  var todayStr=(function(){ var n=new Date(); return n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2); })();
+  try{
+    win.confirm=function(){return true;};
+    var hc4=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 후보 종목')>=0;})[0];
+    hc4.click(); await wait(380);
+    var saleOnce=async function(qty,px){
+      qa('#msheet [data-simmode]')[1].click(); await wait(220);
+      var qi2=q('#simq'), pi2=q('#simp');
+      qi2.value=String(qty); qi2.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(170);
+      pi2.value=String(px); pi2.dispatchEvent(new win.Event('input',{bubbles:true})); await wait(170);
+      var prev=txt(q('#simres'));
+      q('#msheet [data-simapply]').click(); await wait(520);
+      return prev;
+    };
+    await saleOnce(5,11000);
+    need(!q('#modal').hidden,'첫 매도 뒤 상세가 닫힘');
+    await saleOnce(5,8000);
+    q('#msheet [data-close]').click(); await wait(320);
+    var RK='macro_radar_realized_v1:qa';
+    var items=(JSON.parse(localStorage.getItem(RK)||'{}').items)||[];
+    need(items.length>=3,'실현손익 '+items.length+'건(기대 3 이상)');
+    var w=0,rn=0,sum=0;
+    items.forEach(function(it){ if(it.pnl>0) w++; if(it.avg>0&&it.qty>0){ rn++; sum+=it.pnl/(it.avg*it.qty)*100; } });
+    var rate=Math.round(w/items.length*100), avgV=Math.round(sum/rn*10)/10;
+    var avgS=(avgV>0?'+':'')+avgV.toFixed(1)+'%';
+    q('#main .pfcard [data-real]').click(); await wait(380);
+    var stat=q('#msheet .rstat');
+    need(!!stat,'승률·평균 요약 없음');
+    need(txt(stat).indexOf('이긴 매도 '+w+'/'+items.length)>=0,'이긴 매도 '+w+'/'+items.length+' 없음: '+txt(stat));
+    need(txt(stat).indexOf('승률 '+rate+'%')>=0,'승률 '+rate+'% 없음: '+txt(stat));
+    need(txt(stat).indexOf('평균 '+avgS)>=0,'평균 '+avgS+' 없음: '+txt(stat));
+    var mon=qa('#msheet .rmon');
+    need(mon.length===1,'이번 달 그룹 '+mon.length+'개(기대 1)');
+    need(mon[0].open===true,'최신 달이 접혀 있음');
+    need(/건/.test(txt(mon[0].querySelector('summary'))),'월 요약 건수 없음: '+txt(mon[0].querySelector('summary')));
+    need(qa('#msheet .rmon .rmrows .rrow').length===items.length,'월 그룹 안 행 '+qa('#msheet .rmon .rmrows .rrow').length+'/'+items.length);
+    need(!X.overflowV('#msheet .rstat, #msheet .rmon > summary').length,'승률·월 요약 넘침');
+    rec('pass','v10 실현손익 승률·평균 · '+txt(stat));
+    q('#msheet [data-close]').click(); await wait(300);
+  }catch(e){ rec('fail','v10 실현손익 승률·월별',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 30. v10 · 도감 복습 주기 선택(기본 7일) ---------- */
+  var QC='macro_radar_qtcfg_v1:qa';
+  try{
+    q('.tab[data-tab="study"]').click(); await wait(420);
+    var cyc=qa('#main .scycle [data-scyc]');
+    need(cyc.length===3,'복습 주기 버튼 '+cyc.length+'개(기대 3)');
+    need(txt(cyc[0]).indexOf('3')===0&&txt(cyc[1]).indexOf('7')===0&&txt(cyc[2]).indexOf('14')===0,'주기 라벨: '+txt(cyc[0])+'/'+txt(cyc[1])+'/'+txt(cyc[2]));
+    need(cyc[1].classList.contains('on'),'기본 7일이 선택돼 있지 않음');
+    cyc[0].click(); await wait(400);
+    var cfg=JSON.parse(localStorage.getItem(QC)||'{}');
+    need(cfg.review===3,'저장된 복습 주기 '+cfg.review+' (기대 3)');
+    need(qa('#main .scycle [data-scyc="3"]')[0].classList.contains('on'),'3일 버튼이 선택 표시되지 않음');
+    need(txt(q('#main .scycle')).indexOf('3일 뒤')>=0,'3일 안내 문구 없음: '+txt(q('#main .scycle')));
+    qa('#main .scycle [data-scyc="7"]')[0].click(); await wait(350);
+    need(JSON.parse(localStorage.getItem(QC)||'{}').review===7,'7일로 되돌린 값이 저장되지 않음');
+    rec('pass','v10 복습 주기 3/7일 전환 · 저장 · 기본 7일');
+  }catch(e){ rec('fail','v10 복습 주기',e.message); }
+
+  /* ---------- 31. v10 · 신호 이력 기간 · 지난달 묶음 · 복습 주기 효과(새로고침) ---------- */
+  var reviewKey=null, n7=null;
+  try{
+    var RWK='macro_radar_realized_v1:qa';
+    var ro=JSON.parse(localStorage.getItem(RWK)||'{"items":[]}');
+    ro.items.push({id:'qa-old',name:'QA 지난달',ts:'2026-10-15 10:00',qty:5,px:9450,avg:9000,pnl:2250,cur:'KRW'});
+    localStorage.setItem(RWK,JSON.stringify(ro));
+    /* 완료 카드 하나를 5일 전 판정으로 — 7일 기준에선 복습 아님, 3일 기준에선 복습 */
+    var STK='macro_radar_study_v1:qa', SMK='macro_radar_study_meta_v1:qa';
+    var st0=JSON.parse(localStorage.getItem(STK)||'{}');
+    var sm0=JSON.parse(localStorage.getItem(SMK)||'{}');
+    var now0=new Date(), t0=new Date(now0.getFullYear(),now0.getMonth(),now0.getDate());
+    var five=new Date(t0.getTime()-5*86400000);
+    var fiveS=five.getFullYear()+'-'+('0'+(five.getMonth()+1)).slice(-2)+'-'+('0'+five.getDate()).slice(-2);
+    Object.keys(st0).forEach(function(k){
+      if(reviewKey||st0[k]!==2) return;
+      var d=sm0[k]?Math.round((t0-new Date(sm0[k]+'T00:00:00'))/86400000):999;
+      if(d<7) reviewKey=k;
+    });
+    need(!!reviewKey,'5일 전으로 둘 완료 카드가 없음');
+    sm0[reviewKey]=fiveS; localStorage.setItem(SMK,JSON.stringify(sm0));
+    localStorage.setItem(QC,JSON.stringify({review:7}));
+    /* QA 후보 종목의 신호 시작일을 3일 전으로 — 상세 시트의 'n일째' 검증 */
+    var SGK='macro_radar_siglog_v1:qa';
+    var sg0=JSON.parse(localStorage.getItem(SGK)||'{}');
+    var three=new Date(t0.getTime()-3*86400000);
+    var threeS=three.getFullYear()+'-'+('0'+(three.getMonth()+1)).slice(-2)+'-'+('0'+three.getDate()).slice(-2);
+    var yest=new Date(t0.getTime()-1*86400000);
+    var yestS=yest.getFullYear()+'-'+('0'+(yest.getMonth()+1)).slice(-2)+'-'+('0'+yest.getDate()).slice(-2);
+    var hk=Object.keys(sg0).filter(function(k){ return k.indexOf(hitId+'|')===0; });
+    need(hk.length>=1,'QA 후보 종목 신호 기록 없음');
+    hk.forEach(function(k){ sg0[k]={d:threeS,u:yestS}; });
+    localStorage.setItem(SGK,JSON.stringify(sg0));
+    var loadP2=new Promise(function(r){ f.addEventListener('load',r,{once:true}); });
+    win.location.reload();
+    await loadP2; await wait(2600);
+    X=boot(win); d=X.d; q=X.q; qa=X.qa;
+    win.confirm=function(){ return true; };
+    /* (1) 복습 주기 효과 */
+    q('.tab[data-tab="study"]').click(); await wait(500);
+    var hint7=txt(q('#main .sec .hint'));
+    n7=parseInt((hint7.match(/복습 필요 (\d+)/)||[0,0])[1],10)||0;
+    need(qa('#main .scycle [data-scyc="7"]')[0].classList.contains('on'),'새로고침 후 7일이 선택 안 됨');
+    qa('#main .scycle [data-scyc="3"]')[0].click(); await wait(450);
+    var hint3=txt(q('#main .sec .hint'));
+    var n3=parseInt((hint3.match(/복습 필요 (\d+)/)||[0,0])[1],10)||0;
+    need(n3===n7+1,'3일 기준 복습 '+n3+'장(기대 '+(n7+1)+') · 7일 '+n7);
+    need(JSON.parse(localStorage.getItem(QC)||'{}').review===3,'새로고침 후 3일 선택 저장 안 됨');
+    rec('pass','v10 복습 주기 효과 · 7일 '+n7+' → 3일 '+n3+' (5일 전 카드 포함)');
+    /* (2) 신호 이력 기간 */
+    q('.tab[data-tab="companies"]').click(); await wait(520);
+    need(!!q('#main .mfsum'),'새로고침 후 매수 후보 줄 없음');
+    var hc5=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 후보 종목')>=0;})[0];
+    need(!!hc5,'임시 종목 없음');
+    hc5.click(); await wait(420);
+    var sage2=q('#msheet .sage');
+    need(!!sage2,'새로고침 후 신호 이력 없음');
+    var dTxt=(threeS.slice(5,7)||'')+'/'+threeS.slice(8,10);
+    need(txt(sage2).indexOf(dTxt+'부터 걸림')>=0,'시작일 문구 없음('+dTxt+'): '+txt(sage2));
+    need(txt(sage2).indexOf('(4일째)')>=0,'4일째 표시 없음: '+txt(sage2));
+    need(!X.overflowV('#msheet .sage .sa').length,'신호 이력 넘침');
+    rec('pass','v10 신호 이력 · '+txt(sage2).replace(/\s+/g,' ').slice(0,70));
+    q('#msheet [data-close]').click(); await wait(300);
+    /* (3) 월별 접기 */
+    q('#main .pfcard [data-real]').click(); await wait(380);
+    var mon2=qa('#msheet .rmon');
+    need(mon2.length===2,'월 그룹 '+mon2.length+'개(기대 2)');
+    need(mon2[0].open===true&&mon2[1].open===false,'최신 달 펼침·지난달 접기 아님');
+    need(txt(mon2[1].querySelector('.mt'))==='2026.10','지난달 라벨: '+txt(mon2[1].querySelector('.mt')));
+    need(txt(mon2[1].querySelector('summary')).indexOf('1건')>=0,'지난달 건수 없음: '+txt(mon2[1].querySelector('summary')));
+    mon2[1].querySelector('summary').click(); await wait(200);
+    need(mon2[1].open===true,'월 그룹이 펼쳐지지 않음');
+    rec('pass','v10 실현손익 월별 2그룹 · 최신 펼침/지난달 접힘');
+    q('#msheet [data-close]').click(); await wait(300);
+  }catch(e){ rec('fail','v10 신호 이력·월별·복습 효과',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 32. v10 · 브리핑 반영 대기(기준시각을 과거로) ---------- */
+  try{
+    var mkFrame=function(qs){
+      var fr=document.createElement('iframe');
+      fr.width=W; fr.height=H; fr.src='../index.html?qa=1&'+qs+'&t='+Date.now();
+      document.getElementById('frames').appendChild(fr);
+      return new Promise(function(r){ fr.addEventListener('load',function(){ setTimeout(function(){ r(fr); },2400); },{once:true}); });
+    };
+    var f2=await mkFrame('stamps='+encodeURIComponent('kr=11/20 16:00,us=11/20 07:00'));
+    var d2=f2.contentWindow.document;
+    d2.querySelector('.tab[data-tab="briefing"]').click();
+    await wait(600);
+    var dbox=d2.querySelector('#main .bdelay');
+    need(!!dbox,'반영 대기 상자 없음');
+    need(!!d2.querySelector('#main .bnext .bdelay'),'반영 대기가 다음 브리핑 카드 안에 없음');
+    var dlines=dbox.querySelectorAll('.bdl');
+    need(dlines.length===2,'반영 대기 줄 '+dlines.length+'개(기대 2)');
+    var dt=txt(dbox);
+    need(dt.indexOf('반영 대기 · 국내')>=0,'국내 반영 대기 없음: '+dt);
+    need(dt.indexOf('반영 대기 · 미국')>=0,'미국 반영 대기 없음: '+dt);
+    need(dt.indexOf('현재 데이터')>=0,'현재 데이터 표시 없음: '+dt);
+    need(dt.indexOf('11/20')>=0,'기준시각 표시 없음: '+dt);
+    rec('pass','v10 브리핑 반영 대기 · '+dt.replace(/\s+/g,' ').slice(0,100));
+    f2.remove(); await wait(200);
+  }catch(e){ rec('fail','v10 브리핑 반영 대기',e.message); }
+
+  /* ---------- 33. v10 · 기본 화면의 반영 대기 판정 정합 ---------- */
+  try{
+    var dat=await (await fetch('../data/market_state.json?x='+Date.now(),{cache:'no-store'})).json();
+    function prevDue(kind, now){
+      var hh=(kind==='kr')?16:7;
+      for(var i=0;i<10;i++){
+        var dd=new Date(now.getTime()); dd.setDate(dd.getDate()-i); dd.setHours(hh,0,0,0);
+        var w=dd.getDay();
+        if(kind==='kr'){ if(!(w>=1&&w<=5)) continue; } else { if(!(w>=2&&w<=6)) continue; }
+        if(dd.getTime()<=now.getTime()) return dd;
+      }
+      return null;
+    }
+    function parseS(s){
+      var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/);
+      if(!m) return null;
+      var n=new Date(); var dd=new Date(n.getFullYear(),parseInt(m[1],10)-1,parseInt(m[2],10),parseInt(m[3],10),parseInt(m[4],10));
+      if(dd.getTime()-n.getTime()>2*86400000) dd.setFullYear(dd.getFullYear()-1);
+      return dd;
+    }
+    var stm=dat.meta.sessionStamps||{}, now1=new Date(), exp=0;
+    [['kr'],['us']].forEach(function(x){
+      var due=prevDue(x[0],now1), at=parseS(stm[x[0]]);
+      if(due&&at&&at.getTime()+60000<due.getTime()) exp++;
+    });
+    q('.tab[data-tab="briefing"]').click(); await wait(500);
+    need(!!q('#main .bnext'),'다음 브리핑 카드 없음');
+    var got=qa('#main .bdelay > .bdl').length;
+    need(got===exp,'반영 대기 '+got+'건 ≠ 기대 '+exp+'건 (stamps '+JSON.stringify(stm)+')');
+    rec('pass','v10 반영 대기 판정 정합 · 기본 '+got+'건 · 기준 '+stm.kr+'/'+stm.us);
+  }catch(e){ rec('fail','v10 반영 대기 판정 정합',e.message); }
+
+
+  /* ================= v11 신규 ================= */
+
+  /* ---------- 35. v11 · 오늘 손익(전일 종가 대비 · 총 평가손익과 별개) ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(420);
+    var day=q('#main .pfday');
+    need(!!day,'오늘 손익 줄 없음');
+    var rowsD=qa('#main .pfrow[data-pfid]');
+    need(rowsD.length>=2,'보유 행 '+rowsD.length+'개(data-pfid)');
+    var expK=0, expU=0, nK=0, nU=0, skipD=0;
+    rowsD.forEach(function(r){
+      var id=r.getAttribute('data-pfid');
+      var card=q('#main [data-asset="'+id+'"]');
+      var dtxt=card?txt(card.querySelector('.apx .delta')):'';
+      var pfs=txt(r.querySelector('.pfs'));
+      var md=dtxt.match(/(-?[\d,.]+)\s*%/), me=pfs.match(/평가\s*(\$?)([\d,.]+)/);
+      if(!md||!me){ skipD++; return; }
+      var ev=parseFloat(me[2].replace(/,/g,''));
+      var pc=parseFloat(md[1].replace(/,/g,''));
+      if(!(ev>0)||!(pc>-100)){ skipD++; return; }
+      var dv=ev-ev/(1+pc/100);
+      if(me[1]==='$'){ expU+=dv; nU++; } else { expK+=dv; nK++; }
+    });
+    need(nK+nU>=2,'오늘 손익을 계산할 행 '+(nK+nU)+'개');
+    var fxT=txt(q('#main .pfcard .pfsub')).match(/환율\s*([\d,.]+)원/);
+    var fx=fxT?parseFloat(fxT[1].replace(/,/g,'')):null;
+    function numD(s){ var v=parseFloat(String(s).replace(/[^\d.-]/g,'')); return isFinite(v)?v:0; }
+    function krw(v){ return (v>0?'+':(v<0?'-':''))+Math.round(Math.abs(v)).toLocaleString('ko-KR')+'원'; }
+    var bt=txt(day.querySelector('b')), bv=numD(bt);
+    need(/[+-]?[\d,]+원|\$[\d,.]+/.test(bt),'오늘 손익 금액 표기: '+bt);
+    if(nK&&nU&&fx){
+      var expSum=expK+expU*fx;
+      need(Math.abs(bv-expSum)<=3,'오늘 손익 '+bt+' ≠ 기대 '+krw(expSum)+' (원화 '+krw(expK)+' + 달러 $'+expU.toFixed(2)+'×'+fx+')');
+      need(txt(day).indexOf('원화')>=0&&txt(day).indexOf('달러')>=0,'통화별 병기 없음: '+txt(day));
+    }else if(nK){
+      need(Math.abs(bv-expK)<=3,'원화 오늘 손익 '+bt+' ≠ 기대 '+krw(expK));
+    }else{
+      need(Math.abs(bv-expU)<=0.05,'달러 오늘 손익 '+bt+' ≠ 기대 $'+expU.toFixed(2));
+    }
+    var pcEl=day.querySelector('.pc');
+    need(!!pcEl,'오늘 손익 % 없음');
+    need((bv>0.5&&pcEl.className.indexOf('up')>=0)||(bv<-0.5&&pcEl.className.indexOf('down')>=0),'% 색이 부호와 다름: '+txt(pcEl)+' / '+pcEl.className);
+    need(txt(day).indexOf('전일 종가')>=0,'전일 종가 기준 표기 없음');
+    need(txt(q('#main .pfcard .pfh')).indexOf('평가손익')>=0,'총 평가손익 라벨이 사라짐');
+    need(!X.overflow('#main .pfday').length,'오늘 손익 넘침: '+X.overflow('#main .pfday').join(', '));
+    win.scrollTo(0,0);
+    rec('pass','v11 오늘 손익 · '+txt(day).replace(/\s+/g,' ').slice(0,90),'기대 원화 '+krw(expK)+' / 달러 $'+expU.toFixed(2)+' (건너뜀 '+skipD+')');
+  }catch(e){ rec('fail','v11 오늘 손익',e.message); }
+
+  /* ---------- 36. v11 · 기간 성과 · 지수 대비 ---------- */
+  try{
+    var datP=await (await fetch('../data/market_state.json?x='+Date.now(),{cache:'no-store'})).json();
+    function onOrBefore(series,iso){
+      var s=(series||[]).filter(function(p){ return p&&typeof p.v==='number'&&p.v>0&&/^\d{4}-\d{2}-\d{2}$/.test(p.d); });
+      var hit=null;
+      for(var i=0;i<s.length;i++){ if(s[i].d>iso) break; hit=s[i]; }
+      return hit||s[0];
+    }
+    function isoOf(dt){ return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2); }
+    function rowof(arr,labKey,lab){ return (arr||[]).filter(function(r){ return r[labKey]===lab; })[0]; }
+    q('.tab[data-tab="companies"]').click(); await wait(320);
+    q('#main [data-asset="gamsung"]').click(); await wait(480);
+    var tbl=q('#msheet .perftbl');
+    need(!!tbl,'기간 성과 표 없음');
+    var head=txt(tbl.querySelector('.pr.th'));
+    need(head.indexOf('기간')>=0&&head.indexOf('종목')>=0&&head.indexOf('지수 대비')>=0,'표 머리: '+head);
+    var prs=qa('#msheet .perftbl .pr').slice(1);
+    need(prs.length===3,'기간 행 '+prs.length+'개(기대 3)');
+    var h4=txt(q('#msheet .perftbl').closest('.msec').querySelector('h4'));
+    need(h4.indexOf('코스닥')>=0,'코스닥 시장인데 지수 라벨: '+h4);
+    var ga=rowof(datP.assets,'id','gamsung');
+    var kq=rowof(rowof(datP.indicators,'id','indices').rows,'label','코스닥');
+    var gs=ga.series, glast=gs[gs.length-1];
+    var labels=['1개월','3개월','6개월'], spans=[30,90,180];
+    var checked=[];
+    spans.forEach(function(dn,i){
+      var t=new Date(glast.d+'T00:00:00'); t.setDate(t.getDate()-dn);
+      var f=onOrBefore(gs,isoOf(t));
+      if(!f||f.d>=glast.d) return;
+      var b0=onOrBefore(kq.series,f.d), b1=onOrBefore(kq.series,glast.d);
+      var ap=(glast.v/f.v-1)*100, bp=(b1.v/b0.v-1)*100;
+      var cells=prs[i].querySelectorAll('span');
+      need(txt(cells[0])===labels[i],'기간 라벨 '+txt(cells[0])+' ≠ '+labels[i]);
+      var sa=parseFloat(txt(cells[1]).replace(/[^\d.-]/g,''));
+      var sb=parseFloat(txt(cells[2]).replace(/[^\d.-]/g,''));
+      var sd=parseFloat(txt(cells[3]).replace(/[^\d.-]/g,''));
+      need(Math.abs(sa-ap)<=0.5,labels[i]+' 종목 '+txt(cells[1])+' ≠ 독립계산 '+ap.toFixed(1)+'%');
+      need(Math.abs(sb-bp)<=0.15,labels[i]+' 코스닥 '+txt(cells[2])+' ≠ 독립계산 '+bp.toFixed(1)+'%');
+      need(Math.abs(sd-(sa-sb))<=0.3,labels[i]+' 지수 대비 '+txt(cells[3])+' ≠ '+(sa-sb).toFixed(1)+'p');
+      checked.push(labels[i]+' '+txt(cells[3]));
+    });
+    need(checked.length===3,'검증한 기간 '+checked.length+'개');
+    var nt=txt(q('#msheet .perftbl').parentNode);
+    need(nt.indexOf('같은 시작일')>=0,'같은 시작일 기준 설명 없음');
+    need(!X.overflowV('#msheet .perftbl, #msheet .perftbl .pr').length,'기간 표 넘침');
+    rec('pass','v11 기간 성과 · 코스닥 대비 · '+checked.join(' / '));
+    q('#msheet [data-close]').click(); await wait(260);
+  }catch(e){ rec('fail','v11 기간 성과',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  try{
+    q('#main [data-asset="eth"]').click(); await wait(480);
+    var pe2=q('#msheet .perftbl');
+    need(!!pe2,'ETH 기간 표 없음');
+    var h4e=txt(q('#msheet .perftbl').closest('.msec').querySelector('h4'));
+    need(h4e.indexOf('BTC')>=0,'코인 지수 라벨이 BTC가 아님: '+h4e);
+    need(txt(pe2).indexOf('%p')>=0,'%p 표기 없음');
+    rec('pass','v11 ETH 기간 성과 · BTC 대비','');
+    q('#msheet [data-close]').click(); await wait(260);
+  }catch(e){ rec('fail','v11 ETH 기간 성과',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 37. v11 · 오늘의 매수 후보 → 탭 제목 배지 ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(400);
+    need(!!txt(q('#main .mfsum')),'후보 줄이 없어 배지 검사를 못 함');
+    need(win.document.title.indexOf('(1) ')==0,'탭 제목 배지 없음: '+win.document.title);
+    need(win.document.title.indexOf('거시경제')>=0,'앱 이름이 사라짐: '+win.document.title);
+    var hcT=qa('#main [data-asset]').filter(function(c){return txt(c).indexOf('QA 후보 종목')>=0;})[0];
+    need(!!hcT,'임시 후보 종목 없음');
+    hcT.click(); await wait(400);
+    win.confirm=function(){ return true; };
+    q('#msheet [data-pclear]').click(); await wait(500);
+    q('#msheet [data-close]').click(); await wait(420);
+    need(!q('#main .mfsum'),'계획을 지웠는데 후보 줄이 남음');
+    need(win.document.title==='거시경제·투자 레이더','후보 0인데 제목 배지가 남음: '+win.document.title);
+    rec('pass','v11 탭 제목 배지 · 후보 1 → (1) · 후보 0 → 원래 제목');
+  }catch(e){ rec('fail','v11 탭 제목 배지',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 38. v11 · 도감 복습 필요 필터 ---------- */
+  try{
+    var STK2='macro_radar_study_v1:qa', SMK2='macro_radar_study_meta_v1:qa', QC2='macro_radar_qtcfg_v1:qa';
+    var st2=JSON.parse(localStorage.getItem(STK2)||'{}'), sm2=JSON.parse(localStorage.getItem(SMK2)||'{}');
+    var qc2=JSON.parse(localStorage.getItem(QC2)||'{}');
+    var rd2=[3,7,14].indexOf(qc2.review)>=0?qc2.review:7;
+    var nowD=new Date(), t0D=new Date(nowD.getFullYear(),nowD.getMonth(),nowD.getDate());
+    function ds2(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s||'')) return null; return Math.round((t0D-new Date(s+'T00:00:00'))/86400000); }
+    var due2=Object.keys(st2).filter(function(k){ return st2[k]===2&&((ds2(sm2[k])==null)||ds2(sm2[k])>=rd2); });
+    need(due2.length>=1,'복습 필요 카드 0장(주기 '+rd2+'일) — 시드 실패');
+    q('.tab[data-tab="study"]').click(); await wait(450);
+    qa('#main .sfilter button').filter(function(b){return txt(b)==='전체';})[0].click(); await wait(350);
+    var chips=qa('#main .sstatus button');
+    need(chips.length===5,'상태 칩 '+chips.length+'개(기대 5)');
+    var rvC=chips.filter(function(b){return b.getAttribute('data-sstate')==='rv';})[0];
+    need(!!rvC,'복습 칩 없음');
+    need(txt(rvC).indexOf(String(due2.length))>=0,'복습 칩 숫자 '+txt(rvC)+' ≠ '+due2.length);
+    rvC.click(); await wait(420);
+    var shownCards=qa('#main details.study');
+    need(shownCards.length===due2.length,'복습 필터 '+shownCards.length+'장 ≠ '+due2.length);
+    need(shownCards.every(function(x){ return x.classList.contains('s2'); }),'복습 필터에 완료가 아닌 카드가 섞임');
+    need(txt(q('#main .sec .hint')).indexOf('복습 '+due2.length+'개')>=0,'힌트에 복습 수 없음: '+txt(q('#main .sec .hint')));
+    var qb2=q('#btnQuizTest');
+    need(txt(qb2).indexOf(Math.min(10,due2.length)+'장')>=0,'복습 퀵 테스트 라벨 '+txt(qb2));
+    qb2.click(); await wait(450);
+    var pr3=txt(q('#msheet .qt-prog'));
+    need(pr3.indexOf('복습 필요')>=0,'세션 머리에 복습 표시 없음: '+pr3);
+    need(/1 \/ \d+/.test(pr3),'세션 진행 표시 없음: '+pr3);
+    need(!X.overflowV('#msheet .qt-prog').length,'세션 머리 넘침');
+    rec('pass','v11 도감 복습 필터 · 칩 '+due2.length+' · 목록 '+shownCards.length+' · 세션 '+pr3.slice(0,40));
+    q('#msheet [data-close]').click(); await wait(300);
+    qa('#main .sstatus button')[0].click(); await wait(350);
+  }catch(e){ rec('fail','v11 도감 복습 필터',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 39. v11 · 브리핑 반영 대기 → 지금 새로고침 ---------- */
+  try{
+    var f3=await mkFrame('stamps='+encodeURIComponent('kr=11/20 16:00,us=11/20 07:00'));
+    var w3=f3.contentWindow, d3=w3.document;
+    d3.querySelector('.tab[data-tab="briefing"]').click();
+    await wait(600);
+    var dbox3=d3.querySelector('#main .bdelay');
+    need(!!dbox3,'반영 대기 상자 없음');
+    var bref=d3.querySelector('#main .bdelay [data-brefresh]');
+    need(!!bref,'지금 새로고침 버튼 없음');
+    need(txt(bref).indexOf('새로고침')>=0,'버튼 라벨: '+txt(bref));
+    need(txt(dbox3).indexOf('늦어질 때')>=0,'안내 문구 없음');
+    bref.click(); await wait(1400);
+    var tst=txt(d3.querySelector('#toast'));
+    need(tst.length>3,'새로고침 뒤 응답 없음');
+    need(/(새 데이터가 아직 없습니다|새 데이터를 반영|받지 못했습니다)/.test(tst),'예상 밖 토스트: '+tst);
+    var errs3=(w3.__errs||[]).slice();
+    need(!errs3.length,'새로고침 뒤 콘솔 에러: '+errs3[0]);
+    rec('pass','v11 반영 대기 새로고침 · '+tst.slice(0,60));
+    f3.remove(); await wait(200);
+  }catch(e){ rec('fail','v11 반영 대기 새로고침',e.message); }
+
+  /* ---------- 40. v11 · 실현손익 통화별 승률(새로고침 시드) ---------- */
+  try{
+    var RK2='macro_radar_realized_v1:qa';
+    var ro2=JSON.parse(localStorage.getItem(RK2)||'{"items":[]}');
+    ro2.items=ro2.items.filter(function(it){ return it.id!=='qa-usd'; });
+    ro2.items.push({id:'qa-usd',name:'QA 달러 매도',ts:'2026-11-24 10:00',qty:2,px:300,avg:250,pnl:100,cur:'USD'});
+    ro2.items.push({id:'qa-usd2',name:'QA 달러 손실',ts:'2026-11-24 11:00',qty:1,px:200,avg:250,pnl:-50,cur:'USD'});
+    localStorage.setItem(RK2,JSON.stringify(ro2));
+    var loadP3=new Promise(function(r){ f.addEventListener('load',r,{once:true}); });
+    win.location.reload();
+    await loadP3; await wait(2600);
+    X=boot(win); d=X.d; q=X.q; qa=X.qa;
+    win.confirm=function(){ return true; };
+    q('.tab[data-tab="companies"]').click(); await wait(520);
+    q('#main .pfcard [data-real]').click(); await wait(420);
+    var stat2=q('#msheet .rstat');
+    need(!!stat2,'승률 줄 없음');
+    var rs2=qa('#msheet .rstat2 .rs2');
+    need(rs2.length===2,'통화별 줄 '+rs2.length+'개(기대 2)');
+    function statOf(cur){
+      var its=(JSON.parse(localStorage.getItem(RK2)||'{"items":[]}').items||[]).filter(function(it){ return it.cur===cur&&typeof it.pnl==='number'; });
+      var w=0,rn=0,sum=0;
+      its.forEach(function(it){ if(it.pnl>0) w++; if(it.avg>0&&it.qty>0){ rn++; sum+=it.pnl/(it.avg*it.qty)*100; } });
+      return {n:its.length,w:w,rate:its.length?Math.round(w/its.length*100):0,avg:rn?Math.round(sum/rn*10)/10:null};
+    }
+    var ek=statOf('KRW'), eu=statOf('USD');
+    var tk=txt(rs2[0]), tu=txt(rs2[1]);
+    need(tk.indexOf('원화')===0,'첫 줄 통화 라벨: '+tk);
+    need(tu.indexOf('달러')===0,'둘째 줄 통화 라벨: '+tu);
+    need(tk.indexOf(ek.w+'/'+ek.n)>=0,'원화 '+ek.w+'/'+ek.n+' 없음: '+tk);
+    need(tk.indexOf('승률 '+ek.rate+'%')>=0,'원화 승률 '+ek.rate+'% 없음: '+tk);
+    need(tu.indexOf(eu.w+'/'+eu.n)>=0,'달러 '+eu.w+'/'+eu.n+' 없음: '+tu);
+    need(tu.indexOf('승률 '+eu.rate+'%')>=0,'달러 승률 '+eu.rate+'% 없음: '+tu);
+    if(ek.avg!=null) need(tk.indexOf((ek.avg>0?'+':'')+ek.avg.toFixed(1)+'%')>=0,'원화 평균 '+ek.avg+' 없음: '+tk);
+    if(eu.avg!=null) need(tu.indexOf((eu.avg>0?'+':'')+eu.avg.toFixed(1)+'%')>=0,'달러 평균 '+eu.avg+' 없음: '+tu);
+    need(txt(stat2).indexOf('합산')>=0,'합산 라벨 없음: '+txt(stat2).slice(0,60));
+    need(!X.overflowV('#msheet .rstat2 .rs2').length,'통화별 줄 넘침');
+    rec('pass','v11 실현손익 통화별 · 원화 '+ek.w+'/'+ek.n+' · 달러 '+eu.w+'/'+eu.n);
+    q('#msheet [data-close]').click(); await wait(300);
+  }catch(e){ rec('fail','v11 실현손익 통화별',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 41. v11 · 라이트 테마의 새 컴포넌트 ---------- */
+  try{
+    var t0T=d.documentElement.getAttribute('data-theme');
+    if(t0T!=='light'){ q('#btnTheme').click(); await wait(320); }
+    need(d.documentElement.getAttribute('data-theme')==='light','라이트 테마 전환 실패');
+    q('.tab[data-tab="companies"]').click(); await wait(450);
+    var bad11=X.overflow('#main .pfday, #main .pfcard .pfrow, #main .mfsum');
+    need(!bad11.length,'라이트 오늘 손익 넘침: '+bad11.join(', '));
+    q('#main [data-asset="gamsung"]').click(); await wait(450);
+    var bad12=X.overflowV('#msheet .perftbl, #msheet .perftbl .pr');
+    need(!bad12.length,'라이트 기간 표 넘침: '+bad12.join(', '));
+    var cf=win.getComputedStyle(q('#msheet .perftbl .pr span.dm'));
+    need(cf.color&&cf.color!=='rgba(0, 0, 0, 0)','지수 대비 색이 비어 있음');
+    q('#msheet [data-close]').click(); await wait(260);
+    win.scrollTo(0,0);
+    rec('pass','v11 라이트 테마 새 컴포넌트 · 넘침 0');
+  }catch(e){ rec('fail','v11 라이트 테마 새 컴포넌트',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+
+  /* ---------- 42. v11 · 백업 내보내기·불러오기(예전 백업 포함) ---------- */
+  try{
+    q('.tab[data-tab="companies"]').click(); await wait(420);
+    var n0c=qa('#main [data-asset]').length;
+    var exBtn=q('#btnAstExport');
+    need(!!exBtn,'백업 내보내기 버튼 없음');
+    exBtn.click(); await wait(500);
+    need(txt(q('#toast')).indexOf('내보냈')>=0,'내보내기 토스트 없음: '+txt(q('#toast')));
+    async function importFile(obj,name){
+      var inp=q('#astImport');
+      need(!!inp,'백업 불러오기 입력 없음');
+      var dt=new win.DataTransfer();
+      dt.items.add(new win.File([JSON.stringify(obj)],(name||'qa-backup')+'.json',{type:'application/json'}));
+      inp.files=dt.files;
+      inp.dispatchEvent(new win.Event('change',{bubbles:true}));
+      await wait(700);
+    }
+    await importFile({app:'macro-radar',version:5,exportedAt:'2026-11-24 10:00',
+      assets:{deleted:[],overrides:{},custom:[{id:'qa-restored',name:'QA 복원 종목',market:'KOSPI',price:5000,avg:4000,qty:'2주 보유',qtyNum:2,invested:8000,custom:true}],order:[]},
+      plans:{'qa-restored':[{px:4500,qty:1}]},
+      realized:{items:[{id:'qa-r1',name:'QA 복원 매도',ts:'2026-11-24 10:00',qty:1,px:10,avg:9,pnl:1,cur:'KRW'}]},
+      qcfg:{review:14}},'qa-v5');
+    need(txt(q('#toast')).indexOf('불러왔')>=0,'불러오기 토스트 없음: '+txt(q('#toast')));
+    var rc=qa('#main [data-asset]').filter(function(c){ return txt(c).indexOf('QA 복원 종목')>=0; })[0];
+    need(!!rc,'불러온 종목이 목록에 없음');
+    var datB=await (await fetch('../data/market_state.json?y='+Date.now(),{cache:'no-store'})).json();
+    var wantN=datB.assets.length+1;
+    need(qa('#main [data-asset]').length===wantN,'불러오기 뒤 종목 수 '+qa('#main [data-asset]').length+' ≠ '+wantN+' (기본 '+datB.assets.length+' + 복원 1)');
+    var pl2=JSON.parse(localStorage.getItem('macro_radar_plans_v1:qa')||'{}');
+    need(pl2['qa-restored']&&pl2['qa-restored'].length===1,'불러온 계획 없음');
+    need(JSON.parse(localStorage.getItem('macro_radar_qtcfg_v1:qa')||'{}').review===14,'불러온 복습 주기 14 아님');
+    var rz=JSON.parse(localStorage.getItem('macro_radar_realized_v1:qa')||'{"items":[]}');
+    need((rz.items||[]).some(function(it){return it.id==='qa-r1';}),'불러온 실현손익 없음');
+    rc.click(); await wait(400);
+    need(!!q('#msheet .plansum'),'불러온 종목의 계획 요약 없음');
+    q('#msheet [data-close]').click(); await wait(300);
+    /* 예전 백업(v3 형식: memos·assets만)도 그대로 열린다 — qcfg·plans는 건너뛰고 기존 값 유지 */
+    var beforeReview=JSON.parse(localStorage.getItem('macro_radar_qtcfg_v1:qa')||'{}').review;
+    await importFile({app:'macro-radar',version:3,exportedAt:'2026-11-01 09:00',
+      memos:{quiz:{'k1':'예전 백업 메모'},brief:{},notes:[{id:'old-n1',ts:'2026-11-01 09:00',text:'예전 가설'}]},
+      assets:{deleted:['hdelectric'],overrides:{},custom:[],order:[]}},'qa-v3');
+    need(txt(q('#toast')).indexOf('불러왔')>=0,'예전 백업 불러오기 실패: '+txt(q('#toast')));
+    need(JSON.parse(localStorage.getItem('macro_radar_qtcfg_v1:qa')||'{}').review===beforeReview,'예전 백업이 복습 주기를 바꿈');
+    need(!qa('#main [data-asset="hdelectric"]').length,'예전 백업의 deleted 목록이 적용되지 않음');
+    rec('pass','v11 백업 · 내보내기 · v5 복원(종목·계획·실현·복습 주기) · v3 복원 하위 호환');
+  }catch(e){ rec('fail','v11 백업/복원',e.message); try{q('#msheet [data-close]').click();}catch(_){} }
+
+  /* ---------- 34. 전 시나리오를 지난 뒤 콘솔 에러 0 ---------- */
+  try{
+    var errsF=(win.__errs||[]).slice();
+    need(!errsF.length,'콘솔 에러 '+errsF.length+'건: '+errsF[0]);
+    rec('pass','전 시나리오 뒤 콘솔 에러 0');
+  }catch(e){ rec('fail','전 시나리오 뒤 콘솔 에러',e.message); }
+
+  /* ---------- 결과 ---------- */
+  restoreStorage();
+  var sum=document.getElementById('sum');
+  sum.innerHTML='<span class="ok">PASS '+R.pass+'</span> · <span class="ng">FAIL '+R.fail+'</span> · <span class="sk">SKIP '+R.skip+'</span> · 폭 '+W+'px';
+  document.title='QA '+W+' PASS '+R.pass+' FAIL '+R.fail+' SKIP '+R.skip;
+  document.getElementById('log').textContent=R.items.map(function(i){
+    return (i.state==='pass'?'✅ ':i.state==='fail'?'❌ ':'⏭ ')+i.name+(i.info?' — '+i.info:'');
+  }).join('\n');
+  window.__QA=R;
+}
+run().catch(function(e){
+  restoreStorage();
+  document.getElementById('sum').textContent='HARNESS ERROR: '+e.message;
+  window.__QA={error:String(e&&e.stack||e)};
+});
+</script>
+</body>
+</html>

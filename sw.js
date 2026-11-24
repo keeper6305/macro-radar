@@ -10,7 +10,7 @@
  *    앱 껍데기 캐시가 그 문서로 덮어써진다. 앱 셸 주소일 때만 그 키를 쓰고, 나머지는 URL별로 저장한다.
  *  - ?qa=1 점검 모드는 서비스워커가 개입하지 않는다(항상 네트워크).
  */
-var CACHE = 'macro-radar-v10-0';
+var CACHE = 'macro-radar-v11-0';
 var PRECACHE = [
   './', './index.html', './manifest.json', './data/market_state.json',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',

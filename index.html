@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="투자 레이더">
-<link rel="manifest" href="./manifest.json?v=10.0">
+<link rel="manifest" href="./manifest.json?v=11.0">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon-32.png" sizes="32x32">
@@ -851,6 +851,7 @@ details.study.s2[open]{opacity:1}
 .rstat b{font-variant-numeric:tabular-nums;color:var(--tx)}
 .rstat b.up{color:var(--up)} .rstat b.down{color:var(--down)}
 .rstat .cap2{flex-basis:100%;font-size:8.5px;color:var(--mu)}
+.rstat .sm2{font-size:8.5px;font-weight:800;color:var(--mu);letter-spacing:.02em;margin-right:1px}
 .rmon{border-top:1px solid var(--line);margin-top:2px}
 .rmon>summary{display:flex;align-items:baseline;gap:7px;padding:8px 0 3px;cursor:pointer;list-style:none}
 .rmon>summary::-webkit-details-marker{display:none}
@@ -879,6 +880,47 @@ details.study.s2[open]{opacity:1}
 .bdelay b{font-weight:800}
 .bdelay .dt{color:var(--tx2);font-weight:700;font-variant-numeric:tabular-nums}
 .prow input,.simin input,.simin textarea{scroll-margin-block:110px}
+/* ===== v11: 오늘 손익 · 기간 성과(지수 대비) · 실현손익 통화별 · 복습 필터 · 반영 대기 새로고침 ===== */
+/* 오늘 손익 — 총 평가손익과 구분해 한 줄로(전일 종가 기준) */
+.pfcard .pfday{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;margin-top:7px;padding-top:6px;
+  border-top:1px dashed var(--line);font-size:9.5px;color:var(--mu);min-width:0}
+.pfcard .pfday .lb{flex:none;font-weight:800;color:var(--tx2)}
+.pfcard .pfday b{font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pfcard .pfday b.up{color:var(--up)} .pfcard .pfday b.down{color:var(--down)}
+.pfcard .pfday .pc{font-weight:800;font-variant-numeric:tabular-nums;color:var(--tx2);white-space:nowrap}
+.pfcard .pfday .pc.up{color:var(--up)} .pfcard .pfday .pc.down{color:var(--down)}
+.pfcard .pfday .two,.pfcard .pfday .sep{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pfcard .pfday .sep{color:var(--mu);opacity:.7}
+.pfcard .pfday .cap{flex-basis:100%;font-size:8.5px;color:var(--mu);line-height:1.4}
+/* 기간 성과 · 지수 대비 */
+.perftbl{margin-top:9px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.perftbl .pr{display:grid;grid-template-columns:46px 1fr 1fr 1.15fr;gap:6px;padding:6px 9px;font-size:10.5px;
+  border-top:1px solid var(--line);font-variant-numeric:tabular-nums;align-items:baseline}
+.perftbl .pr:first-child{border-top:0}
+.perftbl .pr.th{background:var(--card2);color:var(--mu);font-size:9px;font-weight:800;border-top:0}
+.perftbl .pr span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.perftbl .pr span:not(:first-child){text-align:right}
+.perftbl .pr span.up{color:var(--up)}
+.perftbl .pr span.down{color:var(--down)}
+.perftbl .pr span.dm{font-weight:800}
+.perftbl .pr span.mu{color:var(--mu)}
+/* 실현손익 통화별 */
+.rstat2{flex-basis:100%;display:grid;gap:2px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--line)}
+.rstat2 .rs2{display:flex;align-items:baseline;gap:5px;font-size:9.5px;color:var(--tx2);min-width:0;font-variant-numeric:tabular-nums}
+.rstat2 .ccy{flex:none;font-size:8.5px;font-weight:800;color:var(--mu);min-width:20px}
+.rstat2 b{font-weight:800;color:var(--tx)}
+.rstat2 b.up{color:var(--up)} .rstat2 b.down{color:var(--down)}
+.rstat2 em{font-style:normal;margin-left:auto;font-size:8.5px;color:var(--mu);white-space:nowrap;flex:none}
+/* 도감 복습 필터 */
+.sstatus button[data-sstate="rv"].on{border-color:rgba(var(--warnRGB),.55);color:var(--warn-tx)}
+.sstatus button[disabled]{opacity:.42}
+/* 브리핑 반영 대기 — 지금 새로고침 */
+.bdelay .bref{display:flex;align-items:center;gap:7px;margin-top:4px;flex-wrap:wrap}
+.bdelay .bref .btn{min-height:28px;font-size:9.5px;padding:0 9px;background:var(--card);
+  border-color:rgba(var(--warnRGB),.5);color:var(--warn-tx);flex:none}
+.bdelay .bref .btn.busy{opacity:.55}
+.bdelay .bref .hint2{font-size:8.5px;color:var(--mu);line-height:1.4;min-width:0;flex:1}
+@media (max-width:359px){ .perftbl .pr{grid-template-columns:40px 1fr 1fr 1.1fr;font-size:10px;padding:6px 7px} }
 @media (max-width:389px){ .scycle .em{display:none} }
 @media (max-width:359px){ .pmleg{grid-template-columns:1fr} .qt-grade .btn{font-size:10.5px} .simin{grid-template-columns:1fr} .mfsum .mft{font-size:9px} }
 </style>
@@ -1385,14 +1427,38 @@ function realStats(){
   st.avg=st.rn?st.sum/st.rn:null;
   return st;
 }
+/* v11: 통화별 승률 — 원화·달러 기록을 합산해 하나의 승률을 내면 서로 다른 시장을 섞게 된다.
+   두 통화가 모두 있을 때만 나누고, 한 통화면 기존 합산 줄 그대로다. */
+function realStatsBy(cur){
+  var st={n:0,w:0,rn:0,sum:0};
+  (S.real.items||[]).forEach(function(it){
+    if(typeof it.pnl!=='number'||it.cur!==cur) return;
+    st.n++; if(it.pnl>0) st.w++;
+    var r=realRet(it);
+    if(r!=null&&isFinite(r)){ st.rn++; st.sum+=r; }
+  });
+  st.rate=st.n?Math.round(st.w/st.n*100):0;
+  st.avg=st.rn?st.sum/st.rn:null;
+  return st;
+}
+function realAvgHTML(st){
+  var avg=(st.avg==null)?'–':((st.avg>0?'+':'')+nf(st.avg,1)+'%');
+  var cls=(st.avg==null)?'':(st.avg>=0?'up':'down');
+  return '<b class="'+cls+'">'+avg+'</b>';
+}
 function realStatHTML(){
   var st=realStats();
   if(!st.n) return '';
-  var avg=(st.avg==null)?'–':((st.avg>0?'+':'')+nf(st.avg,1)+'%');
-  var cls=(st.avg==null)?'':(st.avg>=0?'up':'down');
-  return '<div class="rstat" aria-label="승률과 평균 수익률">이긴 매도 <b>'+st.w+'/'+st.n+'</b>'+
-    ' <span>(승률 '+st.rate+'%)</span> · 평균 <b class="'+cls+'">'+avg+'</b>'+
-    (st.rn<st.n?'<span class="cap2">수익률은 평단·수량이 남은 '+st.rn+'건 기준</span>':'')+'</div>';
+  var k=realStatsBy('KRW'), u=realStatsBy('USD');
+  var both=k.n>0&&u.n>0;
+  return '<div class="rstat" aria-label="승률과 평균 수익률">'+(both?'<span class="sm2">합산</span>':'')+
+    '이긴 매도 <b>'+st.w+'/'+st.n+'</b>'+
+    ' <span>(승률 '+st.rate+'%)</span> · 평균 '+realAvgHTML(st)+
+    (st.rn<st.n?'<span class="cap2">수익률은 평단·수량이 남은 '+st.rn+'건 기준</span>':'')+
+    (both?'<div class="rstat2">'+
+      '<div class="rs2"><span class="ccy">원화</span>이긴 매도 <b>'+k.w+'/'+k.n+'</b> (승률 '+k.rate+'%) · 평균 '+realAvgHTML(k)+'<em>'+k.n+'건</em></div>'+
+      '<div class="rs2"><span class="ccy">달러</span>이긴 매도 <b>'+u.w+'/'+u.n+'</b> (승률 '+u.rate+'%) · 평균 '+realAvgHTML(u)+'<em>'+u.n+'건</em></div>'+
+    '</div>':'')+'</div>';
 }
 /* 월별 묶음 — 최신 달만 펼치고 나머지는 접어 둔다 */
 function realMonthKey(it){
@@ -1961,6 +2027,68 @@ function pfMissHTML(miss){
   }).join('');
 }
 function pfDir(v){ return dirClass(v>0?'up':(v<0?'down':'flat')); }
+/* v11: 오늘 손익 — TradingView Holdings의 Daily gain(어제 평가액 대비)과 같은 정의.
+   등락률(delta)로 전일 종가를 역산한다: 전일 평가액 = 오늘 평가액 ÷ (1 + 등락률/100).
+   총 평가손익(매입 대비)과 섞이지 않게 별도 줄로만 보여 준다. */
+function dayPnlOf(h){
+  var d=h&&h.a&&h.a.delta;
+  if(!d||typeof d.text!=='string') return null;
+  var m=d.text.match(/(-?[\d,.]+)\s*%/);
+  if(!m) return null;
+  var r=parseFloat(m[1].replace(/,/g,''));
+  if(!isFinite(r)||r<=-100) return null;
+  return h.evalAmt-h.evalAmt/(1+r/100);
+}
+function dayTotals(P){
+  var t={KRW:0,USD:0,n:0,KRWn:0,USDn:0,evK:0,evU:0,miss:0};
+  ((P&&P.held)||[]).forEach(function(h){
+    var v=dayPnlOf(h);
+    if(v==null||!isFinite(v)){ t.miss++; return; }
+    if(h.cur==='USD'){ t.USD+=v; t.USDn++; t.evU+=h.evalAmt; }
+    else { t.KRW+=v; t.KRWn++; t.evK+=h.evalAmt; }
+    t.n++;
+  });
+  return t;
+}
+function pfDayHTML(P){
+  var t=dayTotals(P);
+  if(!t.n) return '';
+  var fx=fxRate();
+  var prevK=t.evK-t.KRW, prevU=t.evU-t.USD;
+  var both=t.KRWn>0&&t.USDn>0;
+  function pct(v,prev){ return prev>0.0001?(v/prev*100):null; }
+  function pctHTML(v,prev){
+    var p=pct(v,prev);
+    return (p==null)?'':'<span class="pc '+pfDir(v)+'">'+((p>0?'+':(p<0?'':'')))+nf(p,2)+'%</span>';
+  }
+  var body='', mainCls;
+  /* 총 평가손익과 오늘 손익이 반대 방향이면 그 사실을 적는다(가장 헷갈리는 지점) */
+  var totK=0, totKnown=true;
+  ((P&&P.held)||[]).forEach(function(h){
+    if(h.cur==='USD'){ if(fx==null){ totKnown=false; return; } totK+=h.pnl*fx; }
+    else totK+=h.pnl;
+  });
+  var capTxt='전일 종가 대비';
+  var dayRef=(both?(t.KRW+(fx!=null?t.USD*fx:0)):(t.USDn&&!t.KRWn?t.USD:t.KRW));
+  var tip='오늘 하루 손익 · 총 평가손익'+(totKnown?(' '+moneyS(totK,'KRW')):'')+'과 별개'+
+    (totKnown&&totK!==0&&((dayRef>0&&totK<0)||(dayRef<0&&totK>0))?' (오늘은 총 손익과 반대 방향)':'');
+  if(both&&fx!=null){
+    var sum=t.KRW+t.USD*fx, prev=(prevK+prevU*fx);
+    mainCls=pfDir(sum);
+    body='<b class="'+mainCls+'">'+moneyS(sum,'KRW')+'</b>'+pctHTML(sum,prev)+
+      '<span class="sep">·</span><span class="two">원화 '+moneyS(t.KRW,'KRW')+' · 달러 '+moneyS(t.USD,'USD')+'</span>';
+  }else if(both){
+    mainCls=pfDir(t.KRW);
+    body='<b class="'+mainCls+'">'+moneyS(t.KRW,'KRW')+'</b>'+pctHTML(t.KRW,prevK)+
+      '<span class="sep">·</span><span class="two">달러 '+moneyS(t.USD,'USD')+'</span>';
+  }else if(t.USDn){
+    body='<b class="'+pfDir(t.USD)+'">'+moneyS(t.USD,'USD')+'</b>'+pctHTML(t.USD,prevU);
+  }else{
+    body='<b class="'+pfDir(t.KRW)+'">'+moneyS(t.KRW,'KRW')+'</b>'+pctHTML(t.KRW,prevK);
+  }
+  return '<div class="pfday" aria-label="오늘 손익" title="'+esc(tip)+'"><span class="lb">오늘 손익</span>'+body+
+    '<span class="cap">'+(t.miss?'보유 '+t.n+'/'+(t.n+t.miss)+'종목 · ':'')+esc(capTxt)+'</span></div>';
+}
 /* 숫자 보유가 있으면 평가금액·평가손익 카드, 없으면 기존 평단 대비 카드로 폴백 */
 function portfolioCard(){
   var P=holdingsOf();
@@ -2019,7 +2147,7 @@ function portfolioCard(){
     if(sb) flag='<span class="pfsig bad">⚠ 손절선 하회</span>';
     else if(sw) flag='<span class="pfsig warn">⚠ 손절선 근접</span>';
     else if(sp) flag='<span class="pfsig plan">● 매수 계획</span>';
-    return '<div class="pfrow"><span class="pfn">'+esc(h.a.name)+'<i class="pfq">'+qtyTxt+'</i></span>'+
+    return '<div class="pfrow" data-pfid="'+esc(h.a.id)+'"><span class="pfn">'+esc(h.a.name)+'<i class="pfq">'+qtyTxt+'</i></span>'+
       '<span class="pfr '+pfDir(h.pnl)+'">'+moneyS(h.pnl,h.cur)+'</span>'+
       '<span class="pfs">'+flag+'평가 <b>'+money(h.evalAmt,h.cur)+'</b> · 평단 '+money(h.avg,h.cur,(h.cur==='USD'?2:1))+
         ' · 평단 대비 '+sgn(h.pct,1)+'</span>'+
@@ -2029,7 +2157,7 @@ function portfolioCard(){
   return '<article class="card pfcard">'+
     '<div class="pfh"><span class="t">포트폴리오 평가손익</span>'+
       '<span class="vr"><span class="v '+pfDir(big)+'">'+moneyS(big,bigCur)+'</span>'+realChipHTML()+'</span></div>'+
-    '<div class="pfsub">'+sub+'</div>'+
+    '<div class="pfsub">'+sub+'</div>'+pfDayHTML(P)+
     curLines+rows+pfMissHTML(P.miss)+'</article>';
 }
 function pfcLine(label,ev,pnl,cur){
@@ -2388,6 +2516,7 @@ function studyFiltered(){
   var cur=S.stag||'전체';
   return all.filter(function(s){
     if(cur!=='전체'&&s.tag!==cur) return false;
+    if(S.sstate==='rv') return isStudyDue(s);
     if(S.sstate!=='all'&&studyState(s)!==S.sstate) return false;
     return true;
   });
@@ -2413,6 +2542,8 @@ function studyPrio(s){
 function studyReviewList(list){
   return (list||[]).filter(function(s){ return studyState(s)===2&&studyPrio(s)===2; });
 }
+/* v11: 복습 필요 = 완료(2)인데 판정일이 복습 주기를 지난 카드 */
+function isStudyDue(s){ return studyState(s)===2&&studyPrio(s)===2; }
 function qtPool(){
   var pool=studyFiltered();
   if(!pool.length) pool=((S.data&&S.data.study)||[]).slice();
@@ -2453,7 +2584,7 @@ function qtHTML(){
     '<div class="msub">제목만 보고 스스로 판정 · 상태가 바로 저장됩니다</div></div>'+
     '<button class="mx" data-close="1" aria-label="닫기">✕</button></div>';
   var prog='<div class="qt-prog"><span>'+esc(S.stag==='전체'?'전체':S.stag)+
-    ' · '+(S.sstate==='all'?'모든 상태':(S.sstate===0?'미학습':(S.sstate===1?'애매':'완료')))+
+    ' · '+(S.sstate==='all'?'모든 상태':(S.sstate==='rv'?'복습 필요':(S.sstate===0?'미학습':(S.sstate===1?'애매':'완료'))))+
     (reAll?' · 회수 '+reAll+'장':'')+(q.limit&&q.pool>q.limit?' · '+q.limit+'장 세션':'')+'</span>'+
     '<b>'+(i>=total?total:Math.min(i+1,total))+' / '+total+'</b></div>'+
     '<div class="qt-bar"><i style="width:'+(Math.min(i,total)/total*100).toFixed(1)+'%"></i></div>'+
@@ -2647,9 +2778,11 @@ function briefDelayHTML(){
   var ds=briefDelays();
   if(!ds.length) return '';
   return '<div class="bdelay" role="status">'+ds.map(function(d){
-    return '<div><b>반영 대기 · '+d.label+'</b> <span class="dt">'+esc(briefWhen(d.due))+'</span>'+
+    return '<div class="bdl"><b>반영 대기 · '+d.label+'</b> <span class="dt">'+esc(briefWhen(d.due))+'</span>'+
       ' 정기 브리핑이 아직 반영되지 않았습니다 · 현재 데이터 <span class="dt">'+esc(d.at||'–')+'</span></div>';
-  }).join('')+'</div>';
+  }).join('')+
+    '<div class="bref"><button type="button" class="btn" data-brefresh="1">↻ 지금 새로고침</button>'+
+    '<span class="hint2">정기 브리핑이 늦어질 때는 지금 눌러 다시 받아 보세요</span></div></div>';
 }
 function briefNextHTML(){
   var now=new Date(), nk=nextBriefAt('kr',now), nu=nextBriefAt('us',now);
@@ -2834,6 +2967,22 @@ function planHitHTML(){
       return '<button type="button" data-mfopen="'+esc(h.id)+'" aria-label="'+esc(h.name)+' 상세 열기">'+
         '<b>'+esc(h.name)+'</b> '+h.stage+'단 '+(h.gap<=0?'도달':nf(h.gap,1)+'% 앞')+'</button>';
     }).join('')+'</span></div>';
+}
+/* v11: 앱 밖에서도 매수 후보가 보이게 — 탭 제목에 후보 수를 붙이고,
+   설치된 PWA에서는 홈 아이콘 배지(Badging API)도 같이 쓴다. 실패는 무시한다. */
+var APP_TITLE='거시경제·투자 레이더';
+function titleBadge(){
+  var n=0;
+  try{ n=planHits().length; }catch(e){ n=0; }
+  var t=(n>0?('('+n+') '):'')+APP_TITLE;
+  try{ if(document.title!==t) document.title=t; }catch(e){}
+  try{
+    if(n>0&&navigator.setAppBadge){
+      var p=navigator.setAppBadge(n); if(p&&p.catch) p.catch(function(){});
+    }else if(navigator.clearAppBadge){
+      var q=navigator.clearAppBadge(); if(q&&q.catch) q.catch(function(){});
+    }
+  }catch(e){}
 }
 function viewCompanies(){
   var list=assets();
@@ -3214,6 +3363,75 @@ function sigAgeHTML(a){
   if(!rows.length) return '';
   return '<div class="sage" aria-label="신호 이력"><span class="t">신호 이력</span>'+rows.join('')+'</div>';
 }
+/* ---------- v11: 기간 성과 · 지수 대비 ----------
+   TradingView Holdings의 Performance(1M/3M/…)와 Koyfin의 performance vs benchmark를
+   우리 데이터(종목 6개월 일별 종가 + 지표 탭 지수 시계열)로 옮겼다.
+   지수는 같은 시작일부터 계산해야 두 수익률의 차이(%p)가 의미를 가진다. */
+var BENCH_OF={KOSPI:'코스피',KOSDAQ:'코스닥',NASDAQ:'나스닥',NYSE:'나스닥',US:'나스닥',CRYPTO:'BTC'};
+function benchSeriesFor(a){
+  var lab=BENCH_OF[String((a&&a.market)||'').toUpperCase()];
+  if(!lab) return null;
+  var found=null;
+  ((S.data&&S.data.indicators)||[]).forEach(function(ind){
+    if(found) return;
+    (ind.rows||[]).forEach(function(r){
+      if(found) return;
+      if(String(r.label||'')===lab&&(r.series||[]).length>2) found={label:lab,series:r.series};
+    });
+  });
+  return found;
+}
+function seriesPointOnOrBefore(series,iso){
+  var s=(series||[]).filter(function(p){ return p&&typeof p.v==='number'&&isFinite(p.v)&&p.v>0&&isISO(p.d); });
+  if(!s.length||!isISO(iso)) return null;
+  var hit=null;
+  for(var i=0;i<s.length;i++){ if(s[i].d>iso) break; hit=s[i]; }
+  return hit||s[0];
+}
+function perfVsBench(a){
+  var pts=((a&&a.series)||[]).filter(function(p){ return p&&typeof p.v==='number'&&isFinite(p.v)&&p.v>0&&isISO(p.d); });
+  if(pts.length<6) return null;
+  var last=pts[pts.length-1];
+  var bench=benchSeriesFor(a);
+  var rows=[];
+  [[30,'1개월'],[90,'3개월'],[180,'6개월']].forEach(function(x){
+    var t=new Date(last.d+'T00:00:00');
+    if(isNaN(t.getTime())) return;
+    t.setDate(t.getDate()-x[0]);
+    var from=seriesPointOnOrBefore(pts,isoFromDate(t));
+    if(!from||!(from.v>0)||from.d>=last.d) return;
+    var ap=(last.v/from.v-1)*100;
+    var bp=null;
+    if(bench){
+      var b0=seriesPointOnOrBefore(bench.series,from.d);
+      var b1=seriesPointOnOrBefore(bench.series,last.d);
+      if(b0&&b1&&b0.v>0&&b1.d>b0.d) bp=(b1.v/b0.v-1)*100;
+    }
+    rows.push({label:x[1],a:ap,b:bp,diff:(bp==null?null:ap-bp),from:from.d,to:last.d});
+  });
+  if(!rows.length) return null;
+  return {rows:rows,bench:bench?bench.label:null,last:last.d};
+}
+function perfBlockHTML(a){
+  var p=perfVsBench(a);
+  if(!p) return '';
+  var bench=p.bench||'지수';
+  var h='<div class="msec"><h4>기간 성과 · '+esc(bench)+' 대비</h4>'+
+    '<div class="perftbl" role="table" aria-label="기간별 수익률과 지수 대비">'+
+    '<div class="pr th"><span>기간</span><span>종목</span><span>'+esc(bench)+'</span><span>지수 대비</span></div>'+
+    p.rows.map(function(r){
+      var ac=(r.a>0?'up':(r.a<0?'down':''));
+      var bc=(r.b==null?'':(r.b>0?'up':(r.b<0?'down':'')));
+      var dc=(r.diff==null?'':(r.diff>0?'up':(r.diff<0?'down':'')));
+      return '<div class="pr"><span>'+esc(r.label)+'</span>'+
+        '<span class="'+ac+'">'+sgn(r.a,1)+'</span>'+
+        '<span class="'+(r.b==null?'mu':bc)+'">'+(r.b==null?'–':sgn(r.b,1))+'</span>'+
+        '<span class="dm '+(r.diff==null?'mu':dc)+'">'+(r.diff==null?'–':sgn(r.diff,1)+'p')+'</span></div>';
+    }).join('')+'</div>'+
+    '<p class="note">최근 6개월 일별 종가 · 종목과 '+esc(bench)+'를 <b>같은 시작일</b>부터 비교했습니다. '+
+    '지수 대비는 두 수익률의 차이(%p)'+(p.bench==='BTC'?' — 코인은 비트코인 대비 상대 강도':'')+'.</p></div>';
+  return h;
+}
 function assetDetail(a){
   var isCrypto=String(a.market||'').toUpperCase()==='CRYPTO';
   var h='<div class="mhd"><div style="flex:1;min-width:0"><h3>'+esc(a.name)+'</h3>'+
@@ -3246,6 +3464,8 @@ function assetDetail(a){
     h+='<div class="msec"><h4>'+(isCrypto?'가격 흐름 · 최근 6개월':'주가 흐름 · 최근 6개월')+'</h4>'+lineChart({series:a.series,refs:refs,h:132,dec:a.price>1000?0:2,
       asofSuffix:(a.quoteAt||isCrypto?'':' 종가'),src:a.seriesSource||'',freq:'일별 종가'})+'</div>';
   }
+  /* v11: 기간 성과 · 지수 대비 */
+  h+=perfBlockHTML(a);
 
   /* 밴드 */
   if((a.per&&a.per.band)||(a.pbr&&a.pbr.band)){
@@ -3385,6 +3605,7 @@ function viewStudy(){
   if(tags.indexOf(cur)<0) cur='전체';
   var items=all.filter(function(s){
     if(cur!=='전체'&&s.tag!==cur) return false;
+    if(S.sstate==='rv') return isStudyDue(s);
     if(S.sstate!=='all'&&studyState(s)!==S.sstate) return false;
     return true;
   });
@@ -3399,9 +3620,10 @@ function viewStudy(){
   var tagItems=all.filter(function(s){ return cur==='전체'||s.tag===cur; });
   var ct=studyCounts(tagItems);
   var rv=studyReviewList(all).length;
+  var rvTag=studyReviewList(tagItems).length;
   var hint=all.length+'개 · '+(cur==='전체'?'전체':cur);
-  if(S.sstate!=='all') hint+=' · '+(S.sstate===1?'애매':(S.sstate===2?'완료':'미학습'))+' '+items.length+'개';
-  if(rv) hint+=' · 복습 필요 '+rv;
+  if(S.sstate!=='all') hint+=' · '+(S.sstate==='rv'?'복습':(S.sstate===1?'애매':(S.sstate===2?'완료':'미학습')))+' '+items.length+'개';
+  if(rv&&S.sstate!=='rv') hint+=' · 복습 필요 '+rv;
   var h='<div class="sec"><h2>공부 도감</h2><span class="hint">'+hint+'</span></div>';
   h+='<div class="sprog"><div class="nums">'+
       '<span>미학습<b>'+c[0]+'</b></span>'+
@@ -3409,12 +3631,12 @@ function viewStudy(){
       '<span class="c2">완료<b>'+c[2]+'</b></span></div>'+
       '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
       '<span class="pct">'+pct+'%</span></div>';
-  /* 상태 필터 — 미학습만 / 애매한 것만 / 완료한 것만 */
+  /* 상태 필터 — 미학습만 / 애매한 것만 / 완료한 것만 + v11: 복습 필요만 */
   h+='<div class="sstatus" role="group" aria-label="학습 상태 필터">'+
-      [['all','전체',tagItems.length],['0','미학습',ct[0]],['1','애매',ct[1]],['2','완료',ct[2]]].map(function(x){
+      [['all','전체',tagItems.length],['rv','복습',rvTag],['0','미학습',ct[0]],['1','애매',ct[1]],['2','완료',ct[2]]].map(function(x){
         return '<button data-sstate="'+x[0]+'" class="'+(String(S.sstate)===x[0]?'on':'')+'" aria-pressed="'+(String(S.sstate)===x[0]?'true':'false')+'"'+
           (x[0]==='1'?' style="color:var(--warn-tx)"':(x[0]==='2'?' style="color:var(--good-tx)"':''))+
-          '>'+x[1]+'<b>'+x[2]+'</b></button>';
+          (x[0]==='rv'&&!x[2]?' disabled':'')+'>'+x[1]+'<b>'+x[2]+'</b></button>';
       }).join('')+'</div>';
   /* v10: 복습 기준일 — 완료한 카드가 며칠 지나면 복습으로 올릴지 고른다 */
   h+='<div class="scycle"><span class="lb">복습 주기</span><span class="seg2" role="group" aria-label="복습 주기">'+
@@ -3500,6 +3722,7 @@ function render(){
   main.innerHTML=html;
   bindView();
   bindCharts();
+  titleBadge();
 }
 
 function setTab(t){
@@ -3628,6 +3851,16 @@ function bindView(){
   Array.prototype.forEach.call(main.querySelectorAll('[data-mfopen]'),function(b){
     b.addEventListener('click',function(ev){ ev.stopPropagation(); openAsset(b.getAttribute('data-mfopen')); });
   });
+  /* v11: 브리핑 반영 대기 → 지금 새로고침 */
+  Array.prototype.forEach.call(main.querySelectorAll('[data-brefresh]'),function(b){
+    b.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      if(b.classList.contains('busy')) return;
+      b.classList.add('busy'); b.textContent='↻ 받는 중…';
+      refreshData(true);
+      setTimeout(function(){ b.classList.remove('busy'); b.textContent='↻ 지금 새로고침'; },1800);
+    });
+  });
   /* v10: 도감 복습 주기 선택 */
   Array.prototype.forEach.call(main.querySelectorAll('[data-scyc]'),function(b){
     b.addEventListener('click',function(){
@@ -3640,8 +3873,9 @@ function bindView(){
   /* 도감 상태 필터 · 퀵 테스트 */
   Array.prototype.forEach.call(main.querySelectorAll('[data-sstate]'),function(b){
     b.addEventListener('click',function(){
+      if(b.hasAttribute('disabled')) return;
       var v=b.getAttribute('data-sstate');
-      S.sstate=(v==='all')?'all':parseInt(v,10);
+      S.sstate=(v==='all'||v==='rv')?v:parseInt(v,10);
       render();
     });
   });
@@ -4150,16 +4384,20 @@ function boot(){
       if(!S.data) render();
     });
 }
-function refreshData(){
+function refreshData(force){
   fetch(DATA_URL+'?v='+Date.now(),{cache:'no-store'})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .then(function(d){
       if(!d||!d.meta) return;
       if(!S.data || d.meta.version!==S.data.meta.version){
         S.data=d; applyQaStamps(d); syncCryptoSnapshot(); applyMeta(); migrateOverrideLive(); render();
-        toast('데이터 갱신 적용 · v'+d.meta.version);
+        if(force) toast('새 데이터를 반영했습니다 · v'+d.meta.version);
+        else toast('데이터 갱신 적용 · v'+d.meta.version);
+      }else if(force){
+        render();
+        toast('새 데이터가 아직 없습니다 · 현재 '+((S.data.meta.sessionStamps||{}).kr||metaTime())+' 기준');
       }
-    }).catch(function(){});
+    }).catch(function(){ if(force) toast('데이터를 받지 못했습니다 · 잠시 뒤 다시 시도하세요'); });
 }
 function applyMeta(){
   if(!S.data) return;
@@ -4221,7 +4459,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=10.0').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=11.0').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });
