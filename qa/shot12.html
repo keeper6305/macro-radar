@@ -5,76 +5,113 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>macro-radar v12 shots</title>
 <style>
-html,body{margin:0;background:#000;overflow:hidden}
-iframe{display:block;border:0;background:#070b11}
+html,body{margin:0;background:#000;overflow:hidden;height:100%}
+#wrap{position:relative}
+.panel{position:absolute;top:0}
+.lab{position:absolute;left:0;top:0;height:18px;font:700 11px/18px -apple-system,"Noto Sans KR",sans-serif;color:#9fb0c0;padding-left:2px}
+iframe{display:block;border:0;background:#070b11;position:absolute;left:0;top:18px}
 </style>
 </head>
 <body>
+<div id="wrap"></div>
 <script>
-/* v12 촬영용 — s=시나리오, w/h=폭·높이, theme=light|dark
+/* v12 촬영용.
+   단독:  ?s=realsym&w=390&h=844&theme=light
+   갤러리: ?g=realsym:360x780,realsym:390x844,realsym:430x932   (가로로 나란히, 한 번에 캡처)
    점검 모드(?qa=1)라 저장 키는 :qa 로 분리된다(사용자 실제 기록은 건드리지 않음). */
 function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 var P=new URLSearchParams(location.search);
-var S=P.get('s')||'realsym', W=parseInt(P.get('w')||'390',10), H=parseInt(P.get('h')||'844',10);
 var TH=P.get('theme')||'dark';
 var SEED=[
   {id:'gamsung',name:'감성코퍼레이션',ts:'2026-11-26 10:00',qty:5,px:3700,avg:3500,pnl:1000,cur:'KRW'},
   {id:'gamsung',name:'감성코퍼레이션',ts:'2026-11-26 11:00',qty:3,px:3600,avg:3500,pnl:300,cur:'KRW'},
   {id:'gamsung',name:'감성코퍼레이션',ts:'2026-11-20 10:00',qty:2,px:3300,avg:3500,pnl:-400,cur:'KRW'},
   {id:'google',name:'알파벳',ts:'2026-11-24 10:00',qty:1,px:280,avg:270,pnl:10,cur:'USD'},
-  {id:'google',name:'알파벳',ts:'2026-11-25 10:00',qty:1,px:265,avg:270,pnl:-5,cur:'USD'}
+  {id:'google',name:'알파벳',ts:'2026-11-25 10:00',qty:1,px:265,avg:270,pnl:-5,cur:'USD'},
+  {id:'qa-old',name:'감성코퍼레이션',ts:'2026-10-15 10:00',qty:2,px:3300,avg:3500,pnl:-400,cur:'KRW'}
 ];
 try{
   localStorage.setItem('macro_radar_theme:qa',TH);
-  if(S.indexOf('real')===0) localStorage.setItem('macro_radar_realized_v1:qa',JSON.stringify({items:SEED}));
+  var anyS=(P.get('g')||P.get('s')||'');
+  if(anyS.indexOf('real')>=0) localStorage.setItem('macro_radar_realized_v1:qa',JSON.stringify({items:SEED}));
 }catch(e){}
-var f=document.createElement('iframe');
-f.width=W; f.height=H; f.style.width=W+'px'; f.style.height=H+'px';
-f.src='../index.html?qa=1&t='+Date.now();
-document.body.appendChild(f);
-document.title='shot '+S+' '+W;
-f.addEventListener('load',async function(){
-  var d=f.contentDocument, w=f.contentWindow;
-  var q=function(x){ return d.querySelector(x); };
-  var qa=function(x){ return Array.prototype.slice.call(d.querySelectorAll(x)); };
-  function scrollToEl(el,off){ if(el) w.scrollTo(0,el.getBoundingClientRect().top+w.scrollY-(off||110)); }
-  try{ w.confirm=function(){ return true; }; }catch(e){}
-  await wait(2200);
-  try{
-    if(S==='realsym'||S==='realmonth'){
-      q('.tab[data-tab="companies"]').click(); await wait(600);
-      q('#main .pfcard [data-real]').click(); await wait(600);
-      if(S==='realsym'){
-        var bs=qa('#msheet .rseg button');
-        if(bs[1]) bs[1].click();
-        await wait(500);
-      }
-      q('#msheet').scrollTop=0; await wait(200);
-    }
-    else if(S==='btc'){
-      q('.tab[data-tab="companies"]').click(); await wait(600);
-      scrollToEl(q('#main [data-asset="btc"]'),120); await wait(250);
-    }
-    else if(S==='btcrow'||S==='btcrow-light'){
-      q('.tab[data-tab="overview"]').click(); await wait(500);
-      var row=qa('#main .row').filter(function(r){ return (r.textContent||'').indexOf('BTC')>=0; })[0];
-      scrollToEl(row,140); await wait(250);
-    }
-    else if(S==='rate429'){
-      var of=w.fetch;
-      w.fetch=function(u,o){
-        var uu=String(u&&u.url?u.url:u);
-        if(uu.indexOf('finance.yahoo.com')>=0) return Promise.resolve(new w.Response('Too Many Requests',{status:429}));
-        if(uu.indexOf('coingecko')>=0) return Promise.resolve(new w.Response(JSON.stringify({bitcoin:{usd:61000,usd_24h_change:1.1},ethereum:{usd:1700,usd_24h_change:0.7}}),{status:200,headers:{'Content-Type':'application/json'}}));
-        if(uu.indexOf('alternative.me')>=0) return Promise.resolve(new w.Response(JSON.stringify({data:[{value:'20',value_classification:'Fear'}]}),{status:200,headers:{'Content-Type':'application/json'}}));
-        return of.apply(w,arguments);
-      };
-      q('.tab[data-tab="companies"]').click(); await wait(500);
-      w.scrollTo(0,0);
-      q('#btnLive').click(); await wait(1500);
-    }
-  }catch(e){ document.title='ERR '+e.message; }
+
+var specs=[];
+if(P.get('g')){
+  P.get('g').split(',').forEach(function(x){ var a=x.split(':'); var wh=(a[1]||'390x844').split('x'); specs.push({s:a[0],w:+wh[0]||390,h:+wh[1]||844}); });
+}else{
+  specs.push({s:P.get('s')||'realsym',w:+(P.get('w')||390),h:+(P.get('h')||844)});
+}
+var wrap=document.getElementById('wrap'), left=0, maxH=0;
+specs.forEach(function(sp){
+  var panel=document.createElement('div');
+  panel.className='panel'; panel.style.left=left+'px'; panel.style.width=sp.w+'px';
+  var lab=document.createElement('div');
+  lab.className='lab'; lab.textContent=sp.s+' '+sp.w+'×'+sp.h;
+  var f=document.createElement('iframe');
+  f.width=sp.w; f.height=sp.h; f.style.width=sp.w+'px'; f.style.height=sp.h+'px';
+  f.setAttribute('aria-hidden','true');   /* 화면에는 보이지만 접근성 트리에서는 숨긴다(점검 결과만 읽기) */
+  f.src='../index.html?qa=1&t='+Date.now();
+  panel.appendChild(lab); panel.appendChild(f);
+  wrap.appendChild(panel);
+  sp.el=f; sp.panel=panel; sp.left=left;
+  left+=sp.w+10; maxH=Math.max(maxH,sp.h+18);
 });
+wrap.style.height=maxH+'px';
+document.title='shots '+specs.map(function(s){return s.s+':'+s.w;}).join(' ');
+
+function drive(f,sp){
+  return new Promise(function(resolve){
+    f.addEventListener('load',async function(){
+      var d=f.contentDocument, w=f.contentWindow;
+      var q=function(x){ return d.querySelector(x); };
+      var qa=function(x){ return Array.prototype.slice.call(d.querySelectorAll(x)); };
+      function scrollToEl(el,off){ if(el) w.scrollTo(0,el.getBoundingClientRect().top+w.scrollY-(off||110)); }
+      try{ w.confirm=function(){ return true; }; }catch(e){}
+      await wait(2300);
+      try{
+        if(sp.s==='realsym'||sp.s==='realmonth'){
+          q('.tab[data-tab="companies"]').click(); await wait(600);
+          var rb=q('#main .pfcard [data-real]');
+          if(rb) rb.click();
+          await wait(600);
+          if(sp.s==='realsym'){
+            var bs=qa('#msheet .rseg button');
+            if(bs[1]) bs[1].click();
+            await wait(500);
+          }
+          var sh=q('#msheet');
+          if(sh) sh.scrollTop=0;
+          await wait(200);
+        }
+        else if(sp.s==='btc'){
+          q('.tab[data-tab="companies"]').click(); await wait(600);
+          scrollToEl(q('#main [data-asset="btc"]'),120); await wait(250);
+        }
+        else if(sp.s==='btcrow'){
+          q('.tab[data-tab="overview"]').click(); await wait(500);
+          var row=qa('#main .row').filter(function(r){ return (r.textContent||'').indexOf('BTC')>=0; })[0];
+          scrollToEl(row,140); await wait(250);
+        }
+        else if(sp.s==='rate429'){
+          var of=w.fetch;
+          w.fetch=function(u,o){
+            var uu=String(u&&u.url?u.url:u);
+            if(uu.indexOf('finance.yahoo.com')>=0) return Promise.resolve(new w.Response('Too Many Requests',{status:429}));
+            if(uu.indexOf('coingecko')>=0) return Promise.resolve(new w.Response(JSON.stringify({bitcoin:{usd:61000,usd_24h_change:1.1},ethereum:{usd:1700,usd_24h_change:0.7}}),{status:200,headers:{'Content-Type':'application/json'}}));
+            if(uu.indexOf('alternative.me')>=0) return Promise.resolve(new w.Response(JSON.stringify({data:[{value:'20',value_classification:'Fear'}]}),{status:200,headers:{'Content-Type':'application/json'}}));
+            return of.apply(w,arguments);
+          };
+          q('.tab[data-tab="companies"]').click(); await wait(500);
+          w.scrollTo(0,0);
+          q('#btnLive').click(); await wait(1500);
+        }
+      }catch(e){ document.title='ERR '+sp.s+' '+e.message; }
+      resolve();
+    },{once:true});
+  });
+}
+Promise.all(specs.map(function(sp){ return drive(sp.el,sp); })).then(function(){ document.title='ready '+specs.length+' shots'; });
 </script>
 </body>
 </html>
