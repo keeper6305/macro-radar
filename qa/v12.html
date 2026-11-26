@@ -1772,6 +1772,7 @@ async function run(){
       need(mv.indexOf(pnlTxt.replace('$',''))>=0||mv.indexOf(pnlTxt)>=0,'종목 손익 '+pnlTxt+' 없음('+g.name+'): '+mv);
       need(el.querySelectorAll('.rrow').length===g.n,'개별 매도 행 '+el.querySelectorAll('.rrow').length+' ≠ '+g.n);
       seen.push(g.name+' '+g.w+'/'+g.n);
+      if(el.open){ el.querySelector('summary').click(); await wait(120); need(el.open===false,'줄이 접히지 않음: '+g.name); }
       el.querySelector('summary').click(); await wait(120);
       need(el.open===true,'줄이 펼쳐지지 않음: '+g.name);
       need(!X.overflowV('.rsym>summary, .rsym>summary .rmeta').length,'종목 줄 넘침: '+X.overflowV('.rsym>summary, .rsym>summary .rmeta').join(', '));
