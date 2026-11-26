@@ -22,6 +22,15 @@ iframe{border:1px solid #33445a;background:#070b11;display:block;flex:none}
 <script>
 /* 이 하네스는 앱과 같은 오리진(GitHub Pages)에서 iframe으로 앱을 띄운다.
    iframe 앱은 이 도메인의 실제 localStorage를 쓰므로, 시작 전에 스냅샷을 뜨고 끝나면 그대로 되돌린다. */
+/* 계측 전용 모드(?hide=1): 화면 캡처·로그를 숨겨 자동 점검의 결과만 읽는다.
+   visibility:hidden 은 레이아웃 상자를 그대로 두므로 폭·넘침 측정에는 영향이 없다. */
+if(/[?&]hide=1/.test(location.search)){
+  try{
+    var hs=document.createElement('style');
+    hs.textContent='iframe{visibility:hidden} #log,h1{display:none}';
+    document.head.appendChild(hs);
+  }catch(e){}
+}
 var ORIGIN=location.origin;
 var SNAP={};
 function snapStorage(){
