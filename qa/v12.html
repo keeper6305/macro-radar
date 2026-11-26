@@ -1769,7 +1769,7 @@ async function run(){
       }
       var mv=txt(el.querySelector('.mv'));
       var pnlTxt=(g.pnl>0?'+':(g.pnl<0?'-':''))+Math.abs(g.pnl).toLocaleString('ko-KR',{minimumFractionDigits:(g.cur==='USD'?2:0),maximumFractionDigits:(g.cur==='USD'?2:0)})+(g.cur==='USD'?'':'원');
-      need(mv.indexOf(pnlTxt.replace('$',''))>=0||mv.indexOf(pnlTxt)>=0,'종목 손익 '+pnlTxt+' 없음('+g.name+'): '+mv);
+      need(mv.replace(/\$/g,'').indexOf(pnlTxt.replace(/\$/g,''))>=0,'종목 손익 '+pnlTxt+' 없음('+g.name+'): '+mv);
       need(el.querySelectorAll('.rrow').length===g.n,'개별 매도 행 '+el.querySelectorAll('.rrow').length+' ≠ '+g.n);
       seen.push(g.name+' '+g.w+'/'+g.n);
       if(el.open){ el.querySelector('summary').click(); await wait(120); need(el.open===false,'줄이 접히지 않음: '+g.name); }
