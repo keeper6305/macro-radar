@@ -1542,7 +1542,8 @@ function realBySymbol(){
   (S.real.items||[]).forEach(function(it,i){
     var nm=String(it.name||'종목');
     var cur=(it.cur==='USD'?'USD':'KRW');
-    var key=(it.id?String(it.id):nm)+'|'+cur;
+    /* 이름으로 묶는다 — 종목 id는 목록에서 지웠다 다시 추가하면 바뀌어, 같은 종목이 두 줄로 갈린다 */
+    var key=nm+'|'+cur;
     var g=map[key];
     if(!g){ g=map[key]={key:key,name:nm,cur:cur,rows:[],n:0,w:0,rn:0,sum:0,pnl:0,last:''}; out.push(g); }
     g.rows.push({it:it,i:i});

@@ -1745,7 +1745,7 @@ async function run(){
     var curItems=(JSON.parse(localStorage.getItem(RK12)||'{"items":[]}').items)||[];
     var exp={}, expOrder=[];
     curItems.forEach(function(it){
-      var key=(it.id?String(it.id):String(it.name))+'|'+(it.cur==='USD'?'USD':'KRW');
+      var key=String(it.name)+'|'+(it.cur==='USD'?'USD':'KRW');
       if(!exp[key]){ exp[key]={name:String(it.name),cur:(it.cur==='USD'?'USD':'KRW'),n:0,w:0,rn:0,sum:0,pnl:0}; expOrder.push(key); }
       var g=exp[key];
       g.n++; if(it.pnl>0) g.w++; g.pnl+=it.pnl;
