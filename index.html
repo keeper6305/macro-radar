@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="투자 레이더">
-<link rel="manifest" href="./manifest.json?v=11.2">
+<link rel="manifest" href="./manifest.json?v=12.0">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon-32.png" sizes="32x32">
@@ -560,6 +560,7 @@ details.study[open] .chv{transform:rotate(90deg)}
 @keyframes updPulse{0%,100%{opacity:1}50%{opacity:.3}}
 .upd .sep{opacity:.55}
 .upd b{color:var(--tx2);font-weight:700}
+.upd .age{opacity:.85;letter-spacing:.01em}
 .row .upd{margin-top:3px}
 .chart .cnow{display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums;margin-bottom:1px}
 .chart .cnow .cn{font-size:8.5px;font-weight:800;color:var(--mu);letter-spacing:.02em}
@@ -862,6 +863,20 @@ details.study.s2[open]{opacity:1}
 .rmon>summary .mv{margin-left:auto;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--tx2)}
 .rmon>summary .mv.up{color:var(--up)} .rmon>summary .mv.down{color:var(--down)}
 .rmon .rmrows{padding-top:1px}
+/* v12: 실현손익 보기 전환(월별/종목별)과 종목 묶음 줄 */
+.rseg{display:flex;align-items:center;gap:6px;margin:10px 0 0;flex-wrap:wrap}
+.rseg button{flex:none;appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--tx2);
+  border-radius:999px;padding:0 14px;min-height:36px;font:700 11px/1 inherit;font-family:inherit;
+  font-variant-numeric:tabular-nums}
+.rseg button.on{border-color:rgba(var(--accRGB),.5);background:var(--accentbg);color:var(--accent2)}
+.rseg button:active{transform:scale(.97)}
+.rseg .cap2{margin-left:auto;font-size:9px;color:var(--mu);font-weight:700}
+.rsym>summary{flex-wrap:wrap;align-items:baseline}
+.rsym>summary .mt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
+.rsym>summary .rmeta{flex-basis:100%;padding-left:16px;font-size:9px;font-weight:600;color:var(--mu);
+  font-variant-numeric:tabular-nums;margin-top:1px;line-height:1.45}
+.rsym>summary .rmeta .ccy{font-weight:800;letter-spacing:.02em;color:var(--tx2)}
+.rsym>summary .rmeta b{color:var(--tx2);font-weight:800}
 .sage{margin-top:7px;display:grid;gap:3px;font-size:9px;color:var(--mu);line-height:1.5}
 .sage .t{font-weight:800;color:var(--tx2);letter-spacing:.02em}
 .sage .sa{display:flex;gap:6px;min-width:0;align-items:baseline}
@@ -999,7 +1014,8 @@ var S = { data:null, tab:'overview', bIdx:0, live:null, err:null,
   study:{}, quoteAt:null,
   charts:{}, finMode:{}, cseq:0, edit:false, stag:'전체',
   sstate:'all', qt:null, openStudy:{}, syncN:0, sigf:'all', sim:null,
-  plans:{}, real:{items:[]}, siglog:{}, smeta:{}, qcfg:{review:7}, planDraft:null, qtSeen:{}, dirty:false };
+  plans:{}, real:{items:[]}, siglog:{}, smeta:{}, qcfg:{review:7}, planDraft:null, qtSeen:{}, dirty:false,
+  rview:'m', quote429At:0, quoteCool:0 };
 var NAV={lastBack:0, exiting:false, ready:false};
 
 /* ---------- utils ---------- */
@@ -1032,28 +1048,47 @@ function metaTime(){
 }
 /* 세션별 마지막 갱신 시각(us / kr / live) */
 function sessionStamp(session){
-  if(session==='live'){
-    if(S.live) return {at:(S.live.at||''), live:true, src:S.live.src};
-    return {at:metaTime(), live:false};
-  }
   var st=(S.data&&S.data.meta&&S.data.meta.sessionStamps)||{};
+  if(session==='live'){
+    /* v12: 가상자산은 24시간 시장이다. ↻로 받은 실시간 값이 없으면 '국내 마감(16:05)' 시각을
+       코인 시세의 기준처럼 쓰지 않는다 — 코인은 07:00 미국 빌드에서 함께 받아 온다.
+       (데이터가 crypto 스탬프를 주면 그것을 먼저 쓴다) */
+    if(S.live) return {at:(S.live.at||''), live:true, src:S.live.src};
+    return {at:(st.crypto||st.us||metaTime()), live:false, crypto:true};
+  }
   return {at:st[session]||metaTime(), live:false};
 }
-/* 일별 시계열이면 마지막 관측일을 '기준 MM/DD 종가'로 */
+/* 일별 시계열이면 마지막 관측일을 '기준 MM/DD 종가'로 — 24시간 시장은 '종가'가 아니라 '스냅샷' */
 function rowBasis(r){
   if(!r) return '';
   if(r.basis) return r.basis;
   if(!r.series||!r.series.length) return '';
   if(String(r.freq||'').indexOf('일별')<0) return '';
   var last=r.series[r.series.length-1];
-  return isISO(last.d)?(dShort(last.d)+' 종가'):'';
+  return isISO(last.d)?(dShort(last.d)+(r.session==='live'?' 스냅샷':' 종가')):'';
+}
+/* v12: 기준 시각이 지금으로부터 얼마나 지났는지 — 스냅샷을 '방금 온 값'처럼 보이지 않게 */
+function stampAgeTxt(at){
+  var dt=parseStampDT(at);
+  if(!dt) return '';
+  var mins=Math.round((Date.now()-dt.getTime())/60000);
+  if(!isFinite(mins)||mins<0) return '';
+  if(mins<10) return '방금';
+  if(mins<60) return mins+'분 전';
+  if(mins<1440) return Math.round(mins/60)+'시간 전';
+  return Math.floor(mins/1440)+'일 전';
+}
+function ageHTML(at){
+  var t=stampAgeTxt(at);
+  return t?'<span class="sep">·</span><span class="age" title="위 기준 시각으로부터 지난 시간">'+esc(t)+'</span>':'';
 }
 function updHTML(r, ind){
   var sess=(r&&r.session)||(ind&&ind.session)||'us';
   var st=sessionStamp(sess);
   var basis=st.live?'':rowBasis(r);
-  return '<div class="upd'+(st.live?' live':'')+'"><i></i><span>'+(st.live?'실시간 ':'업데이트 ')+
-    esc(st.at||metaTime())+' KST</span>'+(basis?'<span class="sep">·</span><span>기준 '+esc(basis)+'</span>':'')+
+  return '<div class="upd'+(st.live?' live':'')+'"'+(st.crypto?' title="가상자산은 24시간 거래됩니다 · ↻로 현재가를 확인하세요"':'')+'>'+
+    '<i></i><span>'+(st.live?'실시간 ':'업데이트 ')+esc(st.at||metaTime())+' KST</span>'+
+    (basis?'<span class="sep">·</span><span>기준 '+esc(basis)+'</span>':'')+(st.live?'':ageHTML(st.at||metaTime()))+
     '</div>';
 }
 function assetSession(a){
@@ -1067,10 +1102,11 @@ function assetUpd(a){
   var liveQuote=!!(a&&a.quoteAt);
   var at=liveQuote?a.quoteAt:(st.at||metaTime());
   var s=(a&&a.series)||[];
-  var basis=(st.live||liveQuote)?'':((s.length&&isISO(s[s.length-1].d))?(dShort(s[s.length-1].d)+' 종가'):'');
-  return '<div class="upd'+((st.live||liveQuote)?' live':'')+'"><i></i><span>'+
-    ((st.live||liveQuote)?'실시간 ':'업데이트 ')+esc(at)+' KST</span>'+
-    (basis?'<span class="sep">·</span><span>'+esc(basis)+'</span>':'')+'</div>';
+  var snap=st.crypto||String((a&&a.market)||'').toUpperCase()==='CRYPTO';
+  var basis=(st.live||liveQuote)?'':((s.length&&isISO(s[s.length-1].d))?(dShort(s[s.length-1].d)+(snap?' 스냅샷':' 종가')):'');
+  return '<div class="upd'+((st.live||liveQuote)?' live':'')+'"'+(snap&&!liveQuote?' title="가상자산은 24시간 거래됩니다 · ↻로 현재가를 확인하세요"':'')+'>'+
+    '<i></i><span>'+((st.live||liveQuote)?'실시간 ':'업데이트 ')+esc(at)+' KST</span>'+
+    (basis?'<span class="sep">·</span><span>'+esc(basis)+'</span>':'')+((st.live||liveQuote)?'':ageHTML(at))+'</div>';
 }
 function isISO(d){ return /^\d{4}-\d{2}-\d{2}$/.test(String(d||'')); }
 function dShort(d){ if(!isISO(d)) return String(d==null?'':d);
@@ -1495,9 +1531,72 @@ function realMonthHTML(){
 }
 function realChipHTML(){
   var t=realTotals();
-  return '<span class="rl">실현손익 <b class="'+realSumCls(t)+'">'+realSumText(t)+'</b>'+
+  return '<span class="rl">실현손익 <b class="'+realSumCls(t)+'">'+(t.n?realSumText(t):'–')+'</b>'+
     '<em>'+(t.n?t.n+'건':'아직 없음')+'</em>'+
     '<button type="button" class="lnk" data-real="1" aria-label="실현손익 내역 보기">내역</button></span>';
+}
+/* v12: 종목별 합산 — 같은 종목의 여러 매도를 묶어 건수·승률·평균을 낸다(저장 없이 화면 계산).
+   통화가 다르면 다른 시장이므로 종목 이름이 같아도 따로 센다. */
+function realBySymbol(){
+  var map={}, out=[];
+  (S.real.items||[]).forEach(function(it,i){
+    var nm=String(it.name||'종목');
+    var cur=(it.cur==='USD'?'USD':'KRW');
+    var key=(it.id?String(it.id):nm)+'|'+cur;
+    var g=map[key];
+    if(!g){ g=map[key]={key:key,name:nm,cur:cur,rows:[],n:0,w:0,rn:0,sum:0,pnl:0,last:''}; out.push(g); }
+    g.rows.push({it:it,i:i});
+    if(!g.last) g.last=String(it.ts||'');
+    if(typeof it.pnl!=='number') return;
+    g.n++; if(it.pnl>0) g.w++; g.pnl+=it.pnl;
+    var r=realRet(it);
+    if(r!=null&&isFinite(r)){ g.rn++; g.sum+=r; }
+  });
+  out.forEach(function(g){
+    g.rate=g.n?Math.round(g.w/g.n*100):0;
+    g.avg=g.rn?g.sum/g.rn:null;
+  });
+  out.sort(function(a,b){
+    var d=Math.abs(b.pnl)-Math.abs(a.pnl);
+    if(d) return d;
+    return a.name<b.name?-1:(a.name>b.name?1:0);
+  });
+  return out;
+}
+function realSymRows(g){
+  return g.rows.map(function(x){
+    var it=x.it;
+    return '<div class="rrow"><div class="rt"><b>'+esc(it.name||'종목')+'</b><span>'+esc(it.ts||'')+'</span></div>'+
+      '<div class="rv"><b class="'+(it.pnl>=0?'up':'down')+'">'+moneyS(it.pnl,it.cur)+'</b>'+
+      '<span>'+(it.qty!=null?nf(it.qty,it.qty%1?3:0):'–')+' × '+money(it.px,it.cur)+'</span></div>'+
+      '<button class="x" data-rdel="'+x.i+'" aria-label="이 기록 삭제">✕</button></div>';
+  }).join('');
+}
+function realSymbolHTML(){
+  var groups=realBySymbol();
+  if(!groups.length) return '';
+  var mixed=groups.some(function(g){return g.cur==='USD';})&&groups.some(function(g){return g.cur==='KRW';});
+  return groups.map(function(g,gi){
+    var avg=(g.avg==null)?'–':((g.avg>0?'+':'')+nf(g.avg,1)+'%');
+    return '<details class="rmon rsym"'+(gi===0?' open':'')+'><summary>'+
+      '<span class="ar">›</span><span class="mt">'+esc(g.name)+'</span>'+
+      '<span class="mv '+(g.pnl>=0?'up':'down')+'">'+moneyS(g.pnl,g.cur)+'</span>'+
+      '<span class="rmeta">'+(mixed?'<span class="ccy">'+(g.cur==='USD'?'달러':'원화')+' · </span>':'')+
+        g.n+'건 · <b>'+g.w+'/'+g.n+'</b> (승률 '+g.rate+'%) · 평균 <b class="'+(g.avg==null?'':(g.avg>=0?'up':'down'))+'">'+avg+'</b>'+
+        (g.rn<g.n?' · 수익률은 '+g.rn+'건 기준':'')+'</span></summary>'+
+      '<div class="rmrows">'+realSymRows(g)+'</div></details>';
+  }).join('');
+}
+function realViewHTML(){
+  var v=(S.rview==='s')?'s':'m';
+  var groups=(v==='s')?realBySymbol():[];
+  var bar='<div class="rseg" role="tablist" aria-label="실현손익 보기">'+
+    '<button type="button" data-rview="m" role="tab" aria-selected="'+(v==='m'?'true':'false')+'" class="'+(v==='m'?'on':'')+'">월별</button>'+
+    '<button type="button" data-rview="s" role="tab" aria-selected="'+(v==='s'?'true':'false')+'" class="'+(v==='s'?'on':'')+'">종목별</button>'+
+    '<span class="cap2">'+(v==='s'?('종목 '+groups.length+' · 매도 '+realStats().n+'건'):'최근 달부터')+'</span></div>';
+  return bar+(v==='s'
+    ?'<div class="rlist">'+realSymbolHTML()+'</div>'
+    :'<div class="rlist">'+realMonthHTML()+'</div>');
 }
 function realSheet(){
   var t=realTotals();
@@ -1512,8 +1611,10 @@ function realSheet(){
     openSheet(h); return;
   }
   h+=realStatHTML();
-  h+='<div class="rlist">'+realMonthHTML()+'</div>';
-  h+='<p class="note">수수료·세금은 빼지 않았습니다. 평균 수익률은 매입 평단으로 계산합니다. 잘못 넣은 기록은 ✕로 지우고 전체 초기화로 비울 수 있습니다.</p>';
+  h+=realViewHTML();
+  h+='<p class="note">수수료·세금은 빼지 않았습니다. 평균 수익률은 매입 평단으로 계산합니다.'+
+    (S.rview==='s'?' 종목별은 같은 종목의 매도를 묶어 건수·승률·평균을 냅니다 — 줄을 펼치면 개별 매도가 보입니다.':'')+
+    ' 잘못 넣은 기록은 ✕로 지우고 전체 초기화로 비울 수 있습니다.</p>';
   h+='<div class="mcta"><button class="btn danger" data-rclear="1">전체 초기화</button>'+
      '<button class="btn" data-close="1">닫기</button></div>';
   openSheet(h);
@@ -4051,6 +4152,12 @@ function bindSheet(){
       S.real={items:[]}; saveReal(); realSheet(); render(); toast('실현손익 기록을 초기화했습니다.');
       return;
     }
+    if(t.closest('[data-rview]')){
+      var rv=t.closest('[data-rview]').getAttribute('data-rview');
+      S.rview=(rv==='s')?'s':'m';
+      realSheet();
+      return;
+    }
     if(t.closest('[data-rdel]')){
       var ri=parseInt(t.closest('[data-rdel]').getAttribute('data-rdel'),10);
       if(!(ri>=0)||!S.real.items[ri]) return;
@@ -4229,7 +4336,10 @@ function fetchJSON(url,ms){
   var t=setTimeout(function(){ctl.abort();},ms||6000);
   return fetch(url,{signal:ctl.signal,cache:'no-store'}).then(function(r){
     clearTimeout(t);
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    if(!r.ok){
+      /* v12: 상태 코드를 실어 보낸다 — 429(한도)와 단순 실패를 다르게 다루기 위해 */
+      var err=new Error('HTTP '+r.status); err.status=r.status; throw err;
+    }
     return r.json();
   }).catch(function(e){ clearTimeout(t); throw e; });
 }
@@ -4301,10 +4411,16 @@ function applyQuote(a, px, prev, dt){
 }
 function refreshQuotes(){
   if(S.quotePromise) return S.quotePromise;
+  /* v12: Yahoo가 429(Too Many Requests)를 주면 90초는 주식 호가를 쉬고, 그 뒤에는
+     1종목만 찔러 보고 풀렸는지 확인한다. 같은 실패를 반복하면 차단이 늘어난다. */
+  var cooling=(S.quoteCool&&Date.now()<S.quoteCool);
+  if(cooling) return Promise.resolve(0);
+  var probe=!!S.quote429At&&(Date.now()-S.quote429At)<10*60000;
   /* 병합 사본이 아니라 시드 원본을 갱신해야 카드 숫자와 차트 마지막 점이 함께 바뀐다 */
   var list=((S.data&&S.data.assets)||[]).filter(function(a){ return a.quoteSymbol && String(a.market).toUpperCase()!=='CRYPTO'; });
   if(!list.length||typeof fetch!=='function') return Promise.resolve(0);
-  var n=0, fail=0;
+  if(probe) list=list.slice(0,1);
+  var n=0, fail=0, hit429=false;
   S.quoteFail=0;
   S.quotePromise=Promise.all(list.map(function(a){
     var url='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(a.quoteSymbol)+
@@ -4317,11 +4433,21 @@ function refreshQuotes(){
       var prev=(typeof m.chartPreviousClose==='number')?m.chartPreviousClose:
                (typeof m.previousClose==='number'?m.previousClose:null);
       var dt=m.regularMarketTime?new Date(m.regularMarketTime*1000):null;
-      if(applyQuote(a,px,prev,dt)) n++;
-    }).catch(function(){ fail++; });
+      if(applyQuote(a,px,prev,dt)){ n++; S.quote429At=0; }
+    }).catch(function(e){
+      fail++;
+      if(e&&e.status===429&&!hit429){ hit429=true; S.quote429At=Date.now(); S.quoteCool=Date.now()+90000; }
+    });
   })).then(function(){ S.quotePromise=null; S.quoteFail=fail; if(n) render(); return n; },
           function(){ S.quotePromise=null; S.quoteFail=fail; return 0; });
   return S.quotePromise;
+}
+/* v12: ↻ 뒤에 무엇이 반영되고 무엇이 막혔는지 한 줄로 */
+function quoteTailTxt(n){
+  if(n) return ' · 종목 '+n+'개';
+  if(S.quoteCool&&Date.now()<S.quoteCool) return ' · 주식 시세 한도(429) · 1분 뒤 다시';
+  if(S.quoteFail) return ' · 주식 시세 응답 없음';
+  return '';
 }
 function fngKo(cls){
   var m={'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'};
@@ -4355,7 +4481,7 @@ function refreshLive(){
   })
   .then(function(o){ return fngP.then(function(f){ if(f){o.fng=f;} return o; }); })
   .then(function(o){ applyLive(o); return refreshQuotes().then(function(n){
-    finish('실시간 반영 · '+o.src+(n?' · 종목 '+n+'개':(S.quoteFail?' · 주식 시세 응답 없음':'')));
+    finish('실시간 반영 · '+o.src+quoteTailTxt(n));
     }).catch(function(){ finish('실시간 반영 · '+o.src); }); })
   .catch(function(){ finish('실시간 시세를 못 받았습니다 · 직전 갱신 데이터 유지'); });
 }
@@ -4461,7 +4587,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=11.2').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=12.0').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });
