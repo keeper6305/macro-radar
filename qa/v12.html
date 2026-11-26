@@ -1580,8 +1580,10 @@ async function run(){
     need(!!bref,'지금 새로고침 버튼 없음');
     need(txt(bref).indexOf('새로고침')>=0,'버튼 라벨: '+txt(bref));
     need(txt(dbox3).indexOf('늦어질 때')>=0,'안내 문구 없음');
-    bref.click(); await wait(1400);
-    var tst=txt(d3.querySelector('#toast'));
+    bref.click();
+    /* 데이터 다시 받기(fetch)가 느린 회차가 있어 토스트는 폴링으로 기다린다 */
+    var tst='';
+    for(var wq=0;wq<14&&tst.length<=3;wq++){ await wait(500); tst=txt(d3.querySelector('#toast')); }
     need(tst.length>3,'새로고침 뒤 응답 없음');
     need(/(새 데이터가 아직 없습니다|새 데이터를 반영|받지 못했습니다)/.test(tst),'예상 밖 토스트: '+tst);
     var errs3=(w3.__errs||[]).slice();
