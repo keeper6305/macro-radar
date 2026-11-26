@@ -105,6 +105,12 @@ function drive(f,sp){
           q('.tab[data-tab="companies"]').click(); await wait(500);
           w.scrollTo(0,0);
           q('#btnLive').click(); await wait(1500);
+          /* 촬영 시점에는 토스트가 사라져 있으므로, 방금 뜬 문구를 화면에 붙잡아 둔다(촬영 전용) */
+          var tEl=q('#toast'), tTxt=tEl?String(tEl.textContent||''):'';
+          if(tEl&&tTxt){
+            tEl.hidden=false; tEl.classList.add('on');
+            w.setInterval(function(){ tEl.hidden=false; tEl.classList.add('on'); tEl.textContent=tTxt; },400);
+          }
         }
       }catch(e){ document.title='ERR '+sp.s+' '+e.message; }
       resolve();
