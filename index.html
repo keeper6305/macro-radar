@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="투자 레이더">
-<link rel="manifest" href="./manifest.json?v=12.0">
+<link rel="manifest" href="./manifest.json?v=13.0">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon-32.png" sizes="32x32">
@@ -281,6 +281,37 @@ details.ans[open] summary:before{content:"▾ "}
 .kill{margin-top:11px;padding:9px 10px;border-radius:10px;background:rgba(var(--badRGB),.09);border:1px solid rgba(var(--badRGB),.24)}
 .kill .kt{font-size:9.5px;font-weight:800;color:var(--bad-tx);margin-bottom:2px}
 .kill p{margin:0;font-size:11.5px;line-height:1.55;color:var(--tx)}
+/* v13: 크립토 바닥 검증 (코웬 5조건) */
+.cbhd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cbhd .nmt{font-size:12.5px;font-weight:800;letter-spacing:-.01em;min-width:0}
+.cbstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.cbstat div{background:var(--card2);border-radius:9px;padding:7px 8px;min-width:0}
+.cbstat b{display:block;font-size:13.5px;font-variant-numeric:tabular-nums;line-height:1.25}
+.cbstat span{display:block;font-size:9px;color:var(--mu);margin-top:2px;line-height:1.35}
+.cbck{list-style:none;margin:8px 0 0;padding:0}
+.cbck li{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.cbck li:first-child{border-top:0;padding-top:2px}
+.cbck .n{flex:none;width:17px;height:17px;border-radius:6px;background:var(--card2);color:var(--mu);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.cbck .n.bad{background:rgba(var(--badRGB),.14);color:var(--bad-tx)}
+.cbck .n.warn{background:rgba(var(--warnRGB),.14);color:var(--warn-tx)}
+.cbck .n.ok{background:rgba(var(--goodRGB),.14);color:var(--good-tx)}
+.cbck .t{flex:1;min-width:0}
+.cbck .nm{font-size:11.5px;font-weight:700;display:flex;gap:6px;align-items:center;flex-wrap:wrap;line-height:1.4}
+.cbck .nm .chip{font-size:9px;padding:1.5px 6px}
+.cbck .nw{display:block;font-size:10.5px;color:var(--tx2);margin-top:2px;line-height:1.45}
+.cbck .wy{display:block;font-size:10px;color:var(--mu);margin-top:3px;line-height:1.5}
+.cbdday{font-style:normal;font-weight:800;color:var(--warn-tx);font-variant-numeric:tabular-nums}
+.cblv{display:grid;gap:0;margin-top:2px}
+.cbrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;font-size:11px;padding:6px 0;border-top:1px dashed var(--line)}
+.cbrow:first-child{border-top:0;padding-top:2px}
+.cbrow>span{color:var(--tx2);min-width:0;line-height:1.4}
+.cbrow i{display:block;font-style:normal;color:var(--mu);font-size:9.5px;margin-top:1px;line-height:1.4}
+.cbrow b{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.cbpct{font-style:normal;font-size:9.5px;color:var(--mu);font-weight:600}
+.cbnote{font-size:10.5px;color:var(--mu);line-height:1.55;margin:8px 0 0}
+.cbdone{margin-top:12px;padding:9px 10px;border-radius:10px;background:var(--accentbg);border:1px solid rgba(var(--accRGB),.25);font-size:11.5px;line-height:1.6;color:var(--tx2)}
+.cbdone b{color:var(--accent2)}
+.srcs a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
 .note{margin:9px 0 0;font-size:10.5px;color:var(--mu);line-height:1.5}
 
 /* events */
@@ -2982,6 +3013,107 @@ function viewBriefing(){
   return h;
 }
 
+/* ---------- v13: 크립토 바닥 검증 (코웬 5조건 × 온체인·유동성 교차 검증) ---------- */
+function cbDate(iso){
+  var m=String(iso||'').split('-');
+  if(m.length!==3) return null;
+  var d=new Date(+m[0], +m[1]-1, +m[2]);
+  return isNaN(d.getTime())?null:d;
+}
+function cbSince(iso){
+  var d=cbDate(iso); if(!d) return null;
+  var t=new Date(); t.setHours(0,0,0,0);
+  return Math.round((t.getTime()-d.getTime())/86400000);
+}
+function cbUntil(iso){
+  var d=cbDate(iso); if(!d) return null;
+  var t=new Date(); t.setHours(0,0,0,0);
+  return Math.round((d.getTime()-t.getTime())/86400000);
+}
+function cbBtcPrice(){
+  var cb=(S.data&&S.data.cryptoBottom)||{}; var a=assetById('btc');
+  return (a&&typeof a.price==='number'&&isFinite(a.price)&&a.price>0)?a.price:((cb.priceRef||{}).btc||null);
+}
+function cbEthPrice(){
+  var cb=(S.data&&S.data.cryptoBottom)||{}; var a=assetById('eth');
+  return (a&&typeof a.price==='number'&&isFinite(a.price)&&a.price>0)?a.price:((cb.priceRef||{}).eth||null);
+}
+function cbPct(cur,lv){ if(!(cur>0&&lv>0)) return ''; return sgn((cur/lv-1)*100,1); }
+function cbCls(s){ return s==='met'?'ok':(s==='wait'?'warn':'bad'); }
+/* 실현가격 이탈은 가격이 내려오면 자동으로 '충족'으로 바뀐다 */
+function cbCheckState(c,btc){
+  if(c.key==='realized'&&btc>0){
+    if(c.levelAlt&&btc<=c.levelAlt) return {s:'met',t:'충족'};
+    if(c.level&&btc<=c.level) return {s:'met',t:'충족 · 1차'};
+  }
+  return {s:c.status,t:c.statusText};
+}
+function cbChecksHTML(cb,btc,slim){
+  return '<ul class="cbck">'+(cb.checks||[]).map(function(c){
+    var st=cbCheckState(c,btc), d=(c.key==='realized'&&c.level&&btc>0)?cbPct(btc,c.level):'';
+    var dd=(c.key==='timing'&&c.deadline)?('D-'+Math.max(0,cbUntil(c.deadline)||0)):'';
+    return '<li><span class="n '+cbCls(st.s)+'">'+c.n+'</span><span class="t">'+
+      '<span class="nm">'+esc(c.name)+'<span class="chip '+cbCls(st.s)+'">'+esc(st.t)+'</span></span>'+
+      '<span class="nw">'+(dd?'<em class="cbdday">'+dd+'</em> · ':'')+esc(c.now||'')+
+        (c.levelLabel?' · '+esc(c.levelLabel):'')+(d?' · 현재가 대비 '+d:'')+'</span>'+
+      (slim?'':'<span class="wy">'+esc(c.why||'')+'</span>')+
+      '</span></li>';
+  }).join('')+'</ul>';
+}
+function cbRowsHTML(rows,cur){
+  return '<div class="cblv">'+rows.map(function(r){
+    var d=(r.v&&cur)?cbPct(cur,r.v):'';
+    return '<div class="cbrow"><span>'+esc(r.label)+(r.note?'<i>'+esc(r.note)+'</i>':'')+'</span>'+
+      '<b>'+esc(r.display)+(d?' <em class="cbpct">'+d+'</em>':'')+'</b></div>';
+  }).join('')+'</div>';
+}
+function cryptoBottomHTML(mode){
+  var cb=S.data&&S.data.cryptoBottom; if(!cb) return '';
+  var slim=(mode==='slim');
+  var btc=cbBtcPrice(), eth=cbEthPrice();
+  var days=cbSince((cb.peak||{}).date);
+  var dd=(cb.peak&&cb.trough&&cb.peak.price)?(cb.trough.price/cb.peak.price-1)*100:null;
+  var met=(cb.checks||[]).filter(function(c){return cbCheckState(c,btc).s==='met';}).length;
+  var h='';
+  if(!slim){
+    h+='<div class="cbhd"><div class="nmt">🪙 '+esc(cb.title||'바닥 검증')+'</div><span class="chip live">코웬 × 온체인</span></div>'+
+      '<div class="cbstat">'+
+        '<div><b>'+(days!=null?days+'일':'–')+'</b><span>고점 후 경과 · 2025-10-06 $126,000</span></div>'+
+        '<div><b>'+(dd!=null?sgn(dd,1):'–')+'</b><span>고점→저점 낙폭 · $55,000</span></div>'+
+        '<div><b>'+met+' / '+(cb.checks||[]).length+'</b><span>충족 조건</span></div></div>'+
+      '<p class="cbnote">'+esc(cb.lead||'')+'</p>';
+  }
+  h+=cbChecksHTML(cb,btc,slim);
+  if(!slim){
+    h+='<div class="msec"><h4>BTC 가격 지도 · 지금 어디인가</h4>'+cbRowsHTML(cb.levels||[],btc)+
+      '<p class="cbnote">표시 %는 현재가가 그 선보다 높으면 +, 낮으면 −입니다. ETF 평균단가·회귀 밴드는 모델 추정치입니다.</p></div>';
+    var e=cb.eth;
+    if(e){
+      h+='<div class="msec"><h4>ETH · 보유분 점검</h4><div class="cblv">';
+      var ratio=(eth&&btc)?(eth/btc):null;
+      h+='<div class="cbrow"><span>ETH/BTC 비율<i>Bitfinex 확인선 0.0298 · 11/9 0.0284</i></span><b>'+
+        (ratio?ratio.toFixed(4):'–')+(ratio?' <em class="cbpct">'+sgn((ratio/0.0298-1)*100,1)+'</em>':'')+'</b></div>';
+      h+=(e.rows||[]).filter(function(r){return r.label.indexOf('ETH/BTC')<0;}).map(function(r){
+        var d=(r.v&&eth)?cbPct(eth,r.v):'';
+        return '<div class="cbrow"><span>'+esc(r.label)+(r.note?'<i>'+esc(r.note)+'</i>':'')+'</span>'+
+          '<b>'+esc(r.display)+(d?' <em class="cbpct">'+d+'</em>':'')+'</b></div>';
+      }).join('');
+      h+='</div><p class="cbnote">'+esc(e.note||'')+'</p></div>';
+    }
+    h+='<div class="msec"><h4>인과 메커니즘 · 신뢰도 높음</h4><ul>'+(cb.mechanisms||[]).map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
+    h+='<div class="msec"><h4>한계 · 반례</h4><ul>'+(cb.limits||[]).map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
+    if(cb.kr) h+='<div class="cbdone"><b>'+esc(cb.kr.title||'국내 관점')+'</b><br>'+rich(cb.kr.body||'')+
+      (cb.kr.note?'<br><span style="color:var(--mu)">'+esc(cb.kr.note)+'</span>':'')+'</div>';
+    h+='<div class="msec"><h4>출처 · 교차 검증</h4><ul class="srcs">'+(cb.sources||[]).map(function(s){
+      var nm=s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.name)+'</a>':esc(s.name);
+      return '<li><b>'+nm+'</b><span>'+esc(s.what)+'</span><i>'+esc(s.asOf)+'</i></li>';
+    }).join('')+'</ul></div>'+
+      '<p class="cbnote">수치는 2026-11-27 확인값입니다. 코웬·기관 견해는 인용이며 매매 권유가 아닙니다.</p>';
+    return '<article class="card">'+h+'</article>';
+  }
+  return h;
+}
+
 function viewScenario(){
   var d=S.data;
   var h='<div class="sec"><h2>거시 3대 시나리오</h2><span class="hint">현재: '+esc(d.regime.label)+'</span></div>';
@@ -2998,6 +3130,10 @@ function viewScenario(){
         return '<li class="'+(t.met?'met':'')+'"><span class="k">'+(t.met?'✔':'○')+'</span><span>'+esc(t.name)+'</span></li>';}).join('')+'</ul>'+
       '<div class="act"><b>대응</b> · '+esc(s.action)+'</div></article>';
   }).join('');
+
+  /* v13: 크립토 바닥 검증 — 코웬 5조건을 온체인·ETF 실측과 대조 */
+  h+='<div class="sec"><h2>🪙 크립토 바닥 검증</h2><span class="hint">코웬 5조건 × 온체인</span></div>';
+  h+=cryptoBottomHTML('full');
 
   var a=d.allocation;
   var C=2*Math.PI*46;
@@ -3549,6 +3685,11 @@ function assetDetail(a){
   /* 가격 지도: 손절·평단·현재·목표를 한 줄에 */
   var pm=priceMap(a);
   if(pm) h+='<div class="msec"><h4>가격 지도 · 손절 · 평단 · 목표</h4>'+pm+'</div>';
+  /* v13: 크립토는 코웬 5조건을 상세에서 바로 (전체 표는 시나리오 탭) */
+  if(isCrypto&&S.data.cryptoBottom){
+    h+='<div class="msec"><h4>🪙 코웬 5조건 · 바닥 검증</h4>'+cryptoBottomHTML('slim')+
+      '<p class="cbnote">시간(고점 후 '+cbSince((S.data.cryptoBottom.peak||{}).date)+'일)은 끝났고 가격이 남았습니다. 전체 검증표는 시나리오 탭 «크립토 바닥 검증»에 있습니다.</p></div>';
+  }
   /* 분할 매수·매도 시뮬레이터 */
   h+=simHTML(a);
   /* 분할 매수 계획 · 카드 신호 연동 */
@@ -4198,6 +4339,8 @@ function openIndicator(id){
     }
     if(r.caption) h+='<div class="cap" style="margin-top:8px">· '+esc(r.label)+' — '+esc(r.caption)+'</div>';
   });
+  /* v13: 크립토 지표 상세에 바닥 검증표 */
+  if(ind.id==='crypto') h+=cryptoBottomHTML('full');
   h+='<div class="msec"><h4>왜 중요한가</h4><ul>'+(ind.why||[]).map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
   h+='<div class="msec"><h4>자금 이동 순서</h4><ul>'+(ind.flow||[]).map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
   h+='<div class="msrc">'+esc(S.data.meta.asOfLabel)+' · 수치는 데일리 브리핑과 DART 원문, 시계열은 FRED·Yahoo·CoinGecko 조회값입니다. 점선은 추정 구간입니다.</div>';
@@ -4530,7 +4673,10 @@ function refreshData(force){
 }
 function applyMeta(){
   if(!S.data) return;
-  $id('asof').textContent=S.data.meta.shortLabel||S.data.meta.asOfLabel;
+  /* v13: 도감 장수는 데이터에서 세어 표시한다(카드를 추가해도 헤더가 어긋나지 않게) */
+  var lab=S.data.meta.shortLabel||S.data.meta.asOfLabel;
+  if(/도감\s*\d+장/.test(lab)) lab=lab.replace(/도감\s*\d+장/,'도감 '+((S.data.study||[]).length)+'장');
+  $id('asof').textContent=lab;
   $id('asof').title=S.data.meta.asOfLabel+' · '+S.data.meta.nextUpdate;
   var m=document.querySelector('meta[name="description"]');
   if(m) m.setAttribute('content',S.data.meta.sourceNote.slice(0,150));
@@ -4588,7 +4734,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=12.0').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=13.0').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });
