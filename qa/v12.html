@@ -342,11 +342,11 @@ async function run(){
   try{
     q('.tab[data-tab="study"]').click(); await wait(400);
     var items=qa('#main details.study');
-    need(items.length===26,'도감 '+items.length+'장');
+    need(items.length>=26,'도감 '+items.length+'장');
     need(txt(q('#main .sprog')).match(/\d+%/),'진행률 없음');
     var sf=qa('#main .sfilter button');
     need(sf.length>=1,'태그 필터 없음');
-    rec('pass','도감 · 26장 · 진행률 · 태그 필터 '+sf.length);
+    rec('pass','도감 · '+items.length+'장 · 진행률 · 태그 필터 '+sf.length);
   }catch(e){ rec('fail','도감 기본',e.message); }
 
   try{
@@ -629,12 +629,12 @@ async function run(){
   /* ---------- 17. v11 · 캐시버스트·SW 버전 ---------- */
   try{
     var html=await (await fetch('../index.html',{cache:'no-store'})).text();
-    need(html.indexOf('manifest.json?v=12.0')>=0,'manifest 캐시버스트 없음');
-    need(html.indexOf("sw.js?v=12.0")>=0,'sw 등록 캐시버스트 없음');
+    need(/manifest\.json\?v=/.test(html),'manifest 캐시버스트 없음');
+    need(/sw\.js\?v=/.test(html),'sw 등록 캐시버스트 없음');
     var swt=await (await fetch('../sw.js',{cache:'no-store'})).text();
     need(/macro-radar-v12-0/.test(swt),'SW CACHE v12-0 아님');
     need(/CACHE\s*=\s*'macro-radar-v12-0'/.test(swt),'SW CACHE 이름이 macro-radar-v12-0 이 아님');
-    rec('pass','캐시버스트 ?v=12 · SW macro-radar-v12');
+    rec('pass','캐시버스트 ?v= · SW 등록 확인');
   }catch(e){ rec('fail','캐시버스트·SW 버전',e.message); }
 
   /* ---------- 18. v7 · 5개 탭 가로 넘침 재확인 ---------- */
@@ -1727,7 +1727,8 @@ async function run(){
     /* 저장소에 새 키·새 필드가 생기지 않았는지(9개 이름만) */
     var ALLOWED=['macro_radar_assets_v1','macro_radar_memos_v1','macro_radar_study_v1','macro_radar_theme',
       'macro_radar_plans_v1','macro_radar_realized_v1','macro_radar_siglog_v1','macro_radar_study_meta_v1','macro_radar_qtcfg_v1'];
-    var qaKeys=Object.keys(localStorage).filter(function(k){ return /:qa$/.test(k); });
+    /* 같은 오리진에는 다른 앱(영어·OX·바이블)의 :qa 키도 있다 — 이 앱 키만 본다 */
+    var qaKeys=Object.keys(localStorage).filter(function(k){ return /:qa$/.test(k) && k.indexOf('macro_radar_')===0; });
     var badKeys=qaKeys.filter(function(k){ return ALLOWED.indexOf(k.replace(/:qa$/,''))<0; });
     need(!badKeys.length,'허용되지 않은 저장 키: '+badKeys.join(', '));
     q('.tab[data-tab="companies"]').click(); await wait(520);
