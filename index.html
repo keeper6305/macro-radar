@@ -311,6 +311,39 @@ details.ans[open] summary:before{content:"▾ "}
 .cbnote{font-size:10.5px;color:var(--mu);line-height:1.55;margin:8px 0 0}
 .cbdone{margin-top:12px;padding:9px 10px;border-radius:10px;background:var(--accentbg);border:1px solid rgba(var(--accRGB),.25);font-size:11.5px;line-height:1.6;color:var(--tx2)}
 .cbdone b{color:var(--accent2)}
+/* v14: 고래 순매수·순매도 — 코호트 · 백테스트 표 · 패턴 */
+.cbco{display:grid;gap:0;margin-top:2px}
+.cbco .co{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px dashed var(--line)}
+.cbco .co:first-child{border-top:0;padding-top:2px}
+.cbco .band{font-size:11px;font-weight:700;color:var(--tx);min-width:0;line-height:1.35}
+.cbco .band i{display:block;font-style:normal;font-weight:400;font-size:9.5px;color:var(--mu);margin-top:1px;line-height:1.4}
+.cbco .dir{flex:none;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cbco .dir.buy{background:rgba(var(--goodRGB),.14);color:var(--good-tx)}
+.cbco .dir.sell{background:rgba(var(--badRGB),.14);color:var(--bad-tx)}
+.cbco .dir.flat{background:var(--card2);color:var(--mu)}
+.cbbt{display:grid;gap:0;margin-top:2px}
+.cbbtr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;padding:6px 0;border-top:1px dashed var(--line);font-size:10.5px}
+.cbbtr:first-child{border-top:0;padding-top:2px}
+.cbbtr.hd{border-top:0;padding:0 0 3px;font-size:9px;color:var(--mu);font-weight:700}
+.cbbtr>span{min-width:0;line-height:1.4;color:var(--tx2)}
+.cbbtr i{display:block;font-style:normal;font-size:9px;color:var(--mu);margin-top:1px;line-height:1.35}
+.cbbtr>b{font-weight:800;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.cbbtr>b.up{color:var(--up)}
+.cbbtr>b.down{color:var(--down)}
+.cbbtr.ok>span{color:var(--good-tx)}
+.cbbtr.bad>span{color:var(--bad-tx)}
+.msec ul.cbul{margin:7px 0 0;padding-left:14px;font-size:10.5px;line-height:1.6;color:var(--mu)}
+.msec ul.cbul li{margin-bottom:4px}
+.msec ul.cbul li:last-child{margin-bottom:0}
+.cbpat{display:grid;gap:8px;margin-top:4px}
+.cbpat .pt{display:flex;gap:8px;align-items:flex-start}
+.cbpat .pt>b{flex:none;width:19px;height:19px;border-radius:7px;background:var(--accentbg);color:var(--accent2);font-size:11px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.cbpat .pt>.bt{flex:1;min-width:0}
+.cbpat .tt{display:block;font-size:11.5px;font-weight:700;line-height:1.4}
+.cbpat .bd{display:block;font-size:10.5px;color:var(--tx2);line-height:1.55;margin:3px 0 0}
+.cbpat .ev{display:block;font-style:normal;font-size:9.5px;color:var(--mu);line-height:1.45;margin-top:3px;padding-left:7px;border-left:2px solid var(--line)}
+.cbwarn{margin-top:9px;padding:8px 9px;border-radius:9px;background:rgba(var(--warnRGB),.09);border:1px solid rgba(var(--warnRGB),.28);font-size:10.5px;line-height:1.55;color:var(--tx2)}
+.cbwarn b{color:var(--warn-tx)}
 .srcs a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
 .note{margin:9px 0 0;font-size:10.5px;color:var(--mu);line-height:1.5}
 
@@ -3067,6 +3100,79 @@ function cbRowsHTML(rows,cur){
       '<b>'+esc(r.display)+(d?' <em class="cbpct">'+d+'</em>':'')+'</b></div>';
   }).join('')+'</div>';
 }
+/* ---------- v14: 고래 순매수·순매도 (코호트 · 거래소 흐름 · ETH 30일 백테스트) ----------
+   - 점수는 방향(0~1)이지 수량이 아니다. 창(7·15일 vs 30일)을 항상 같이 적는다.
+   - 2,506일 백테스트 표는 CryptoQuant 원문 표를 그대로 옮겼다(표본 8·9건은 경향). */
+function whDirLabel(d){ return d==='buy'?'매집':(d==='sell'?'분배':'중립'); }
+function whCohortsHTML(list){
+  if(!list||!list.length) return '';
+  return '<div class="cbco">'+list.map(function(c){
+    var cls=(c.dir==='buy'||c.dir==='sell')?c.dir:'flat';
+    return '<div class="co"><span class="band">'+esc(c.band)+(c.note?'<i>'+esc(c.note)+'</i>':'')+'</span>'+
+      '<span class="dir '+cls+'">'+esc(whDirLabel(c.dir))+(c.score?' '+esc(c.score):'')+'</span></div>';
+  }).join('')+'</div>';
+}
+function whBacktestHTML(bt,slim){
+  if(!bt||!(bt.rows||[]).length) return '';
+  var rows=bt.rows||[];
+  if(slim) rows=rows.filter(function(r){return r.key;});
+  var h='';
+  if(bt.window) h+='<p class="cbnote" style="margin:1px 0 0">'+esc(bt.window)+'</p>';
+  h+='<div class="cbbt"><div class="cbbtr hd"><span>셋업</span><span>30일 중앙값</span></div>'+rows.map(function(r){
+    var m=String(r.med||''), cl=(m.charAt(0)==='+'?'up':(m.charAt(0)==='\u2212'?'down':''));
+    var meta=[]; if(r.days) meta.push(r.days); if(r.up) meta.push('상승 '+r.up); if(r.note) meta.push(r.note);
+    return '<div class="cbbtr'+(r.tone?' '+r.tone:'')+'"><span>'+esc(r.setup)+(meta.length?'<i>'+esc(meta.join(' · '))+'</i>':'')+'</span>'+
+      '<b class="'+cl+'">'+esc(r.med)+'</b></div>';
+  }).join('')+'</div>';
+  return h;
+}
+function whaleFullHTML(w){
+  if(!w) return '';
+  var h='', b=w.btc||{}, e=w.eth||{};
+  if(w.lead) h+='<div class="msec"><h4>🐋 고래 순매수·순매도 · 지금 어느 쪽인가</h4><p class="cbnote" style="margin:0">'+rich(w.lead)+'</p></div>';
+  if((b.cohorts||[]).length){
+    h+='<div class="msec"><h4>BTC · 코호트별 매집/분배</h4>'+whCohortsHTML(b.cohorts)+
+      (b.cohortNote?'<p class="cbnote">'+esc(b.cohortNote)+'</p>':'')+'</div>';
+  }
+  if((b.flows||[]).length){
+    h+='<div class="msec"><h4>BTC · 거래소로 가는 물량</h4>'+cbRowsHTML(b.flows,0)+
+      (b.flowNote?'<p class="cbnote">'+esc(b.flowNote)+'</p>':'')+
+      (b.caveat?'<div class="cbwarn">'+rich(b.caveat)+'</div>':'')+'</div>';
+  }
+  if((e.rows||[]).length){
+    h+='<div class="msec"><h4>ETH · 고래 현황</h4>'+cbRowsHTML(e.rows,0)+
+      (e.note?'<p class="cbnote">'+esc(e.note)+'</p>':'')+'</div>';
+  }
+  if(e.backtest){
+    h+='<div class="msec"><h4>'+esc(e.backtest.title||'ETH · 30일 백테스트')+'</h4>'+whBacktestHTML(e.backtest,false)+
+      ((e.backtest.notes||[]).length?'<ul class="cbul">'+e.backtest.notes.map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul>':'')+'</div>';
+  }
+  if((w.patterns||[]).length){
+    h+='<div class="msec"><h4>고래 패턴 3원칙</h4><div class="cbpat">'+w.patterns.map(function(p){
+      return '<div class="pt"><b>'+esc(p.n||'·')+'</b><div class="bt"><span class="tt">'+esc(p.title||'')+'</span>'+
+        '<span class="bd">'+rich(p.body||'')+'</span>'+(p.ev?'<em class="ev">'+rich(p.ev)+'</em>':'')+'</div></div>';
+    }).join('')+'</div></div>';
+  }
+  if((w.limits||[]).length){
+    h+='<div class="msec"><h4>고래 지표의 한계</h4><ul class="cbul">'+w.limits.map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
+  }
+  return h;
+}
+function whaleSlimHTML(kind,w){
+  if(!w) return '';
+  if(kind==='btc'){
+    var b=w.btc||{};
+    return '<div class="msec"><h4>🐋 고래 순매수·순매도 · 코호트</h4>'+whCohortsHTML(b.cohorts)+
+      (b.flowNote?'<p class="cbnote">'+esc(b.flowNote)+'</p>':'')+
+      '<p class="cbnote">거래소 흐름·착시 경고와 ETH 백테스트는 시나리오 탭 «크립토 바닥 검증»에 있습니다.</p></div>';
+  }
+  var e=w.eth||{}, h='<div class="msec"><h4>🐋 ETH 고래 · 30일 백테스트</h4>';
+  if((e.rows||[]).length) h+=cbRowsHTML((e.rows||[]).slice(0,3),0);
+  h+=whBacktestHTML(e.backtest,true);
+  if(e.note) h+='<p class="cbnote">'+esc(e.note)+'</p>';
+  h+='<p class="cbnote">전체 9개 셋업과 3원칙은 시나리오 탭 «크립토 바닥 검증»에 있습니다.</p></div>';
+  return h;
+}
 function cryptoBottomHTML(mode){
   var cb=S.data&&S.data.cryptoBottom; if(!cb) return '';
   var slim=(mode==='slim');
@@ -3100,6 +3206,7 @@ function cryptoBottomHTML(mode){
       }).join('');
       h+='</div><p class="cbnote">'+esc(e.note||'')+'</p></div>';
     }
+    h+=whaleFullHTML(cb.whale);
     h+='<div class="msec"><h4>인과 메커니즘 · 신뢰도 높음</h4><ul>'+(cb.mechanisms||[]).map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
     h+='<div class="msec"><h4>한계 · 반례</h4><ul>'+(cb.limits||[]).map(function(t){return '<li>'+rich(t)+'</li>';}).join('')+'</ul></div>';
     if(cb.kr) h+='<div class="cbdone"><b>'+esc(cb.kr.title||'국내 관점')+'</b><br>'+rich(cb.kr.body||'')+
@@ -3689,6 +3796,7 @@ function assetDetail(a){
   if(isCrypto&&S.data.cryptoBottom){
     h+='<div class="msec"><h4>🪙 코웬 5조건 · 바닥 검증</h4>'+cryptoBottomHTML('slim')+
       '<p class="cbnote">시간(고점 후 '+cbSince((S.data.cryptoBottom.peak||{}).date)+'일)은 끝났고 가격이 남았습니다. 전체 검증표는 시나리오 탭 «크립토 바닥 검증»에 있습니다.</p></div>';
+    if(S.data.cryptoBottom.whale&&(a.id==='btc'||a.id==='eth')) h+=whaleSlimHTML(a.id,S.data.cryptoBottom.whale);
   }
   /* 분할 매수·매도 시뮬레이터 */
   h+=simHTML(a);
