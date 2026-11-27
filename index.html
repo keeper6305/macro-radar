@@ -3162,9 +3162,10 @@ function whaleSlimHTML(kind,w){
   if(!w) return '';
   if(kind==='btc'){
     var b=w.btc||{};
-    return '<div class="msec"><h4>🐋 고래 순매수·순매도 · 코호트</h4>'+whCohortsHTML(b.cohorts)+
+    return '<div class="msec"><h4>🐋 고래 순매수·순매도 · 코호트와 흐름</h4>'+whCohortsHTML(b.cohorts)+
+      ((b.flows||[]).length?cbRowsHTML(b.flows.slice(0,2),0):'')+
       (b.flowNote?'<p class="cbnote">'+esc(b.flowNote)+'</p>':'')+
-      '<p class="cbnote">거래소 흐름·착시 경고와 ETH 백테스트는 시나리오 탭 «크립토 바닥 검증»에 있습니다.</p></div>';
+      '<p class="cbnote">착시 경고·겉보기 수요와 ETH 백테스트는 시나리오 탭 «크립토 바닥 검증»에 있습니다.</p></div>';
   }
   var e=w.eth||{}, h='<div class="msec"><h4>🐋 ETH 고래 · 30일 백테스트</h4>';
   if((e.rows||[]).length) h+=cbRowsHTML((e.rows||[]).slice(0,3),0);
