@@ -632,8 +632,13 @@ async function run(){
     need(/manifest\.json\?v=/.test(html),'manifest 캐시버스트 없음');
     need(/sw\.js\?v=/.test(html),'sw 등록 캐시버스트 없음');
     var swt=await (await fetch('../sw.js',{cache:'no-store'})).text();
-    need(/macro-radar-v12-0/.test(swt),'SW CACHE v12-0 아님');
-    need(/CACHE\s*=\s*'macro-radar-v12-0'/.test(swt),'SW CACHE 이름이 macro-radar-v12-0 이 아님');
+    /* 앱 버전이 올라가도 깨지지 않게 sw.js 의 CACHE 를 읽어 index 의 등록 ?v= 와 대조한다 */
+    var cm=swt.match(/var\s+CACHE\s*=\s*'([^']+)'/);
+    need(!!cm,'sw.js 에 CACHE 선언 없음');
+    var rv=html.match(/register\('\.\/sw\.js\?v=([0-9.]+)'\)/);
+    need(!!rv,'index 에 sw 등록 ?v= 없음');
+    need(/^macro-radar-v\d+-\d+$/.test(cm[1]),'CACHE 이름 형식 아님: '+cm[1]);
+    need(cm[1].replace('macro-radar-v','').replace('-','.')===rv[1],'CACHE '+cm[1]+' ↔ 등록 ?v='+rv[1]+' 불일치');
     rec('pass','캐시버스트 ?v= · SW 등록 확인');
   }catch(e){ rec('fail','캐시버스트·SW 버전',e.message); }
 
