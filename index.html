@@ -1052,6 +1052,8 @@ details.study.s2[open]{opacity:1}
 'use strict';
 
 var DATA_URL = './data/market_state.json';
+var LAST_FETCH=0;   /* v14-1: 탭 복귀 때 데이터를 다시 받은 시각 — 2분 안에는 건너뛴다 */
+var FRESH_MS=120000;
 /* ?qa=1 : 점검용 — 앱의 실제 학습·메모·종목 데이터를 건드리지 않도록 저장 키를 분리하고
    서비스워커를 끄는 모드. (같은 오리진의 실제 사용 데이터 보존) */
 var QA = /[?&]qa=1(&|$)/.test(location.search);
@@ -2049,7 +2051,35 @@ function badge(signal,text){
   var em=signal==='red'?'🔴 ':signal==='amber'?'🟡 ':signal==='green'?'🟢 ':'';
   return '<span class="badge '+cls+'">'+em+esc(text)+'</span>';
 }
-function sdot(s){ return '<span class="sdot s-'+(s||'amber')+'"></span>'; }
+/* v14-1: 게이지(zones)와 배지·점이 어긋나지 않도록 신호를 값에서 다시 계산한다.
+   데이터의 signal 필드가 낡아도 화면은 실제 수치·임계 구간을 따른다. */
+var SIG_RANK={green:0,amber:1,red:2};
+var SIG_LEVEL={ok:'green',good:'green',warn:'amber',bad:'red'};
+var SIG_TEXT={green:'안정',amber:'주의',red:'경계'};
+function zoneSignal(row){
+  if(!row||!row.zones||!row.zones.length) return null;
+  var v=row.value;
+  if(typeof v!=='number'||!isFinite(v)) return null;
+  var zs=row.zones, L=null;
+  for(var i=0;i<zs.length;i++){ if(v>=zs[i].from&&v<=zs[i].to){ L=zs[i].level; break; } }
+  if(!L) L=(v<zs[0].from)?zs[0].level:zs[zs.length-1].level;
+  return SIG_LEVEL[L]||null;
+}
+function rowSignal(row){ var s=zoneSignal(row); return s||(row&&row.signal)||null; }
+function worstSignal(rows){
+  var w=null;
+  (rows||[]).forEach(function(r){ var s=zoneSignal(r); if(s&&(w===null||SIG_RANK[s]>SIG_RANK[w])) w=s; });
+  return w;
+}
+function indSignal(ind){ return worstSignal(ind.rows)||(ind&&ind.signal)||null; }
+function indBadgeHTML(ind){
+  var w=indSignal(ind);
+  if(!w) return badge(ind.signal,ind.signalText||'');
+  var keep=(SIG_RANK[w]===SIG_RANK[ind.signal])&&ind.signalText;
+  return badge(w,keep?ind.signalText:(SIG_TEXT[w]||''));
+}
+function sdot(s){ s=(s==='ok'||s==='good')?'green':((s==='red'||s==='amber'||s==='green')?s:'amber');
+  return '<span class="sdot s-'+s+'"></span>'; }
 
 /* ---------- indicator card ---------- */
 function rowChart(r,name){
@@ -2080,7 +2110,7 @@ function indCard(ind,compact){
     body=rows.map(function(r2){
       var dl2=r2.delta?' <span class="delta '+dirClass(r2.delta.dir)+'">'+esc(r2.delta.text)+'</span>':'';
       return '<div class="row"><div class="rh"><span class="rl">'+esc(r2.label)+dl2+'</span>'+
-        '<span class="rv">'+(r2.signal?sdot(r2.signal):'')+esc(r2.display)+'</span></div>'+
+        '<span class="rv">'+(rowSignal(r2)?sdot(rowSignal(r2)):'')+esc(r2.display)+'</span></div>'+
         updHTML(r2,ind)+gauge(r2)+
         (r2.caption?'<div class="cap">'+esc(r2.caption)+'</div>':'')+
         rowChart(r2,r2.label)+
@@ -2094,7 +2124,7 @@ function indCard(ind,compact){
   return '<article class="card tap '+(ind.primary?'':'mini')+'" data-ind="'+esc(ind.id)+'" tabindex="0" role="button">'+
     '<div class="ch"><span class="ic">'+esc(ind.icon||'•')+'</span>'+
       '<div class="nm">'+esc(ind.name)+(ind.summary?'<div class="sub">'+esc(ind.summary)+'</div>':'')+'</div>'+
-      badge(ind.signal,ind.signalText)+'</div>'+
+      indBadgeHTML(ind)+'</div>'+
     body+
     (liveChip?'<div class="chips">'+liveChip+'</div>':'')+
     chips+
@@ -3280,8 +3310,9 @@ function viewScenario(){
       }).join('')+'</div>'+
       '<button class="btn wide" data-goto="companies" style="margin-top:11px">종목 상세 · 재무 · 밴드 보기 ›</button></article>';
 
-  h+='<div class="sec"><h2>이벤트 타임라인</h2><span class="hint">11/18 → 2027-02</span></div>'+
-    '<article class="card"><ul class="ev">'+d.events.map(function(e){
+  var evs=liveEvents();
+  h+='<div class="sec"><h2>이벤트 타임라인</h2><span class="hint">'+esc(evs.length?(evs[0].dateLabel||'')+' → '+(evs[evs.length-1].dateLabel||''):'예정 없음')+'</span></div>'+
+    '<article class="card"><ul class="ev">'+evs.map(function(e){
       return '<li class="'+esc(e.level)+'"><span class="ed"><span class="dd">'+esc(e.dday)+'</span><span class="dt">'+esc(e.dateLabel||e.date.slice(5))+'</span></span>'+
         '<span class="eb"><span class="et">'+esc(e.title)+(e.time?' · '+esc(e.time):'')+'</span>'+
         '<span class="ei">'+esc(e.impact)+'</span></span></li>';}).join('')+'</ul></article>';
@@ -4095,12 +4126,19 @@ function bindView(){
     var key=el.getAttribute('data-memo');
     var badgeEl=document.querySelector('[data-save="'+key+'"]');
     var t=null;
+    var saveT=null;
+    function flushMemo(){ if(saveT){ clearTimeout(saveT); saveT=null; memoSet(key,el.value); } }
     el.addEventListener('input',function(){
-      memoSet(key,el.value);
+      /* v14-1: 키 입력마다 localStorage 전체를 쓰지 않는다(400ms 디바운스, 벗어날 때 즉시 저장) */
+      if(saveT) clearTimeout(saveT);
+      saveT=setTimeout(function(){ saveT=null; memoSet(key,el.value); },400);
       if(badgeEl){ badgeEl.textContent='저장됨 '+nowHMS(); badgeEl.classList.add('on'); }
       clearTimeout(t);
       t=setTimeout(function(){ if(badgeEl) badgeEl.classList.remove('on'); },1600);
     });
+    el.addEventListener('blur',flushMemo);
+    el.addEventListener('change',flushMemo);
+    window.addEventListener('pagehide',flushMemo);
   });
 
   var nt=$id('noteAdd');
@@ -4438,8 +4476,8 @@ function openIndicator(id){
   var h='<div class="mhd"><h3>'+esc(ind.icon+' '+ind.name)+'</h3>'+
     '<button class="mx" data-close="1" aria-label="닫기">✕</button></div>'+
     '<div class="mval">'+rows.map(function(r){
-      return '<span>'+(r.signal?sdot(r.signal):'')+'<b>'+esc(r.display)+'</b></span>';}).join('<span style="color:var(--mu)"> · </span>')+
-      badge(ind.signal,ind.signalText)+'</div>';
+      return '<span>'+(rowSignal(r)?sdot(rowSignal(r)):'')+'<b>'+esc(r.display)+'</b></span>';}).join('<span style="color:var(--mu)"> · </span>')+
+      indBadgeHTML(ind)+'</div>';
   if(ind.summary) h+='<div class="cap" style="margin-top:-4px">'+esc(ind.summary)+'</div>';
   rows.forEach(function(r){
     if(r.series&&r.series.length>2){
@@ -4766,7 +4804,13 @@ function boot(){
     });
 }
 function refreshData(force){
-  fetch(DATA_URL+'?v='+Date.now(),{cache:'no-store'})
+  /* v14-1: 백그라운드 복귀마다 195KB(전송 64KB) JSON을 통째로 다시 받던 것을 막는다.
+     수동 ↻(force)는 늘 즉시 받고, 자동 복귀는 2분 안이면 건너뛴다.
+     캐시 버스터(?v=) 대신 cache:'no-cache' → 바뀐 게 없으면 ETag 304로 본문을 받지 않는다. */
+  var tnow=Date.now();
+  if(!force&&S.data&&(tnow-LAST_FETCH)<FRESH_MS) return;
+  LAST_FETCH=tnow;
+  fetch(DATA_URL,{cache:'no-cache'})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .then(function(d){
       if(!d||!d.meta) return;
@@ -4793,6 +4837,37 @@ function applyMeta(){
 }
 
 /* ---------- events ---------- */
+/* v14-1: 저장된 dday·과거 일정이 그대로 남지 않도록 asOf(오늘) 기준으로 다시 계산해 지난 일정은 뺀다 */
+function asOfYMD(){
+  var s=(S.data&&S.data.meta&&S.data.meta.asOf)||'';
+  var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return {y:+m[1],mo:+m[2],d:+m[3]};
+  var n=new Date();
+  return {y:n.getFullYear(),mo:n.getMonth()+1,d:n.getDate()};
+}
+function evYMD(e){
+  var m=String((e&&e.date)||'').match(/^(\d{4})-(\d{2})(?:-(\d{2}))?$/);
+  if(!m) return null;
+  var y=+m[1], mo=+m[2];
+  if(m[3]) return {y:y,mo:mo,d:+m[3]};
+  return {y:y,mo:mo,d:new Date(Date.UTC(y,mo,0)).getUTCDate()};
+}
+function dayNum(o){ return Math.round(Date.UTC(o.y,o.mo-1,o.d)/86400000); }
+function liveEvents(){
+  var out=[], today=dayNum(asOfYMD());
+  ((S.data&&S.data.events)||[]).forEach(function(e){
+    var y=evYMD(e); if(!y) return;
+    var diff=dayNum(y)-today;
+    if(diff<0) return;                     /* 이미 지난 일정은 표시하지 않는다 */
+    var c={}; for(var k in e){ if(Object.prototype.hasOwnProperty.call(e,k)) c[k]=e[k]; }
+    c.dday=(diff===0)?'D-0':('D-'+diff);
+    c._n=dayNum(y);
+    out.push(c);
+  });
+  out.sort(function(a,b){ return a._n-b._n; });
+  return out;
+}
+
 document.addEventListener('DOMContentLoaded',function(){
   loadMemos();
   loadAssets();
@@ -4843,7 +4918,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   if(!QA&&'serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js?v=13.0').then(function(reg){
+      navigator.serviceWorker.register('./sw.js?v=15.0').then(function(reg){
         document.addEventListener('visibilitychange',function(){
           if(document.visibilityState==='visible'){ reg.update().catch(function(){}); }
         });

@@ -10,7 +10,7 @@
  *    앱 껍데기 캐시가 그 문서로 덮어써진다. 앱 셸 주소일 때만 그 키를 쓰고, 나머지는 URL별로 저장한다.
  *  - ?qa=1 점검 모드는 서비스워커가 개입하지 않는다(항상 네트워크).
  */
-var CACHE = 'macro-radar-v14-0';
+var CACHE = 'macro-radar-v15-0';
 var PRECACHE = [
   './', './index.html', './manifest.json', './data/market_state.json',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
@@ -78,7 +78,9 @@ self.addEventListener('fetch', function (e) {
 
 function networkFirst(req, cacheKey) {
   var key = cacheKey || req.url;
-  return fetch(req.url, { cache: 'no-store', credentials: 'same-origin' })
+  /* v15: no-store 대신 no-cache → ETag 재검증(304)으로 본문을 다시 받지 않는다.
+     no-store 는 탭 복귀마다 index.html·market_state.json(전송 64KB)을 통째로 다시 받았다. */
+  return fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
     .then(function (res) {
       if (res && res.ok) {
         var cp = res.clone();
